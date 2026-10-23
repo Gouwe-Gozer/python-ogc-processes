@@ -1,9 +1,16 @@
 """Flask boundary guard for registered synchronous process endpoints."""
 
 from collections.abc import Mapping
+from email.utils import formatdate
 
-from flask import jsonify, request
-from pygeoapi.flask_app import APP, CONFIG
+from flask import jsonify, make_response, request
+from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_
+
+from terrio_processes.responses import STATUS_HEADER
+from terrio_processes.storage import ResultNotFoundError, ResultStore, ResultStoreError
+
+api_.manager.result_base_url = api_.base_url
+APP.config["MAX_CONTENT_LENGTH"] = 16 * 1024
 
 EXECUTION_PATHS = {
     f"/processes/{identifier}/execution"
@@ -15,6 +22,11 @@ ALLOWED_EXECUTION_MEMBERS = {"inputs", "outputs", "response"}
 
 def _invalid_request(description):
     return jsonify(type="InvalidParameterValue", code="InvalidParameterValue", description=description), 400
+
+
+@APP.errorhandler(413)
+def execution_document_too_large(_error):
+    return jsonify(type="RequestTooLarge", code="RequestTooLarge", description="request body exceeds 16 KiB"), 413
 
 
 @APP.before_request
@@ -42,3 +54,37 @@ def validate_execution_document():
     ):
         return _invalid_request("response must be either raw or document")
     return None
+
+
+@APP.after_request
+def apply_process_status(response):
+    """pygeoapi 0.24.0 fixes successful executions at 200; honor explicit 204s."""
+    status = response.headers.pop(STATUS_HEADER, None)
+    if status == "204" and response.status_code == 200:
+        response.status_code = 204
+        response.set_data(b"")
+        response.headers.pop("Content-Type", None)
+    return response
+
+
+@APP.route(f"{(API_RULES.get_url_prefix('flask') or '').rstrip('/')}/results/<result_id>/output.tif")
+def download_result(result_id):
+    """Deliver a generated GeoTIFF, enforcing its lifetime on every retrieval."""
+    try:
+        data, expires_at = ResultStore.from_environment().read(result_id)
+    except ResultNotFoundError:
+        return jsonify(type="NoSuchResult", code="NoSuchResult", description="result not found or expired"), 404
+    except (ResultStoreError, OSError):
+        APP.logger.exception("Result storage read failed")
+        return jsonify(type="NoApplicableCode", code="NoApplicableCode", description="result could not be read"), 500
+    response = make_response(data)
+    response.headers.update(
+        {
+            "Content-Type": "image/tiff",
+            "Content-Disposition": 'attachment; filename="output.tif"',
+            "Cache-Control": "no-store",
+            "Expires": formatdate(expires_at, usegmt=True),
+            "X-Content-Type-Options": "nosniff",
+        }
+    )
+    return response

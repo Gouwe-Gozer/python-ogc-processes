@@ -27,6 +27,11 @@ RUN /venv/bin/python3 -m pip install --no-cache-dir --only-binary=:all: "terrio=
 RUN /venv/bin/python3 -c \
     'import terrio, pygeoapi; from terrio_processes.processes.info import TerrioInfoProcessor'
 
+# Docker initializes a new named volume with this non-root ownership.
+RUN mkdir -p /var/lib/terrio/results \
+    && chown 10001:10001 /var/lib/terrio/results \
+    && chmod 0700 /var/lib/terrio/results
+
 USER 10001:10001
 
 EXPOSE 8080

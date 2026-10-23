@@ -50,6 +50,19 @@
     },
     {
       "severity": "error",
+      "code": "/req/core/process-execute-success-async",
+      "message": "A successful asynchronous execution SHALL be reported with HTTP status code `201`. \"responses[201]\" property must be truthy",
+      "path": [
+        "paths",
+        "/processes/terrio-warp/execution",
+        "post",
+        "responses"
+      ],
+      "source": "<input>",
+      "documentationUrl": "https://docs.ogc.org/is/18-062r2/18-062r2.html#req_core_process-execute-success-async"
+    },
+    {
+      "severity": "error",
       "code": "/req/job-list/job-list-op",
       "message": "The server SHALL support the HTTP GET operation at the path `/jobs`.",
       "path": [

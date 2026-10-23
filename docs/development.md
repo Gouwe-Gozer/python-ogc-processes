@@ -38,13 +38,23 @@ Start and test the self-contained release:
 docker compose --file compose.release.yml config --quiet
 docker compose --file compose.release.yml up --build --detach
 uv run python scripts/smoke_discovery.py --base-url http://localhost:5001 --wait-seconds 60
+uv run python scripts/smoke_warp.py --base-url http://localhost:5001 --save-reference /tmp/warp-reference.txt
 uv run python scripts/check_release_container.py
+docker compose --file compose.release.yml restart api
+uv run python scripts/smoke_discovery.py --base-url http://localhost:5001 --wait-seconds 60
+uv run python scripts/smoke_warp.py --check-saved-reference /tmp/warp-reference.txt
 docker compose --file compose.release.yml down --remove-orphans
 ```
 
-The smoke test discovers the service and executes `terrio-info` through Terrio
-in both raw and document modes. `compose.yml` additionally mounts source and
-configuration read-only for development; restart after changing them.
+The discovery test executes `terrio-info`; the warp test exercises all four
+response/transmission combinations and opens the resulting GeoTIFFs. The saved
+reference verifies persistence across a service restart. `compose.yml` mounts
+source and configuration read-only for development; restart after changing them.
+Both stacks use a named result volume. Normal `down` retains it; adding
+`--volumes` deletes it and all stored results.
+
+The local storage lock uses Linux `flock`; use Linux or Docker for this service.
+See [result storage](results.md) for settings and maintenance commands.
 
 The inherited CITE echo fixture remains separate from the public service:
 
@@ -58,5 +68,6 @@ docker compose -f compose.yml -f compose.integration.yml up --build --detach
 That diagnostic configuration uses upstream TinyDB and `async-echo`; it is not
 evidence that the public service implements asynchronous jobs. The public CI
 retains quality checks, coverage, API validation, container execution/isolation
-and pinned Geonovum diagnostics. Public process tests use the bundled raster
+and pinned Geonovum diagnostics. CI also downloads results from an independent
+client container and verifies persistence across restart. Public process tests use the bundled raster
 and do not depend on a live data service.

@@ -2,25 +2,36 @@
 
 `terrio-processes` exposes bounded Terrio operations through OGC API – Processes
 using the official pygeoapi package. Maintainer: Minnert Wijnands (Gouwe-Gozer).
-The first milestone, `terrio-info`, is implemented. See [README](README.md) for
-usage and [development](docs/development.md) for setup and checks.
+`terrio-info` and the first file-producing operation, `terrio-warp`, are
+implemented. See [README](README.md) for usage and
+[development](docs/development.md) for setup and checks.
 
 ## Current implementation
 
 - Python 3.12, pygeoapi **0.24.0** and Terrio **0.4.2**, with project-local
   dependencies managed by `uv` and pinned in `uv.lock`.
-- One public process: **`terrio-info`**. Its required `source` input is the
-  inline string `demo-dem`, mapped to a bundled 4 by 3 GeoTIFF in EPSG:28992.
+- Two public processes: **`terrio-info`** and **`terrio-warp`**. Their required
+  `source` input is the inline string `demo-dem`, mapped to a bundled 4 by 3
+  GeoTIFF in EPSG:28992.
   Clients cannot choose filesystem paths, URLs or arbitrary Terrio options.
-- The plain Python adapter calls `terrio.info(path, stats=True)` directly.
+- The plain Python adapter calls `terrio.info(path, stats=True)` and `terrio.warp` directly.
   Each processor owns its input validation, description and result formatting.
-- Synchronous execution only: `jobControlOptions: ["sync-execute"]`,
-  `outputTransmission: ["value"]`. Omitted `response` means `raw`; omitted
-  `outputs` selects the defined output; omitted transmission means `value`.
-- Raw execution returns native raster information with HTTP 200 and
+- Synchronous execution only: `jobControlOptions: ["sync-execute"]`.
+  Info offers value transmission; warp offers value and reference. Omitted
+  `response` means `raw`; omitted `outputs` selects the defined output; omitted
+  transmission means `value`.
+- Info raw execution returns native raster information with HTTP 200 and
   `application/json`. Document execution returns HTTP 200 and
   `{"info":{"value":{...raster information...}}}`. `Prefer: respond-async`
   remains synchronous and does not advertise a job URL.
+- Warp accepts EPSG:28992/4326/3857 and nearest/bilinear resampling (default
+  bilinear), retaining source grid dimensions. Raw/value returns TIFF bytes;
+  document/value returns base64 with media type/encoding; document/reference
+  returns a download URL; raw/reference returns empty HTTP 204 plus a Link header.
+- Outputs live in a bounded named Docker volume, with 24-hour expiry by
+  default. Quotas and a cross-worker file lock return 503 when full or busy.
+  Expiry is enforced on reads; cleanup happens before new warps or through the
+  cleanup command. See [result lifecycle](docs/results.md).
 - Unknown inputs/outputs, unsupported formats/transmission, callbacks and
   malformed requests are rejected with JSON client errors. Engine failures
   return sanitized server errors.
@@ -33,8 +44,11 @@ usage and [development](docs/development.md) for setup and checks.
 | Location | Responsibility |
 | --- | --- |
 | `src/terrio_processes/engine.py` | Terrio adapter without pygeoapi imports |
-| `src/terrio_processes/processes/info.py` | Process validation and output representation |
-| `src/terrio_processes/contracts/info.py` | Dataset registry, metadata and schemas |
+| `src/terrio_processes/processes/` | Independent info and warp validation/representations |
+| `src/terrio_processes/contracts/` | Per-operation metadata and schemas |
+| `src/terrio_processes/datasets.py` | Operator-approved local raster registry |
+| `src/terrio_processes/storage.py` | Bounded local output publication, expiry and cleanup |
+| `src/terrio_processes/responses.py` | Explicit process HTTP representation |
 | `src/terrio_processes/app.py` | Boundary validation for registered execution routes |
 | `src/terrio_processes/manager.py` | Synchronous execution and typed/sanitized errors |
 | `src/terrio_processes/openapi.py` | Version-checked corrections to upstream OpenAPI |
@@ -49,7 +63,7 @@ generated discovery/execution schemas and metadata mutation still need the
 current corrections. No upstream Python source or entrypoint is patched.
 
 The integration-only `async-echo`/TinyDB configuration is a diagnostic fixture,
-not a public capability. The pinned Geonovum checker has four recorded job/async
+not a public capability. The pinned Geonovum checker has five recorded job/async
 diagnostics. Historical CITE results describe the predecessor service, not this
 implementation. See [validation](docs/validation.md) for the evidence boundary
 and [migration report](docs/migration.md) for the initial compatibility inventory.
@@ -67,23 +81,19 @@ Do not add a generic engine plugin system, a GDAL backend, asynchronous jobs or
 arbitrary remote data access as incidental work on the current milestone.
 Do not commit, push or publish unless the user requests it.
 
-## Next milestone: file-producing processing
+## Further milestones
 
-`terrio-warp` is the next separate milestone; `terrio-hillshade` can follow.
-Before implementing either, decide and test:
+`terrio-hillshade` can follow as a separately authorized operation using the
+tested result lifecycle. Remote inputs and uploads remain separate decisions:
+external OGC `href` inputs need protocol/destination restrictions, redirect
+handling, timeouts, size limits and content validation. Do not treat local
+dataset identifiers as implemented external-reference interoperability.
 
-1. Safe input handling. External OGC `href` inputs need protocol/destination
-   restrictions, redirect handling, timeouts, size limits and content validation.
-2. Bounded writable output storage, per-request filenames and retention/cleanup
-   compatible with the hardened release container.
-3. A client-retrievable HTTP URL and the supported output transmission modes.
-   A container path or an internal hostname is not a downloadable result.
-4. Standards-correct responses: document/reference is an output-ID mapping
-   containing `href` and media type; raw/reference, if offered, requires HTTP 204,
-   an empty body and `Link` headers. Value transmission remains the default.
-5. End-to-end download/open tests from another client and resource limits
-   appropriate to synchronous execution. Advertise new capabilities only after
-   their behavior is implemented and tested.
+Preserve the four tested warp response combinations, default value transmission,
+expiry, capacity controls and independent-client download checks when adding
+another file-producing operation. No additional operation or asynchronous
+infrastructure is part of the completed warp scope. See the
+[warp milestone report](docs/warp-milestone.md) for validation and known limits.
 
 ## Licence and origins
 
