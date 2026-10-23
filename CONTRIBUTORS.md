@@ -1,6 +1,7 @@
 # Contributors
 
-- Gouwe-Gozer
+- Minnert Wijnands ([Gouwe-Gozer](https://github.com/Gouwe-Gozer))
 
-Required attribution for reused code is preserved in LICENSE and
-THIRD_PARTY_NOTICES.md. Git history records the predecessor implementation.
+Attribution for the MIT-licensed `bkn-terrain-processes` infrastructure reused
+by this project is preserved in [LICENSE](LICENSE) and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

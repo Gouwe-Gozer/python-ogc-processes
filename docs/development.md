@@ -58,4 +58,5 @@ docker compose -f compose.yml -f compose.integration.yml up --build --detach
 That diagnostic configuration uses upstream TinyDB and `async-echo`; it is not
 evidence that the public service implements asynchronous jobs. The public CI
 retains quality checks, coverage, API validation, container execution/isolation
-and pinned Geonovum diagnostics. The BGT-only live PDOK job has been removed.
+and pinned Geonovum diagnostics. Public process tests use the bundled raster
+and do not depend on a live data service.

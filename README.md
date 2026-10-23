@@ -1,4 +1,4 @@
-# Terrio Processes
+# terrio-processes
 
 A small OGC API – Processes service built on pygeoapi and Terrio's Rust-backed
 Python binding. The first process, **`terrio-info`**, inspects a bundled GeoTIFF
@@ -59,12 +59,22 @@ metadata, input validation and result representation. Shared request/manager
 code does not assume every future operation returns one JSON output.
 
 Pinned versions: **pygeoapi 0.24.0**, **Terrio 0.4.2**, Python **3.12**.
-Both run in the same interpreter in the Docker image. This project derives
-reusable infrastructure from BKN; required notices remain in [LICENSE](LICENSE)
-and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Both dependencies run in the same interpreter in the Docker image.
 
 See [development commands](docs/development.md), [architecture](docs/architecture.md),
 [validation limits](docs/validation.md), [release deployment](docs/release-image.md)
-and the [migration report](docs/migration.md). Passing local tests is not OGC
+and the [historical migration report](docs/migration.md). Passing local tests is not OGC
 certification. The next milestone is `terrio-warp`, after deciding how to serve
 and expire downloadable results.
+
+## License and origins
+
+Maintained by **Minnert Wijnands (Gouwe-Gozer)** and licensed under the
+[MIT License](LICENSE).
+
+`terrio-processes` derives reusable pygeoapi integration, testing and deployment
+infrastructure from the MIT-licensed
+[`bkn-terrain-processes`](https://github.com/Gouwe-Gozer/bkn-terrain-processes)
+project. The original copyright and MIT terms are preserved alongside the
+copyright for this project's changes. See [third-party notices](THIRD_PARTY_NOTICES.md)
+for attribution and dependency licences.

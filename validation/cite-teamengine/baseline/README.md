@@ -3,10 +3,10 @@
 
 # CITE/TEAM Engine baseline — 2026-08-24
 
-This directory records the latest OGC API - Processes 1.0 CITE run against
-the integration configuration. The run uses a controlled echo process to test
-the OGC API and temporary job-manager behaviour. It is useful validation
-evidence, but it is not a conformance claim for the terrain process.
+This directory records an inherited OGC API - Processes 1.0 CITE run against
+the predecessor's integration configuration. The run used a controlled echo
+process to test the OGC API and temporary job-manager behaviour. The recorded
+results do not establish conformance for the current `terrio-processes` service.
 
 ## Run metadata
 
@@ -43,10 +43,10 @@ and job-management results in this run concern that controlled fixture and the
 shared pygeoapi routes. The setting to test all processes therefore still tests
 only `async-echo`.
 
-The run does not discover or execute `bgt-land-cover-summary`. It does not prove
-asynchronous execution, persistent jobs, restart recovery or CITE conformance
-for the terrain process. Behaviour of the terrain process is covered by its own
-unit, integration and live-data checks.
+The run did not discover or execute the predecessor's application process and
+predates `terrio-info`. It does not prove asynchronous execution, persistent
+jobs, restart recovery or CITE conformance for the current public service.
+Current process checks are documented in [validation](../../../docs/validation.md).
 
 ## Remaining findings
 

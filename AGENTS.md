@@ -1,6 +1,6 @@
 # Codex instructions
 
-This repository adapts the existing BKN pygeoapi project into a Terrio-backed OGC API – Processes service. Follow `CODEX_HANDOVER.md` for scope and milestones; keep the first implementation small.
+This repository implements `terrio-processes`, a Terrio-backed OGC API – Processes service built on pygeoapi. Follow `CODEX_HANDOVER.md` for current scope and milestones; keep additions small and operation-specific.
 
 ## Environment
 
@@ -11,7 +11,7 @@ This repository adapts the existing BKN pygeoapi project into a Terrio-backed OG
 
 ## Implementation
 
-- Reuse the existing pygeoapi configuration, synchronous execution contract, tests, and CI where possible. Remove BGT-specific logic without discarding useful infrastructure.
+- Reuse the existing pygeoapi configuration, synchronous execution contract, tests, and CI where possible. Preserve the MIT licence and copyright notices for reused infrastructure.
 - Keep OGC processors separate from a small Terrio adapter. Do **not** add a generalized engine plugin system, GDAL backend, or asynchronous job infrastructure for this prototype.
 - Give each new operation its own process implementation and description. Don't hardcode JSON-only, single-output, or value-only assumptions into shared infrastructure.
 - Advertise only supported OGC API – Processes capabilities. Use the standard and official examples linked in `CODEX_HANDOVER.md` to check request and response semantics.

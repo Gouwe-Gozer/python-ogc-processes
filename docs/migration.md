@@ -1,8 +1,15 @@
-# Terrio info milestone — 2026-10-23
+# Historical migration report — 2026-10-23
 
-Phases 0–2 are implemented as a local, reviewable patch in the already-created
-Terrio derivative repository. No commit, remote push, publication, or change to
-the original BKN checkout was made.
+This records the initial `terrio-info` implementation and its validation at
+the time of development. References to predecessor commands, host versions and
+local port choices below are historical evidence, not current setup instructions.
+Use the [README](../README.md) and [development guide](development.md) for setup,
+and [CODEX_HANDOVER.md](../CODEX_HANDOVER.md) for current scope.
+
+Phases 0–2 were implemented in the derivative repository using the local copy
+of `bkn-terrain-processes`. The original project was untouched. The work was
+subsequently committed as `82d9ae2` on `feat/terrio-info`; this report describes
+the validation performed before that commit.
 
 ## Baseline and compatibility
 
@@ -110,9 +117,11 @@ throwaway Node container. Initial checker attempts failed during npm dependency
 installation in constrained temporary storage; the normal disposable-container
 run completed.
 
-## Try the running service
+## Recorded HTTP demonstration
 
-Port 5001 was already occupied. The new release was started with:
+During validation, port 5001 was already occupied. The release was started with
+the commands below. This report does not imply that the container is currently
+running; the default documented API port is 5001.
 
 ```bash
 API_PORT=5002 PYGEOAPI_SERVER_URL=http://localhost:5002 docker compose --file compose.release.yml up --build --detach

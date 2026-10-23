@@ -1,7 +1,24 @@
 # Third-party notices
 
-This project uses the following third-party software. Its licence applies to
-that software independently of this application's licence.
+`terrio-processes` is maintained by Minnert Wijnands (Gouwe-Gozer) and is
+MIT-licensed. The following notices identify reused application code and
+dependencies, whose licences also apply to their respective software.
+
+## Project origins: bkn-terrain-processes
+
+This project derives reusable pygeoapi integration, tests and deployment
+infrastructure from the MIT-licensed
+[Gouwe-Gozer/bkn-terrain-processes](https://github.com/Gouwe-Gozer/bkn-terrain-processes)
+project. Its original notice is retained in [LICENSE](LICENSE):
+
+```text
+Copyright (c) 2026 Breinstein Informatiemanagement B.V.
+```
+
+The original MIT permission and warranty terms remain unchanged. The additional
+copyright for changes in `terrio-processes` names Minnert Wijnands (Gouwe-Gozer).
+The origin acknowledgement does not imply involvement in this project's
+maintenance.
 
 ## pygeoapi 0.24.0
 
@@ -31,12 +48,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
-## Reused application infrastructure
-
-Derived from the BKN terrain-processes application. Its original copyright
-and MIT notice remain in LICENSE for reused portions. This attribution does
-not imply involvement in the new Terrio project.
 
 ## Terrio 0.4.2
 
