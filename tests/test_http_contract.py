@@ -128,8 +128,8 @@ def test_discovery_links_descriptions_and_capabilities_agree(http_client):
     assert landing.status_code == 200
     assert landing.get_json()["title"] == "Terrio Processes API"
     listing = http_client.get("/processes?f=json").get_json()
-    assert [process["id"] for process in listing["processes"]] == ["terrio-info"]
-    process = listing["processes"][0]
+    assert {process["id"] for process in listing["processes"]} == {"terrio-info", "terrio-warp"}
+    process = next(process for process in listing["processes"] if process["id"] == "terrio-info")
     description_link = next(link for link in process["links"] if link["type"] == "application/json")
     parsed = urlsplit(description_link["href"])
     response = http_client.get(f"{parsed.path}?{parsed.query}")

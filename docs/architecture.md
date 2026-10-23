@@ -1,12 +1,13 @@
 # Architecture
 
 The official pygeoapi package supplies discovery, configuration, Flask routes
-and process registration. `terrio_processes.processes.info.TerrioInfoProcessor`
-validates the `source` identifier and output options, then calls the plain
-Python adapter in `engine.py`. The adapter directly invokes
-`terrio.info(path, stats=True)`; no CLI, shell or secondary backend is involved.
+and process registration. `TerrioInfoProcessor` and `TerrioWarpProcessor`
+validate each operation's inputs and output options, then call the plain
+Python adapter in `engine.py`. It invokes `terrio.info` and `terrio.warp`
+directly; no CLI, shell or secondary backend is involved.
 
-`contracts/info.py` describes the bounded operation and its JSON schemas. The
+`contracts/info.py` and `contracts/warp.py` describe the independent operations.
+`datasets.py` is their shared operator-owned input registry. The
 GeoTIFF ships inside the Python package. `demo-dem` resolves through a fixed
 operator-owned registry; a client never controls a filesystem path or URL.
 The raster is Float32, one band, four columns by three rows, EPSG:28992,
@@ -17,8 +18,12 @@ Its origin is (155000, 463000). Tests verify its actual Terrio output.
 interface. Each processor owns its optional `format_result` method, so shared
 code passes through native values and media types and delegates document
 encoding. The manager preserves typed client/server exceptions and sanitizes
-unexpected failures. It does not implement output storage, async jobs,
-reference transmission or multipart responses.
+unexpected failures. A processor can return a `ProcessResponse` to select its
+media type, headers and HTTP representation. The Flask boundary removes a
+private status marker to correct pygeoapi 0.24.0's fixed successful HTTP 200 to
+204 for raw/reference execution. This is covered by actual HTTP tests; the
+marker is never sent to clients. The manager assumes no particular output IDs
+or count, and does not implement storage, async jobs or multipart responses.
 
 The registered execution routes have a small Flask boundary guard because
 pygeoapi 0.24.0 still dereferences malformed execute documents without checking
@@ -31,9 +36,15 @@ corrects wrong discovery schemas and missing limits/404s, and asks each process
 for its execution contract. It rejects untested pygeoapi upgrades. The container
 uses a short owned entrypoint; no upstream source or shell script is edited.
 
-Before adding `terrio-warp`, choose bounded result storage, an external HTTP
-retrieval URL, retention/cleanup, resource limits, and the supported transmission
-modes. A document/reference result must contain a retrievable `href` and media
-type under the output identifier. Raw/reference, if offered, requires an empty
-204 response with `Link` headers. Binary value results need their declared
-media type. Input `href` support needs a separate safe fetch/validation design.
+`storage.py` handles bounded local outputs independently of OGC jobs. It writes
+each raster in a private workspace, atomically publishes a UUID-named file and
+serializes writers with a Linux file lock. The result route only reads regular,
+unexpired files and refuses symlinks and invalid identifiers. Download URLs use
+the configured canonical API base URL. Storage and lifecycle details are in
+[results.md](results.md).
+
+Warp output dimensions are pinned to the source grid to bound allocation;
+resolution follows the reprojected extent. Clients select only an approved
+dataset, one of three target CRSs and nearest/bilinear resampling. Enlarging the
+input catalogue requires operator review and tests. External input `href`
+support needs a separate safe fetch/validation design.

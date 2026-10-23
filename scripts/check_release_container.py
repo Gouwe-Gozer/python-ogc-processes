@@ -54,9 +54,15 @@ def validate_release_container(inspection: dict) -> None:
         raise RuntimeError("Release container root filesystem must be read-only")
     print("PASS release container root filesystem is read-only")
 
-    if inspection.get("Mounts"):
-        raise RuntimeError("Release container must not rely on host bind mounts or persistent volumes")
-    print("PASS release container has no host mounts")
+    mounts = inspection.get("Mounts", [])
+    if (
+        len(mounts) != 1
+        or mounts[0].get("Type") != "volume"
+        or mounts[0].get("Destination") != "/var/lib/terrio/results"
+        or mounts[0].get("RW") is not True
+    ):
+        raise RuntimeError("Release container must have only its writable named result volume")
+    print("PASS release container has only its dedicated named result volume, without host bind mounts")
 
     dropped_capabilities = set(host_config.get("CapDrop") or [])
     if "ALL" not in dropped_capabilities:

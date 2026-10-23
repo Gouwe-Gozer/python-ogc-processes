@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "source": "demo-dem",
+    "target_crs": "EPSG:3857",
+    "resampling": "nearest"
+  },
+  "outputs": {"result": {"transmissionMode": "reference"}},
+  "response": "document"
+}

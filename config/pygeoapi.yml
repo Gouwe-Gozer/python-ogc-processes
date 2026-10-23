@@ -26,8 +26,7 @@ logging:
 metadata:
   identification:
     title: Terrio Processes API
-    description: Bounded synchronous raster operations powered by Terrio. The initial
-      terrio-info process inspects a bundled GeoTIFF.
+    description: Bounded synchronous raster information and reprojection powered by Terrio.
     keywords:
     - Terrio
     - raster
@@ -49,3 +48,7 @@ resources:
     type: process
     processor:
       name: terrio_processes.processes.info.TerrioInfoProcessor
+  terrio-warp:
+    type: process
+    processor:
+      name: terrio_processes.processes.warp.TerrioWarpProcessor

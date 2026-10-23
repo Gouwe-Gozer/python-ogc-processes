@@ -1,10 +1,7 @@
 """Contract verified against Terrio 0.4.2's raster information response."""
 
-from pathlib import Path
-
 from terrio_processes import __version__
-
-DATASETS = {"demo-dem": Path(__file__).resolve().parents[1] / "data" / "demo-dem.tif"}
+from terrio_processes.datasets import DATASETS
 
 
 def _numbers(length):

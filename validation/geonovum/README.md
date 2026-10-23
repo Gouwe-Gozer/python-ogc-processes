@@ -5,13 +5,17 @@ pygeoapi 0.24.0 and Terrio 0.4.2. `@geonovum/ogc-checker` **1.2.0** used the
 OGC API – Processes **1.0.0** profile. This checks OpenAPI statically; it does
 not execute Terrio or certify conformance.
 
-The run completed with **four error diagnostics**, the same rule codes,
-messages and paths as the predecessor apart from the process rename:
+The latest run, including `terrio-warp`, completed with **five error diagnostics**:
 
 - `/req/core/job`: no `/jobs/{jobID}` resource;
 - `/req/core/job-results`: no `/jobs/{jobID}/results` resource;
-- `/req/core/process-execute-success-async`: no asynchronous 201 response;
+- `/req/core/process-execute-success-async`: no asynchronous 201 response for
+  each of the two public synchronous processes (two diagnostics);
 - `/req/job-list/job-list-op`: no `/jobs` resource.
+
+The warp milestone adds only the expected asynchronous-201 diagnostic for
+`/processes/terrio-warp/execution`; the four info-milestone diagnostics remain
+unchanged. No other static diagnostics changed.
 
 These are recorded limitations of the bounded synchronous service. Its public
 contract does not promise async jobs or Job List conformance. No optional
@@ -42,7 +46,7 @@ used a disposable container, without installing Node/npm on the host:
 docker run --rm --network host node:24-alpine \
   npx --yes @geonovum/ogc-checker@1.2.0 validate \
   --standard ogc-api-processes --version 1.0.0 \
-  --input 'http://127.0.0.1:5002/openapi?f=json' --format json --fail-on none
+  --input 'http://127.0.0.1:5003/openapi?f=json' --format json --fail-on none
 ```
 
 The JSON report was normalized by the same `normalize_report` function used by

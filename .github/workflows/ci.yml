@@ -107,6 +107,22 @@ jobs:
       - name: Check API discovery resources
         run: uv run python scripts/smoke_discovery.py --base-url http://127.0.0.1:5001 --wait-seconds 60
 
+      - name: Execute warp and validate all output modes
+        run: uv run python scripts/smoke_warp.py --base-url http://127.0.0.1:5001 --save-reference /tmp/warp-reference.txt
+
+      - name: Check reference downloads from a separate client container
+        run: |
+          docker run --rm --network host \
+            --entrypoint /venv/bin/python3 \
+            --mount type=bind,src="${{ github.workspace }}/scripts/smoke_warp.py",dst=/tmp/smoke_warp.py,readonly \
+            terrio-processes:0.1.0 /tmp/smoke_warp.py --base-url http://127.0.0.1:5001
+
+      - name: Verify results survive a service restart
+        run: |
+          docker compose --file compose.release.yml restart api
+          uv run python scripts/smoke_discovery.py --base-url http://127.0.0.1:5001 --wait-seconds 60
+          uv run python scripts/smoke_warp.py --check-saved-reference /tmp/warp-reference.txt
+
       - name: Check release-container isolation
         run: uv run python scripts/check_release_container.py
 

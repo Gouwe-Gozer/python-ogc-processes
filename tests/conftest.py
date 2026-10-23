@@ -28,6 +28,7 @@ def app(service_config, tmp_path_factory):
     with pytest.MonkeyPatch.context() as environment:
         environment.setenv("PYGEOAPI_CONFIG", str(config_path))
         environment.setenv("PYGEOAPI_OPENAPI", str(openapi_path))
+        environment.setenv("TERRIO_OUTPUT_DIR", str(temporary_directory / "results"))
         from terrio_processes.app import APP
 
         APP.config["TESTING"] = True
@@ -46,7 +47,13 @@ def http_server(app):
     server = make_server("127.0.0.1", 0, app)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
-    yield f"http://127.0.0.1:{server.server_port}"
+    url = f"http://127.0.0.1:{server.server_port}"
+    from pygeoapi.flask_app import api_
+
+    previous_url = api_.manager.result_base_url
+    api_.manager.result_base_url = url
+    yield url
+    api_.manager.result_base_url = previous_url
     server.shutdown()
     server.server_close()
     thread.join(timeout=5)

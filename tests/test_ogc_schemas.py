@@ -39,6 +39,7 @@ def validate_official(document, name):
         ("/conformance", "confClasses.yaml"),
         ("/processes", "processList.yaml"),
         ("/processes/terrio-info", "process.yaml"),
+        ("/processes/terrio-warp", "process.yaml"),
     ],
 )
 def test_discovery_matches_official_schemas(http_client, path, schema):
@@ -66,3 +67,30 @@ def test_boundary_guard_is_required_by_pinned_upstream(app, http_client, monkeyp
     monkeypatch.setitem(app.before_request_funcs, None, [])
     with pytest.raises(AttributeError):
         http_client.post("/processes/terrio-info/execution", json=[])
+
+
+def test_warp_reference_matches_official_execute_and_results_schemas(http_client):
+    payload = {
+        "inputs": {"source": "demo-dem", "target_crs": "EPSG:4326"},
+        "response": "document",
+        "outputs": {"result": {"transmissionMode": "reference"}},
+    }
+    validate_official(payload, "execute.yaml")
+    response = http_client.post("/processes/terrio-warp/execution", json=payload)
+    assert response.status_code == 200
+    validate_official(response.get_json(), "results.yaml")
+
+
+def test_official_binary_schema_has_overlapping_string_branches():
+    # The unchanged official oneOf includes both an unrestricted string and
+    # a byte-formatted string. Valid base64 therefore matches both, even with
+    # format checking. Keep the correct base64 representation and record this
+    # schema limitation instead of distorting binary output to pass a validator.
+    value = "SUkrAA=="
+    binary = Draft4Validator({"$ref": SCHEMA_BASE + "binaryInputValue.yaml"}, registry=REGISTRY, format_checker=FORMATS)
+    assert binary.is_valid(value)
+    assert Draft4Validator({"type": "string"}).is_valid(value)
+    no_object = Draft4Validator(
+        {"$ref": SCHEMA_BASE + "inputValueNoObject.yaml"}, registry=REGISTRY, format_checker=FORMATS
+    )
+    assert not no_object.is_valid(value)

@@ -2,6 +2,12 @@
 
 ## 0.1.0 — Unreleased
 
+- Add `terrio-warp` for approved local GeoTIFFs, three target CRSs and
+  nearest/bilinear resampling, with native, base64 and reference responses.
+- Persist bounded results in a named volume with configurable 24-hour expiry,
+  atomic publication, serialized writers, cleanup and HTTP downloads.
+- Extend HTTP/schema/storage tests and CI with independent-container downloads,
+  restart persistence and dedicated-volume isolation checks.
 - Document the `terrio-processes` identity, current implementation and historical
   validation separately, with explicit MIT origin attribution and maintainer
   copyright for Minnert Wijnands (Gouwe-Gozer).

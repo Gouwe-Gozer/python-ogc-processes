@@ -67,6 +67,7 @@ def generate_openapi(config):
         execution["requestBody"] = override["requestBody"]
         execution["responses"].update(override["responses"])
         execution["responses"]["400"] = schema_response("Invalid execution request", "exception.yaml")
+        execution["responses"]["413"] = schema_response("Request body exceeds 16 KiB", "exception.yaml")
         if processor.metadata["jobControlOptions"] == ["sync-execute"]:
             execution["responses"].pop("201", None)
             execution["parameters"] = [
@@ -77,6 +78,32 @@ def generate_openapi(config):
                     "schema": {"type": "string", "enum": ["wait", "respond-async"]},
                 }
             ]
+    if "terrio-warp" in config["resources"]:
+        # This is application storage delivery, separate from OGC job management.
+        paths["/results/{result_id}/output.tif"] = {
+            "get": {
+                "summary": "Download an unexpired raster result",
+                "operationId": "downloadRasterResult",
+                "tags": ["terrio-warp"],
+                "parameters": [
+                    {
+                        "name": "result_id",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "GeoTIFF, available until the Expires time (24 hours by default)",
+                        "content": {"image/tiff": {"schema": {"type": "string", "format": "binary"}}},
+                        "headers": {"Expires": {"schema": {"type": "string"}, "description": "Result expiration time"}},
+                    },
+                    "404": schema_response("Result missing, invalid or expired", "exception.yaml"),
+                    "500": schema_response("Result could not be read", "exception.yaml"),
+                },
+            }
+        }
     return document
 
 
