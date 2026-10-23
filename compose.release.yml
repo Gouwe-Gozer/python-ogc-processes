@@ -3,17 +3,17 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    image: terrio-processes:0.1.0
+    image: geo-processes:0.1.0
     ports:
       - "${API_PORT:-5001}:8080"
     environment:
       PYGEOAPI_SERVER_URL: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
-      TERRIO_OUTPUT_DIR: /var/lib/terrio/results
-      TERRIO_RESULT_RETENTION_SECONDS: ${TERRIO_RESULT_RETENTION_SECONDS:-86400}
-      TERRIO_RESULT_MAX_BYTES: ${TERRIO_RESULT_MAX_BYTES:-67108864}
-      TERRIO_RESULT_MAX_COUNT: ${TERRIO_RESULT_MAX_COUNT:-256}
+      GEO_OUTPUT_DIR: /var/lib/geo/results
+      GEO_RESULT_RETENTION_SECONDS: ${GEO_RESULT_RETENTION_SECONDS:-86400}
+      GEO_RESULT_MAX_BYTES: ${GEO_RESULT_MAX_BYTES:-67108864}
+      GEO_RESULT_MAX_COUNT: ${GEO_RESULT_MAX_COUNT:-256}
     volumes:
-      - results:/var/lib/terrio/results
+      - results:/var/lib/geo/results
     mem_limit: 512m
     cpus: 1.0
     pids_limit: 128

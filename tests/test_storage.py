@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from terrio_processes.storage import (
+from geo_processes.storage import (
     MAX_RESULT_BYTES,
     ResultNotFoundError,
     ResultStore,
@@ -148,10 +148,10 @@ def test_invalid_storage_bounds_fail_configuration(tmp_path, settings):
 
 
 def test_environment_settings(monkeypatch, tmp_path):
-    monkeypatch.setenv("TERRIO_OUTPUT_DIR", str(tmp_path))
-    monkeypatch.setenv("TERRIO_RESULT_RETENTION_SECONDS", "123")
-    monkeypatch.setenv("TERRIO_RESULT_MAX_BYTES", "456")
-    monkeypatch.setenv("TERRIO_RESULT_MAX_COUNT", "7")
+    monkeypatch.setenv("GEO_OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setenv("GEO_RESULT_RETENTION_SECONDS", "123")
+    monkeypatch.setenv("GEO_RESULT_MAX_BYTES", "456")
+    monkeypatch.setenv("GEO_RESULT_MAX_COUNT", "7")
     assert ResultStore.from_environment() == ResultStore(tmp_path, 123, 456, 7)
 
 
@@ -161,7 +161,7 @@ def test_io_failure_is_not_misreported_as_a_missing_result(tmp_path, monkeypatch
     def denied(*args, **kwargs):
         raise PermissionError(errno.EACCES, "/secret/internal/path")
 
-    monkeypatch.setattr("terrio_processes.storage.os.open", denied)
+    monkeypatch.setattr("geo_processes.storage.os.open", denied)
     with pytest.raises(ResultStoreError, match="result could not be read") as error:
         ResultStore(tmp_path).read("a" * 32)
     assert not isinstance(error.value, ResultNotFoundError)

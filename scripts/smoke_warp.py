@@ -3,12 +3,11 @@
 import argparse
 import base64
 import json
-import tempfile
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
-import terrio
+from rasterio.io import MemoryFile
 
 
 def _read(url, payload=None):
@@ -26,14 +25,11 @@ def _read(url, payload=None):
 
 
 def _inspect(data):
-    with tempfile.TemporaryDirectory() as directory:
-        path = Path(directory) / "download.tif"
-        path.write_bytes(data)
-        info = terrio.info(str(path), stats=True)
-    if info["crs"]["epsg"] != 4326 or info["size"] != [4, 3] or info["band_count"] != 1:
-        raise RuntimeError("downloaded GeoTIFF has unexpected CRS or dimensions")
-    if info["bands"][0]["statistics"]["valid_count"] == 0:
-        raise RuntimeError("downloaded GeoTIFF has no valid samples")
+    with MemoryFile(data) as memory, memory.open() as raster:
+        if raster.crs.to_epsg() != 4326 or raster.shape != (3, 4) or raster.count != 1:
+            raise RuntimeError("downloaded GeoTIFF has unexpected CRS or dimensions")
+        if raster.read(1, masked=True).count() == 0:
+            raise RuntimeError("downloaded GeoTIFF has no valid samples")
 
 
 def check_reference(url):
@@ -55,8 +51,8 @@ def run(base_url, save_reference=None):
                 "response": mode,
                 "outputs": {"result": {"transmissionMode": transmission}},
             }
-            status, headers, data = _read(f"{base_url.rstrip('/')}/processes/terrio-warp/execution", payload)
-            if headers.get("Location") or headers.get("Preference-Applied") or headers.get("X-Terrio-Internal-Status"):
+            status, headers, data = _read(f"{base_url.rstrip('/')}/processes/raster-warp/execution", payload)
+            if headers.get("Location") or headers.get("Preference-Applied") or headers.get("X-Geo-Internal-Status"):
                 raise RuntimeError("synchronous execution leaked a job or private transport header")
             if mode == "raw" and transmission == "reference":
                 if status != 204 or data:

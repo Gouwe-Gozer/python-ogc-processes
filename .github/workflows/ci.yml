@@ -44,7 +44,7 @@ jobs:
         run: |
           uv run pygeoapi config validate \
             --config config/pygeoapi.yml
-          uv run python -m terrio_processes.openapi \
+          uv run python -m geo_processes.openapi \
             --config config/pygeoapi.yml \
             --output /tmp/public-openapi.yml
           uv run pygeoapi openapi validate \
@@ -64,7 +64,7 @@ jobs:
             /tmp/integration-openapi.yml
 
       - name: Test with coverage
-        run: uv run pytest --cov=terrio_processes --cov-report=term-missing --cov-fail-under=70
+        run: uv run pytest --cov=geo_processes --cov-report=term-missing --cov-fail-under=70
 
   api-validation:
     name: API runtime and conformance
@@ -115,7 +115,7 @@ jobs:
           docker run --rm --network host \
             --entrypoint /venv/bin/python3 \
             --mount type=bind,src="${{ github.workspace }}/scripts/smoke_warp.py",dst=/tmp/smoke_warp.py,readonly \
-            terrio-processes:0.1.0 /tmp/smoke_warp.py --base-url http://127.0.0.1:5001
+            geo-processes:0.1.0 /tmp/smoke_warp.py --base-url http://127.0.0.1:5001
 
       - name: Verify results survive a service restart
         run: |

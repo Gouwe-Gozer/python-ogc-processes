@@ -1,4 +1,4 @@
-"""HTTP contract tests through real Flask routes, manager, processor and Terrio."""
+"""HTTP contract tests through real Flask routes, manager, processor and Rasterio."""
 
 import json
 import urllib.request
@@ -7,10 +7,10 @@ from urllib.parse import urlsplit
 import pytest
 from jsonschema import Draft202012Validator
 
-from terrio_processes import engine
-from terrio_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA
+from geo_processes import engine
+from geo_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA
 
-EXECUTION_PATH = "/processes/terrio-info/execution"
+EXECUTION_PATH = "/processes/raster-info/execution"
 VALID_INPUTS = {"source": "demo-dem"}
 
 
@@ -81,7 +81,7 @@ def test_execution_defaults_and_explicit_options(http_client, response_mode, out
 )
 def test_malformed_or_unsupported_requests_are_controlled_errors(http_client, monkeypatch, document):
     def must_not_execute(*args, **kwargs):
-        pytest.fail("Terrio must not run for an invalid execution request")
+        pytest.fail("Rasterio must not run for an invalid execution request")
 
     monkeypatch.setattr(engine, "raster_info", must_not_execute)
     assert not Draft202012Validator(EXECUTE_SCHEMA).is_valid(document)
@@ -106,7 +106,7 @@ def test_engine_failure_is_a_sanitized_server_error(http_client, monkeypatch):
     def fail(*args, **kwargs):
         raise OSError("/private/server/path/secret.tif")
 
-    monkeypatch.setattr(engine.terrio, "info", fail)
+    monkeypatch.setattr(engine.rasterio, "open", fail)
     response = http_client.post(EXECUTION_PATH, json={"inputs": VALID_INPUTS})
     assert response.status_code == 500
     assert response.is_json
@@ -126,10 +126,10 @@ def test_preferences_remain_synchronous(http_client, preference):
 def test_discovery_links_descriptions_and_capabilities_agree(http_client):
     landing = http_client.get("/?f=json")
     assert landing.status_code == 200
-    assert landing.get_json()["title"] == "Terrio Processes API"
+    assert landing.get_json()["title"] == "Geo Processes API"
     listing = http_client.get("/processes?f=json").get_json()
-    assert {process["id"] for process in listing["processes"]} == {"terrio-info", "terrio-warp"}
-    process = next(process for process in listing["processes"] if process["id"] == "terrio-info")
+    assert {process["id"] for process in listing["processes"]} == {"raster-info", "raster-warp"}
+    process = next(process for process in listing["processes"] if process["id"] == "raster-info")
     description_link = next(link for link in process["links"] if link["type"] == "application/json")
     parsed = urlsplit(description_link["href"])
     response = http_client.get(f"{parsed.path}?{parsed.query}")

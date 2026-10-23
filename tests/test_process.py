@@ -3,11 +3,11 @@
 import pytest
 from jsonschema import Draft202012Validator
 
-from terrio_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA, PROCESS_METADATA
-from terrio_processes.manager import InvalidExecutionRequestError
-from terrio_processes.processes.info import TerrioInfoProcessor
+from geo_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA, PROCESS_METADATA
+from geo_processes.manager import InvalidExecutionRequestError
+from geo_processes.processes.info import RasterInfoProcessor
 
-DEFINITION = {"name": "terrio_processes.processes.info.TerrioInfoProcessor"}
+DEFINITION = {"name": "geo_processes.processes.info.RasterInfoProcessor"}
 
 
 @pytest.mark.parametrize("schema", [INFO_SCHEMA, EXECUTE_SCHEMA, DOCUMENT_SCHEMA])
@@ -16,14 +16,14 @@ def test_published_schema_is_valid(schema):
 
 
 def test_metadata_is_independent_of_upstream_mutation():
-    processor = TerrioInfoProcessor(DEFINITION)
+    processor = RasterInfoProcessor(DEFINITION)
     processor.metadata["outputs"]["info"]["schema"].pop("contentMediaType")
     assert PROCESS_METADATA["outputs"]["info"]["schema"]["contentMediaType"] == "application/json"
-    assert TerrioInfoProcessor(DEFINITION).supports_outputs
+    assert RasterInfoProcessor(DEFINITION).supports_outputs
 
 
-def test_processor_calls_real_terrio():
-    processor = TerrioInfoProcessor(DEFINITION)
+def test_processor_calls_real_rasterio():
+    processor = RasterInfoProcessor(DEFINITION)
     media_type, output = processor.execute({"source": "demo-dem"})
     assert media_type == "application/json"
     Draft202012Validator(INFO_SCHEMA).validate(output)
@@ -35,4 +35,4 @@ def test_processor_calls_real_terrio():
 @pytest.mark.parametrize("inputs", [None, [], {}, {"source": False}, {"source": "demo-dem", "extra": 1}])
 def test_invalid_inputs_fail_when_called_directly(inputs):
     with pytest.raises(InvalidExecutionRequestError):
-        TerrioInfoProcessor(DEFINITION).execute(inputs)
+        RasterInfoProcessor(DEFINITION).execute(inputs)

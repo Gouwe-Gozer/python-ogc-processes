@@ -1,8 +1,8 @@
 # Development
 
 Use user-installed `uv` and a project-local `.venv`. Python 3.12 remains the
-tested interpreter: the official pygeoapi 0.24.0 image uses 3.12, and both pinned
-packages work there. Changing Python is a separate compatibility decision.
+tested interpreter: the official pygeoapi 0.24.0 image uses 3.12, and the pinned
+application libraries work there. Changing Python is a separate compatibility decision.
 No host system packages or global Python installs are needed.
 
 ```bash
@@ -10,7 +10,7 @@ uv sync --locked --all-groups
 uv run ruff format --check src tests scripts
 uv run ruff check src tests scripts
 uv run bandit -r src scripts -c pyproject.toml
-uv run pytest --cov=terrio_processes --cov-report=term-missing --cov-fail-under=70
+uv run pytest --cov=geo_processes --cov-report=term-missing --cov-fail-under=70
 ```
 
 Tests include real loopback HTTP requests and need permission to bind a local
@@ -24,7 +24,7 @@ Validate the public configuration and generated definition:
 
 ```bash
 uv run pygeoapi config validate --config config/pygeoapi.yml
-uv run python -m terrio_processes.openapi --output pygeoapi-openapi.yml
+uv run python -m geo_processes.openapi --output pygeoapi-openapi.yml
 uv run pygeoapi openapi validate pygeoapi-openapi.yml
 ```
 
@@ -36,7 +36,7 @@ The compatibility tests explicitly compare that output with the runtime contract
 
 The [roadmap](roadmap.md) prioritizes processing users' own rasters. Input
 references, uploads and new operations remain planned work, not features of the
-current demo. Implement the approved [Rasterio pivot](rasterio-pivot.md) first.
+current demo. The completed [Rasterio pivot](rasterio-pivot.md) is their baseline.
 Keep each operation's processor and contract separate, use small Python adapters,
 and reuse the input/result lifecycle where appropriate.
 Follow the [OGC review guide](validation.md#ogc-review-guide) for descriptions,
@@ -60,7 +60,7 @@ uv run python scripts/smoke_warp.py --check-saved-reference /tmp/warp-reference.
 docker compose --file compose.release.yml down --remove-orphans
 ```
 
-The discovery test executes `terrio-info`; the warp test exercises all four
+The discovery test executes `raster-info`; the warp test exercises all four
 response/transmission combinations and opens the resulting GeoTIFFs. The saved
 reference verifies persistence across a service restart. `compose.yml` mounts
 source and configuration read-only for development; restart after changing them.

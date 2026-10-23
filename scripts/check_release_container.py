@@ -58,7 +58,7 @@ def validate_release_container(inspection: dict) -> None:
     if (
         len(mounts) != 1
         or mounts[0].get("Type") != "volume"
-        or mounts[0].get("Destination") != "/var/lib/terrio/results"
+        or mounts[0].get("Destination") != "/var/lib/geo/results"
         or mounts[0].get("RW") is not True
     ):
         raise RuntimeError("Release container must have only its writable named result volume")

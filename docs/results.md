@@ -1,6 +1,6 @@
 # Raster results and lifecycle
 
-`terrio-warp` writes approved local inputs to GeoTIFF. All executions create a
+`raster-warp` writes approved local inputs to GeoTIFF. All executions create a
 stored result, including requests that return the raster by value. The public
 output identifier is `result`. No persistent OGC job resource is created.
 
@@ -28,7 +28,7 @@ expired IDs return JSON 404. Internal storage failures return sanitized JSON 500
 ## Storage and expiry
 
 Development and release Compose mount the named volume `results` at
-`/var/lib/terrio/results`. New volumes inherit UID/GID 10001 ownership from the
+`/var/lib/geo/results`. New volumes inherit UID/GID 10001 ownership from the
 image. No runtime root process is needed, and the rest of the release root
 filesystem remains read-only. Files survive container restart and recreation;
 a normal Compose `down` retains the volume. `down --volumes` deletes all results.
@@ -46,17 +46,17 @@ is no background job system. To clean the running release volume explicitly:
 
 ```bash
 docker compose --file compose.release.yml exec -T api \
-  /venv/bin/python3 -m terrio_processes.storage cleanup
+  /venv/bin/python3 -m geo_processes.storage cleanup
 ```
 
 For locally generated files outside Docker, use:
 
 ```bash
-uv run python -m terrio_processes.storage cleanup
+uv run python -m geo_processes.storage cleanup
 ```
 
 Local Python defaults to `runtime-data/results` under the current repository;
-set `TERRIO_OUTPUT_DIR` when using another approved working directory. Storage
+set `GEO_OUTPUT_DIR` when using another approved working directory. Storage
 locking uses Linux `flock`; run locally on Linux or use Docker.
 
 ## Bounds and configuration
@@ -65,11 +65,11 @@ Compose passes these settings from the environment or `.env`:
 
 | Variable | Default | Accepted range |
 | --- | --- | --- |
-| `TERRIO_RESULT_RETENTION_SECONDS` | `86400` | 1 second to 7 days |
-| `TERRIO_RESULT_MAX_BYTES` | `67108864` (64 MiB) | 1 byte to 1 GiB |
-| `TERRIO_RESULT_MAX_COUNT` | `256` | 1 to 10,000 results |
+| `GEO_RESULT_RETENTION_SECONDS` | `86400` | 1 second to 7 days |
+| `GEO_RESULT_MAX_BYTES` | `67108864` (64 MiB) | 1 byte to 1 GiB |
+| `GEO_RESULT_MAX_COUNT` | `256` | 1 to 10,000 results |
 
-Compose fixes `TERRIO_OUTPUT_DIR` to the volume mount. The one active writer
+Compose fixes `GEO_OUTPUT_DIR` to the volume mount. The one active writer
 uses an additional staging file; the byte quota and 16 MiB output limit are
 checked after writing and before publication. These are application publication
 bounds, not filesystem quotas for staging or files an operator places in the
@@ -85,7 +85,7 @@ workspaces left by interrupted workers. Readers refuse symlinks, special files
 and invalid IDs; publication is serialized across the two Gunicorn workers
 sharing this local volume. Downloads can proceed during another warp.
 
-Input rasters are limited to 16 MiB and 1,048,576 samples including bands. Warp
+Both info and warp inputs are limited to 16 MiB and 1,048,576 samples including bands. Warp
 retains source width and height, bounding the target sample count. Requests are
 limited to 16 KiB; clients cannot choose resolution, dimensions or extents.
 The release uses two synchronous Gunicorn workers with a 30-second worker

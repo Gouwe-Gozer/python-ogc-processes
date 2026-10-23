@@ -14,7 +14,7 @@ def inspection():
             "SecurityOpt": ["no-new-privileges:true"],
             "Tmpfs": {"/tmp": "rw,size=64m"},
         },
-        "Mounts": [{"Type": "volume", "Name": "test_results", "Destination": "/var/lib/terrio/results", "RW": True}],
+        "Mounts": [{"Type": "volume", "Name": "test_results", "Destination": "/var/lib/geo/results", "RW": True}],
     }
 
 
@@ -26,8 +26,8 @@ def test_expected_named_volume_is_allowed():
     "mounts",
     [
         [],
-        [{"Type": "bind", "Destination": "/var/lib/terrio/results", "RW": True}],
-        [{"Type": "volume", "Destination": "/var/lib/terrio/results", "RW": False}],
+        [{"Type": "bind", "Destination": "/var/lib/geo/results", "RW": True}],
+        [{"Type": "volume", "Destination": "/var/lib/geo/results", "RW": False}],
         [{"Type": "volume", "Destination": "/other", "RW": True}],
         inspection()["Mounts"] * 2,
     ],

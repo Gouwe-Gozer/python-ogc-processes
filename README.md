@@ -1,13 +1,8 @@
-# terrio-processes
+# geo-processes
 
-**Direction update:** the approved next change renames this project to
-**geo-processes** and replaces Terrio with Rasterio. See the
-[pivot decision](docs/rasterio-pivot.md) and [roadmap](docs/roadmap.md).
-The commands and endpoints below describe the current, pre-migration runtime.
-
-A small OGC API – Processes service built on pygeoapi and Terrio's Rust-backed
-Python binding. **`terrio-info`** inspects an approved local GeoTIFF;
-**`terrio-warp`** reprojects it and delivers a GeoTIFF by value or download
+A small OGC API – Processes service built on pygeoapi and Rasterio/GDAL.
+**`raster-info`** inspects an approved local GeoTIFF;
+**`raster-warp`** reprojects it and delivers a GeoTIFF by value or download
 reference. Both operations run offline and synchronously.
 
 The intended service lets **users submit their own rasters**. The bundled demo
@@ -22,7 +17,7 @@ uv sync --locked --all-groups
 docker compose up --build --detach
 ```
 
-Open <http://localhost:5001/processes/terrio-info?f=json> for the process
+Open <http://localhost:5001/processes/raster-info?f=json> for the process
 schema and <http://localhost:5001/openapi> for interactive API documentation.
 If port 5001 is occupied, set both variables when starting Compose:
 
@@ -33,19 +28,19 @@ API_PORT=5002 PYGEOAPI_SERVER_URL=http://localhost:5002 docker compose up --buil
 Inspect the demo raster (omitted `response` defaults to `raw`):
 
 ```bash
-curl --fail-with-body http://localhost:5001/processes/terrio-info/execution \
+curl --fail-with-body http://localhost:5001/processes/raster-info/execution \
   -H 'Content-Type: application/json' \
   --data '{"inputs":{"source":"demo-dem"}}'
 ```
 
-HTTP 200, `application/json`: the native Terrio dictionary, including
+HTTP 200, `application/json`: application-defined raster metadata, including
 `"size": [4, 3]`, `"band_count": 1`, EPSG:28992 and band statistics with
 minimum 1, maximum 12, mean 6.5 and 12 valid cells.
 
 Request an OGC results document:
 
 ```bash
-curl --fail-with-body http://localhost:5001/processes/terrio-info/execution \
+curl --fail-with-body http://localhost:5001/processes/raster-info/execution \
   -H 'Content-Type: application/json' \
   --data '{"inputs":{"source":"demo-dem"},"outputs":{"info":{"transmissionMode":"value"}},"response":"document"}'
 ```
@@ -66,7 +61,7 @@ transformed extent. For `demo-dem`, the output remains four columns by three row
 The default raw/value response is an actual GeoTIFF:
 
 ```bash
-curl --fail-with-body http://localhost:5001/processes/terrio-warp/execution \
+curl --fail-with-body http://localhost:5001/processes/raster-warp/execution \
   -H 'Content-Type: application/json' \
   --data '{"inputs":{"source":"demo-dem","target_crs":"EPSG:4326"}}' \
   --output warped.tif
@@ -75,7 +70,7 @@ curl --fail-with-body http://localhost:5001/processes/terrio-warp/execution \
 For a downloadable reference, explicitly request reference transmission:
 
 ```bash
-curl --fail-with-body http://localhost:5001/processes/terrio-warp/execution \
+curl --fail-with-body http://localhost:5001/processes/raster-warp/execution \
   -H 'Content-Type: application/json' \
   --data '{"inputs":{"source":"demo-dem","target_crs":"EPSG:4326","resampling":"nearest"},"outputs":{"result":{"transmissionMode":"reference"}},"response":"document"}'
 ```
@@ -107,15 +102,22 @@ for configuration, cleanup and limits.
 `source` is an inline string from the published dataset enum. Currently only
 `demo-dem` is accepted, mapped to a read-only, bundled 352-byte GeoTIFF.
 Paths, URLs, OGC input references, callbacks and async jobs are not accepted.
-`terrio-info` still offers only JSON value transmission; `terrio-warp` also
+`raster-info` still offers only JSON value transmission; `raster-warp` also
 offers GeoTIFF references. No runtime request contacts a remote data service.
 
 The adapter has no pygeoapi dependency. Each operation owns its process
 metadata, input validation and result representation. Shared request/manager
 code does not assume every future operation returns one JSON output.
 
-Pinned versions: **pygeoapi 0.24.0**, **Terrio 0.4.2**, Python **3.12**.
-Both dependencies run in the same interpreter in the Docker image.
+Pinned versions: **pygeoapi 0.24.0**, **Rasterio 1.4.3**, **NumPy 1.26.4**,
+Python **3.12**. These application versions match the Docker environment.
+The image and local Rasterio wheels can bundle different GDAL versions; both
+are validated. See the [metadata contract](docs/raster-info.md).
+
+This project was previously named `terrio-processes`. The
+[pivot decision](docs/rasterio-pivot.md) records the backend and naming change,
+including breaking API/configuration changes and preserving existing volumes.
+The GitHub repository retains its existing name until its owner renames it.
 
 See [development commands](docs/development.md), [architecture](docs/architecture.md),
 [OGC review guidance and validation limits](docs/validation.md),
@@ -130,7 +132,7 @@ certification. User inputs and additional operations are planned in the
 Maintained by **Minnert Wijnands (Gouwe-Gozer)** and licensed under the
 [MIT License](LICENSE).
 
-`terrio-processes` derives reusable pygeoapi integration, testing and deployment
+`geo-processes` derives reusable pygeoapi integration, testing and deployment
 infrastructure from the MIT-licensed
 [`bkn-terrain-processes`](https://github.com/Gouwe-Gozer/bkn-terrain-processes)
 project. The original copyright and MIT terms are preserved alongside the

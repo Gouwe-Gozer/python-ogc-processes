@@ -1,7 +1,7 @@
 FROM geopython/pygeoapi:0.24.0@sha256:a62895f2585ef1fcd1fc97ec35bf13177becc1334a622172a2c5c4d2145b8f0a
 
-LABEL org.opencontainers.image.title="Terrio Processes API" \
-      org.opencontainers.image.description="Bounded synchronous Terrio operations built on pygeoapi" \
+LABEL org.opencontainers.image.title="Geo Processes API" \
+      org.opencontainers.image.description="Bounded synchronous Rasterio operations built on pygeoapi" \
       org.opencontainers.image.version="0.1.0" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="Gouwe-Gozer" \
@@ -13,27 +13,27 @@ ENV CONTAINER_PORT=8080 \
     PYGEOAPI_OPENAPI=/tmp/pygeoapi.openapi.yml \
     PYGEOAPI_CONFIG=/pygeoapi/local.config.yml \
     PYTHONDONTWRITEBYTECODE=1 \
-    WSGI_APP=terrio_processes.app:APP
+    WSGI_APP=geo_processes.app:APP
 
 COPY config/pygeoapi.yml /pygeoapi/local.config.yml
-COPY src/terrio_processes /pygeoapi/terrio_processes
-COPY LICENSE THIRD_PARTY_NOTICES.md /licenses/terrio-processes/
+COPY src/geo_processes /pygeoapi/geo_processes
+COPY LICENSE THIRD_PARTY_NOTICES.md /licenses/geo-processes/
 
-COPY docker/entrypoint.sh /terrio-entrypoint.sh
+COPY docker/entrypoint.sh /geo-entrypoint.sh
 
 # Install into the interpreter actually used by Gunicorn. Fail if no wheel exists.
-RUN /venv/bin/python3 -m pip install --no-cache-dir --only-binary=:all: "terrio==0.4.2"
+RUN /venv/bin/python3 -m pip install --no-cache-dir --only-binary=:all: "numpy==1.26.4" "rasterio==1.4.3"
 
 RUN /venv/bin/python3 -c \
-    'import terrio, pygeoapi; from terrio_processes.processes.info import TerrioInfoProcessor'
+    'import rasterio, pygeoapi; from geo_processes.processes.info import RasterInfoProcessor'
 
 # Docker initializes a new named volume with this non-root ownership.
-RUN mkdir -p /var/lib/terrio/results \
-    && chown 10001:10001 /var/lib/terrio/results \
-    && chmod 0700 /var/lib/terrio/results
+RUN mkdir -p /var/lib/geo/results \
+    && chown 10001:10001 /var/lib/geo/results \
+    && chmod 0700 /var/lib/geo/results
 
 USER 10001:10001
 
 EXPOSE 8080
 
-ENTRYPOINT ["/bin/sh", "/terrio-entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/geo-entrypoint.sh"]

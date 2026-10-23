@@ -4,12 +4,12 @@ import pytest
 from pygeoapi.process.base import ProcessorExecuteError
 from pygeoapi.util import RequestedProcessExecutionMode
 
-from terrio_processes.manager import InvalidExecutionRequestError, OgcSynchronousManager
+from geo_processes.manager import InvalidExecutionRequestError, OgcSynchronousManager
 
 
 @pytest.fixture()
 def manager():
-    return OgcSynchronousManager({"name": "terrio_processes.manager.OgcSynchronousManager"})
+    return OgcSynchronousManager({"name": "geo_processes.manager.OgcSynchronousManager"})
 
 
 @pytest.mark.parametrize("response", [None, [], "unsupported"])

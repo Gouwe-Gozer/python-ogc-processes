@@ -1,6 +1,6 @@
 # Validation
 
-The deterministic suite covers the real Terrio binding and fixture, independent
+The deterministic suite covers the real Rasterio binding and fixture, independent
 adapter, schemas, discovery links, input/output validation, raw/document HTTP
 responses, defaults, unsupported options, sanitized failures and synchronous
 preferences. Loopback HTTP tests also retrieve and inspect generated GeoTIFFs.
@@ -12,7 +12,7 @@ that issued result URLs survive a server restart.
 
 Official OGC API – Processes 1.0 schemas are stored under `tests/schemas` for
 offline validation. They are schemas, not the example JSON documents linked in
-the handover. The output schema additionally describes the pinned Terrio result.
+the handover. The output schema additionally describes the pinned Rasterio result.
 
 The public service advertises the Processes 1.0 Core, JSON, OpenAPI 3.0 and OGC
 Process Description classes, plus upstream Common and HTML discovery classes.
@@ -31,7 +31,7 @@ diagnostics are recorded separately; they do not justify inventing unimplemented
 capabilities. See [its baseline](../validation/geonovum/README.md).
 The inherited CITE/TEAM Engine echo fixture and historical reports remain for
 future validation work. Those reports tested the predecessor service and are
-**not Terrio validation evidence**; no new TEAM Engine run is claimed.
+**not Rasterio validation evidence**; no new TEAM Engine run is claimed.
 
 The normative basis is [OGC Processes 1.0, sections 7.10–7.11 and Annex A](https://docs.ogc.org/is/18-062r2/18-062r2.html),
 especially requirements 25–28, 30 and 32 for synchronous mode and result shapes.
@@ -47,13 +47,13 @@ matrix. The [roadmap](roadmap.md) records the user-raster goal and future scope.
 | Review area | Standard pointer | Current evidence or remaining work |
 | --- | --- | --- |
 | Discovery and claims | Sections 7.4, 7.9–7.10 | [HTTP tests](../tests/test_http_contract.py), [official-schema tests](../tests/test_ogc_schemas.py); claims still need a full audit |
-| Per-operation descriptions | Section 8 | [Contracts](../src/terrio_processes/contracts/) and [OpenAPI tests](../tests/test_openapi_patch.py) |
+| Per-operation descriptions | Section 8 | [Contracts](../src/geo_processes/contracts/) and [OpenAPI tests](../tests/test_openapi_patch.py) |
 | Input references and validation | Section 7.11.2, requirements 18 and 24 | Inline dataset IDs only; reference resolution is future work |
 | Execution preferences/defaults | Section 7.11.2, requirements 25–27 | [Info HTTP tests](../tests/test_http_contract.py) and [warp tests](../tests/test_warp.py) |
 | Synchronous results | Section 7.11.4, requirements 28, 30 and 32 | Four single-output warp combinations; [result lifecycle](results.md) |
 | Multiple raw outputs | Section 7.11.4, requirements 29 and 31 | Multipart representations not implemented |
 | Job resources | Sections 7.12–7.13 | Not implemented; see the [checker baseline](../validation/geonovum/README.md) |
-| OpenAPI and exceptions | Section 10 | [Generator](../src/terrio_processes/openapi.py), schema/HTTP tests and [development checks](development.md) |
+| OpenAPI and exceptions | Section 10 | [Generator](../src/geo_processes/openapi.py), schema/HTTP tests and [development checks](development.md) |
 | Conformance assessment | [Annex A][abstract-tests] | Partial local evidence; no current-service certification claim |
 
 For each new operation or input route:
@@ -80,9 +80,8 @@ The custom `/results/<id>/output.tif` download is an output reference target;
 it is not an implementation of `/jobs/{jobID}/results`. A future input upload
 endpoint would likewise be a documented extension, not proof of Core conformance.
 
-The approved [Rasterio pivot](rasterio-pivot.md) must re-run this evidence for
-the new backend and process names. Current Terrio results do not automatically
-establish numerical correctness or conformance of the migrated implementation.
+The [Rasterio pivot](rasterio-pivot.md) records checks for the new backend and
+process names. Historical Terrio results remain separate evidence.
 
 [processes-core]: https://docs.ogc.org/is/18-062r2/18-062r2.html
 [abstract-tests]: https://docs.ogc.org/is/18-062r2/18-062r2.html#_abstract_test_suite

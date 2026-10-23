@@ -9,12 +9,11 @@ This document records direction and proposed milestones, not implemented
 features. The current API accepts only `demo-dem`; see the [README](../README.md)
 for its tested contract and [validation](validation.md) for the OGC evidence.
 
-## Immediate milestone: Rasterio pivot
+## Completed foundation: Rasterio pivot
 
-The accepted [Rasterio pivot](rasterio-pivot.md) comes first: rename the project
-to `geo-processes`, replace the two Terrio operations with Rasterio-backed
-`raster-info` and `raster-warp`, and preserve the tested service infrastructure.
-The current code is still Terrio-based until that migration is committed.
+The [Rasterio pivot](rasterio-pivot.md) renames the project to `geo-processes`
+and implements Rasterio-backed `raster-info` and `raster-warp`, preserving the
+tested service infrastructure. User-supplied inputs are the next milestone.
 
 ## User-supplied rasters
 
@@ -52,9 +51,8 @@ The milestone should include:
   GeoTIFFs, verified through the pinned Rasterio environment. Broader format
   and compression support should follow tested examples.
 - Representative DEM and imagery cases covering supported data types, band
-  counts, nodata and CRSs. Review the fixture-tested info response schema for
-  cases such as absent nodata, missing EPSG codes and entirely empty bands
-  before advertising broader input support.
+  counts, nodata and CRSs. Extend the pivot's metadata/nodata/multiband cases
+  to real user data and submission policies before advertising broader support.
 - Measurements of memory, runtime and output size, with explicit supported
   limits. The existing warp bounds are 16 MiB per input and 1,048,576 samples
   including bands; result and deployment limits are in [results](results.md).
@@ -74,7 +72,7 @@ file-size limits is insufficient for compressed inputs or enlarged outputs.
 Choose the next process after the user-input milestone from concrete user
 needs. Cropping, resampling, band selection and hillshade are candidates.
 Confirm the required algorithm is available or define its implementation;
-Rasterio is not a drop-in replacement for Terrio's complete operation catalogue.
+do not assume that Rasterio exposes every GDAL processing algorithm directly.
 Each process should reuse input resolution and the tested result lifecycle
 while owning its parameters, description, validation and output contract.
 
@@ -102,9 +100,9 @@ or an engine plugin framework. The [architecture](architecture.md) identifies
 the boundaries, and the [OGC review guide](validation.md#ogc-review-guide) gives
 the contract review points for each addition.
 
-The project accepts Rasterio's GDAL dependency and no longer targets a
-GDAL-free deployment. The [pivot decision](rasterio-pivot.md) explains why the
-active Terrio integration will be removed while historical records are retained.
+The project accepts Rasterio's GDAL dependency. The
+[pivot decision](rasterio-pivot.md) records the removal of the active Terrio
+integration and the retained historical records.
 
 ## From a useful pilot to a hosted service
 

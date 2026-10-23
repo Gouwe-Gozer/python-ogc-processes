@@ -8,7 +8,7 @@ from pygeoapi.process.base import ProcessorExecuteError
 from pygeoapi.process.manager.dummy import DummyManager
 from pygeoapi.util import JobStatus, RequestedProcessExecutionMode
 
-from terrio_processes.responses import STATUS_HEADER, ProcessResponse
+from geo_processes.responses import STATUS_HEADER, ProcessResponse
 
 LOGGER = logging.getLogger(__name__)
 CALLBACK_CONFORMANCE_URI = "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/callback"

@@ -1,14 +1,15 @@
 [project]
-name = "terrio-processes"
+name = "geo-processes"
 version = "0.1.0"
-description = "Bounded Terrio operations exposed through OGC API Processes"
+description = "Bounded Rasterio operations exposed through OGC API Processes"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Minnert Wijnands (Gouwe-Gozer)" }]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "pygeoapi==0.24.0",
-    "terrio==0.4.2",
+    "numpy==1.26.4",
+    "rasterio==1.4.3",
 ]
 
 [build-system]
@@ -16,7 +17,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/terrio_processes", "scripts"]
+packages = ["src/geo_processes", "scripts"]
 
 [tool.ruff]
 line-length = 120
@@ -34,7 +35,7 @@ select = [
 ]
 
 [tool.bandit]
-targets = ["src/terrio_processes", "scripts"]
+targets = ["src/geo_processes", "scripts"]
 exclude_dirs = [".venv", "tests"]
 skips = ["B101"]
 
@@ -44,7 +45,7 @@ pythonpath = ["tests/fixtures"]
 addopts = "--strict-markers --strict-config"
 
 [tool.coverage.run]
-source = ["terrio_processes"]
+source = ["geo_processes"]
 branch = true
 
 [tool.coverage.report]

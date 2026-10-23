@@ -1,7 +1,7 @@
 """The bounded GeoTIFF reprojection contract and its HTTP representations."""
 
-from terrio_processes import __version__
-from terrio_processes.datasets import DATASETS
+from geo_processes import __version__
+from geo_processes.datasets import DATASETS
 
 TARGET_CRSS = ["EPSG:28992", "EPSG:4326", "EPSG:3857"]
 RESAMPLING_METHODS = ["nearest", "bilinear"]
@@ -68,16 +68,16 @@ DOCUMENT_SCHEMA = {
     "additionalProperties": False,
 }
 PROCESS_METADATA = {
-    "id": "terrio-warp",
+    "id": "raster-warp",
     "version": __version__,
-    "title": "Terrio raster reprojection",
+    "title": "Raster reprojection",
     "description": (
         "Reproject an approved local raster into a GeoTIFF, retaining its grid dimensions. "
         "Raw/value returns TIFF bytes; document/value returns base64. Explicit reference transmission "
         "returns a download URL (document) or HTTP 204 with a Link header (raw). "
         "Results are retained for 24 hours by default, subject to configured storage limits."
     ),
-    "keywords": ["Terrio", "GeoTIFF", "reprojection"],
+    "keywords": ["Rasterio", "GeoTIFF", "reprojection"],
     "jobControlOptions": ["sync-execute"],
     "outputTransmission": ["value", "reference"],
     "inputs": {

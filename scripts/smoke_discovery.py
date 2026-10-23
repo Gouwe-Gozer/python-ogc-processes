@@ -1,4 +1,4 @@
-"""Check container discovery and execute the bounded Terrio process."""
+"""Check container discovery and execute the bounded Rasterio process."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
-PROCESS_ID = "terrio-info"
+PROCESS_ID = "raster-info"
 
 
 class SmokeTestError(RuntimeError):
@@ -125,8 +125,8 @@ def run(base_url: str, wait_seconds: int) -> None:
             _require("Location" not in response.headers, "execution does not promise an async job")
             results[mode] = json.load(response)
     _require(results["document"] == {"info": {"value": results["raw"]}}, "document result matches raw output")
-    _require(results["raw"]["size"] == [4, 3], "Terrio inspected the bundled 4 by 3 raster")
-    _require(results["raw"]["bands"][0]["statistics"]["mean"] == 6.5, "Terrio computed exact band statistics")
+    _require(results["raw"]["size"] == [4, 3], "Rasterio inspected the bundled 4 by 3 raster")
+    _require(results["raw"]["bands"][0]["statistics"]["mean"] == 6.5, "Rasterio computed exact band statistics")
 
 
 def main() -> int:

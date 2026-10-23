@@ -38,8 +38,8 @@ def validate_official(document, name):
     [
         ("/conformance", "confClasses.yaml"),
         ("/processes", "processList.yaml"),
-        ("/processes/terrio-info", "process.yaml"),
-        ("/processes/terrio-warp", "process.yaml"),
+        ("/processes/raster-info", "process.yaml"),
+        ("/processes/raster-warp", "process.yaml"),
     ],
 )
 def test_discovery_matches_official_schemas(http_client, path, schema):
@@ -51,13 +51,13 @@ def test_discovery_matches_official_schemas(http_client, path, schema):
 def test_execute_and_results_match_official_schemas(http_client):
     document = {"inputs": {"source": "demo-dem"}, "response": "document"}
     validate_official(document, "execute.yaml")
-    response = http_client.post("/processes/terrio-info/execution", json=document)
+    response = http_client.post("/processes/raster-info/execution", json=document)
     assert response.status_code == 200
     validate_official(response.get_json(), "results.yaml")
 
 
 def test_errors_match_official_schema(http_client):
-    response = http_client.post("/processes/terrio-info/execution", json={"inputs": {"source": "unknown"}})
+    response = http_client.post("/processes/raster-info/execution", json={"inputs": {"source": "unknown"}})
     assert response.status_code == 400
     validate_official(response.get_json(), "exception.yaml")
 
@@ -66,7 +66,7 @@ def test_boundary_guard_is_required_by_pinned_upstream(app, http_client, monkeyp
     # Without our guard, upstream calls .get on this JSON list and raises.
     monkeypatch.setitem(app.before_request_funcs, None, [])
     with pytest.raises(AttributeError):
-        http_client.post("/processes/terrio-info/execution", json=[])
+        http_client.post("/processes/raster-info/execution", json=[])
 
 
 def test_warp_reference_matches_official_execute_and_results_schemas(http_client):
@@ -76,7 +76,7 @@ def test_warp_reference_matches_official_execute_and_results_schemas(http_client
         "outputs": {"result": {"transmissionMode": "reference"}},
     }
     validate_official(payload, "execute.yaml")
-    response = http_client.post("/processes/terrio-warp/execution", json=payload)
+    response = http_client.post("/processes/raster-warp/execution", json=payload)
     assert response.status_code == 200
     validate_official(response.get_json(), "results.yaml")
 
