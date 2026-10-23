@@ -1,45 +1,18 @@
 # Changelog
 
-Notable changes to the prototype are recorded here. Git history contains the
-complete development record.
+## 0.1.0 — Unreleased
 
-## Unreleased
+- Document the `terrio-processes` identity, current implementation and historical
+  validation separately, with explicit MIT origin attribution and maintainer
+  copyright for Minnert Wijnands (Gouwe-Gozer).
+- Derive Terrio Processes from the reusable BKN pygeoapi infrastructure.
+- Upgrade pygeoapi from 0.23.4 to 0.24.0 after a separate baseline test cycle.
+- Add the direct Terrio 0.4.2 adapter, offline GeoTIFF and `terrio-info` process.
+- Preserve synchronous OGC raw/document semantics, schema and HTTP tests,
+  coverage, Ruff, Bandit and hardened Compose deployment.
+- Replace the BGT-specific OpenAPI patch and entrypoint modification with
+  operation-specific contracts and an owned startup script.
+- Remove BGT/PDOK calculations, examples and live-data CI checks.
 
-### Documentation
-
-- Reframe the repository as an independent synchronous prototype.
-- Document implemented capabilities, known limitations and validation
-  boundaries explicitly.
-- Limit generated OpenAPI and Redoc documentation to the public synchronous
-  process and service-information resources.
-
-### Added
-
-- Add a self-contained release image with no source mounts.
-- Run the release container as a non-root user with a read-only filesystem and
-  reduced Linux privileges.
-- Validate release configuration, startup and isolation properties in CI.
-
-## 0.2.0
-
-### Added
-
-- Cursor-based pagination of PDOK BGT collections with a fixed retrieval time.
-- Explicit input parsing and error responses for the coordinate/radius
-  contract.
-- OGC API Processes raw and document response formatting for the synchronous
-  process.
-- Unit, schema, HTTP contract, container smoke and live-PDOK regression checks.
-- Stored Geonovum checker and OGC CITE/TEAM Engine baseline evidence.
-
-### Changed
-
-- Separate the Breinstein calculation package from pygeoapi framework code.
-- Restrict the public process description and runtime to the implemented
-  synchronous capability.
-
-### Known limitations
-
-- Geometry inputs, referenced inputs, persistent asynchronous jobs and OGC
-  subscriber callbacks are not implemented.
-- The repository does not claim complete OGC API Processes conformance.
+The predecessor's releases remain in Git history; their version numbers and
+validation reports do not describe this application.

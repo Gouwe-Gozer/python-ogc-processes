@@ -1,17 +1,19 @@
 # OGC CITE/TEAM Engine evidence
 
-This directory records the accepted OGC API - Processes 1.0 TEAM Engine
-baseline. It is evidence of the observed implementation state, not a
+No new TEAM Engine run has been performed for Terrio Processes.
+
+This directory retains the inherited OGC API - Processes 1.0 TEAM Engine
+baseline of the predecessor application. It is historical evidence, not a
 conformance certificate. Known failures are retained for transparency.
 
-The recorded execution tests use the integration-only `async-echo` process,
-because the CITE suite expects its controlled input/output contract. Selecting
-all processes also checks discovery and descriptions, but does not execute the
-domain-specific terrain calculation. CITE evidence must therefore be combined
-with black-box HTTP tests of `bgt-land-cover-summary`; it does not replace
-them.
+The recorded execution tests used the integration-only `async-echo` process,
+because the CITE suite expects its controlled input/output contract. They did
+not exercise `terrio-info`, which did not exist in that service. Current process
+behavior is covered by the tests described in [validation](../../docs/validation.md).
+The retained echo configuration can support a future TEAM Engine run; its
+asynchronous capabilities are separate from the public synchronous API.
 
-Keep the current baseline in `baseline/`. Updating the same directory lets Git
+Keep run evidence in `baseline/`. Updating the same directory lets Git
 retain older baselines without accumulating a generated result tree for every
 pull request.
 

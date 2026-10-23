@@ -1,0 +1,52 @@
+"""Real pygeoapi application and loopback HTTP service fixtures."""
+
+import threading
+from pathlib import Path
+
+import pytest
+import yaml
+
+from terrio_processes.openapi import generate_openapi
+
+
+@pytest.fixture(scope="session")
+def service_config():
+    config = yaml.safe_load(Path("config/pygeoapi.yml").read_text())
+    config["server"]["url"] = "http://example.test"
+    config["server"]["cors"] = False
+    config["server"]["ogc_schemas_location"] = "https://schemas.opengis.net"
+    return config
+
+
+@pytest.fixture(scope="session")
+def app(service_config, tmp_path_factory):
+    temporary_directory = tmp_path_factory.mktemp("pygeoapi-http-contract")
+    config_path = temporary_directory / "pygeoapi.yml"
+    openapi_path = temporary_directory / "openapi.yml"
+    config_path.write_text(yaml.safe_dump(service_config))
+    openapi_path.write_text(yaml.safe_dump(generate_openapi(service_config)))
+    with pytest.MonkeyPatch.context() as environment:
+        environment.setenv("PYGEOAPI_CONFIG", str(config_path))
+        environment.setenv("PYGEOAPI_OPENAPI", str(openapi_path))
+        from terrio_processes.app import APP
+
+        APP.config["TESTING"] = True
+        yield APP
+
+
+@pytest.fixture()
+def http_client(app):
+    return app.test_client()
+
+
+@pytest.fixture(scope="session")
+def http_server(app):
+    from werkzeug.serving import make_server
+
+    server = make_server("127.0.0.1", 0, app)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    yield f"http://127.0.0.1:{server.server_port}"
+    server.shutdown()
+    server.server_close()
+    thread.join(timeout=5)

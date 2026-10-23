@@ -1,0 +1,21 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: Ruff formatting
+        entry: uv run ruff format --check src tests scripts
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: ruff-check
+        name: Ruff lint
+        entry: uv run ruff check src tests scripts
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: bandit
+        name: Bandit
+        entry: uv run bandit -r src scripts -c pyproject.toml
+        language: system
+        pass_filenames: false
+        types: [python]

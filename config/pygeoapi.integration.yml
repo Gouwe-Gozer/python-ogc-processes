@@ -29,7 +29,7 @@ logging:
 
 metadata:
     identification:
-        title: BKN Terrain Processes integration-test API
+        title: Terrio Processes integration-test API
         description: >-
             Local integration environment. It includes a diagnostic process
             that is deliberately absent from the public service.
@@ -43,9 +43,9 @@ metadata:
         name: MIT
         url: https://opensource.org/license/mit
     provider:
-        name: Breinstein Informatiemanagement B.V.
+        name: Gouwe-Gozer
     contact:
-        name: Breinstein open-source maintainers
+        name: Gouwe-Gozer
         role: pointOfContact
 
 resources:

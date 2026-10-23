@@ -1,9 +1,0 @@
-{
-  "inputs": {
-    "latitude": 52.6324,
-    "longitude": 4.7534,
-    "inner_radius_m": 20,
-    "outer_radius_m": 30
-  },
-  "response": "document"
-}

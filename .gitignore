@@ -5,6 +5,8 @@ build/
 dist/
 
 .venv/
+.uv-cache/
+.uv-python/
 .env
 
 .pytest_cache/

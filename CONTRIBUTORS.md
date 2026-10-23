@@ -1,10 +1,7 @@
 # Contributors
 
-This prototype was developed at Breinstein Informatiemanagement B.V. by:
+- Minnert Wijnands ([Gouwe-Gozer](https://github.com/Gouwe-Gozer))
 
-- Minnert Wijnands
-- Sam van der Velden
-
-The Git history is retained as the detailed record of individual changes and
-reviews. Publication by Breinstein does not imply certification or endorsement
-by Geonovum, PDOK or the organisations whose standards and data are referenced.
+Attribution for the MIT-licensed `bkn-terrain-processes` infrastructure reused
+by this project is preserved in [LICENSE](LICENSE) and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

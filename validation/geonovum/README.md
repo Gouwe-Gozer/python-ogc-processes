@@ -1,46 +1,49 @@
 # Geonovum checker baseline
 
-The automated check uses `@geonovum/ogc-checker` version `1.2.0` with the
-OGC API - Processes `1.0.0` profile. It statically inspects the generated
-OpenAPI document; it does not execute the terrain process. OGC CITE/TEAM Engine
-tests generic runtime behaviour separately through the integration-only echo
-fixture, and product HTTP tests are required for `bgt-land-cover-summary`.
+Updated on **2026-10-23** against the running Terrio Processes release container,
+pygeoapi 0.24.0 and Terrio 0.4.2. `@geonovum/ogc-checker` **1.2.0** used the
+OGC API – Processes **1.0.0** profile. This checks OpenAPI statically; it does
+not execute Terrio or certify conformance.
 
-The current baseline contains four diagnostics. Three report that the Job List
-and job-result paths are absent; the fourth asks for an asynchronous `201`
-response. The public OpenAPI deliberately suppresses pygeoapi's generic job
-routes because the terrain process declares only synchronous execution and
-never creates jobs. The baseline is a regression record, not a conformance
-claim or a roadmap commitment. The recorded rulesets also do not include the
-separate OpenAPI 3.0 conformance class.
+The run completed with **four error diagnostics**, the same rule codes,
+messages and paths as the predecessor apart from the process rename:
 
-Run the normal API with an explicit loopback address:
+- `/req/core/job`: no `/jobs/{jobID}` resource;
+- `/req/core/job-results`: no `/jobs/{jobID}/results` resource;
+- `/req/core/process-execute-success-async`: no asynchronous 201 response;
+- `/req/job-list/job-list-op`: no `/jobs` resource.
 
-```bash
-PYGEOAPI_SERVER_URL=http://127.0.0.1:5001 \
-docker compose up --build --detach --force-recreate api
-```
+These are recorded limitations of the bounded synchronous service. Its public
+contract does not promise async jobs or Job List conformance. No optional
+endpoint was added solely to satisfy a static checker. Raw and document
+execution are separately tested against HTTP and the official OGC schemas.
 
-Compare a complete checker run with the reviewed baseline:
+The latest checker uses the tested document URL as diagnostic `source`.
+The runner normalizes only an exact match of that URL to `<input>`, making
+port 5001/5002 runs comparable; other sources and all diagnostic fields remain
+significant. The original raw report remains available when `--raw-output` is
+requested. Rulesets and diagnostic changes are still compared exactly.
 
-```bash
-python3 scripts/check_geonovum_baseline.py
-```
-
-The script makes up to five attempts after command, network or schema-resolution
-failures. If it cannot obtain a complete report, it exits with an operational
-error instead of treating incomplete results as API diagnostics. The checker
-runs automatically on pull requests, not again for the squash-merge push to
-`main`; use a manually started workflow when a fresh main-branch run is needed.
-
-The comparison fails when a diagnostic is added, removed or changed. A removed
-diagnostic represents an improvement, but the baseline must be deliberately
-updated in the same pull request so that the resolved fault cannot silently
-return:
+With Node/npm available, compare or deliberately update the baseline:
 
 ```bash
-python3 scripts/check_geonovum_baseline.py --update-baseline
+uv run python scripts/check_geonovum_baseline.py --input 'http://127.0.0.1:5001/openapi?f=json'
+uv run python scripts/check_geonovum_baseline.py --input 'http://127.0.0.1:5001/openapi?f=json' --update-baseline
 ```
 
-Never use `--update-baseline` in CI. Review every baseline change and explain
-the added, resolved or changed diagnostic in the pull request.
+Never update the baseline automatically in CI. A newly added, removed or changed
+diagnostic requires review. The runner retries incomplete network/schema fetch
+attempts and reports operational failures separately.
+
+This development environment had no host Node installation. The completed run
+used a disposable container, without installing Node/npm on the host:
+
+```bash
+docker run --rm --network host node:24-alpine \
+  npx --yes @geonovum/ogc-checker@1.2.0 validate \
+  --standard ogc-api-processes --version 1.0.0 \
+  --input 'http://127.0.0.1:5002/openapi?f=json' --format json --fail-on none
+```
+
+The JSON report was normalized by the same `normalize_report` function used by
+the runner. This records an observed diagnostic set, not a passing checker result.

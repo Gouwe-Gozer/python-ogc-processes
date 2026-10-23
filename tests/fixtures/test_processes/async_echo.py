@@ -1,7 +1,7 @@
 """Predictable, integration-only process for OGC conformance testing.
 
 The process lets CITE test synchronous and asynchronous OGC API execution
-without domain-specific terrain inputs or live PDOK data. It is never
+without domain-specific inputs or live data. It is never
 registered in the public service.
 """
 
