@@ -1,37 +1,63 @@
-"""Unit tests for the OGC result formatter around pygeoapi."""
+"""Keep manager behavior independent of JSON, output IDs and result counts."""
 
 import pytest
+from pygeoapi.process.base import ProcessorExecuteError
+from pygeoapi.util import RequestedProcessExecutionMode
 
-from bkn_terrain_processes.manager import format_process_result
-
-
-def test_format_raw_response_returns_single_output_value():
-    result = {"sentinel": "terrain-result"}
-
-    assert format_process_result({"id": "summary", "value": result}, "raw") == result
+from terrio_processes.manager import InvalidExecutionRequestError, OgcSynchronousManager
 
 
-def test_format_document_response_uses_output_identifier_as_key():
-    result = {"sentinel": "terrain-result"}
-
-    assert format_process_result({"id": "summary", "value": result}, "document") == {"summary": {"value": result}}
-
-
-def test_format_document_response_keeps_scalar_output_inline():
-    assert format_process_result({"id": "message", "value": "hello"}, "document") == {"message": "hello"}
+@pytest.fixture()
+def manager():
+    return OgcSynchronousManager({"name": "terrio_processes.manager.OgcSynchronousManager"})
 
 
-@pytest.mark.parametrize(
-    "invalid_output",
-    [
-        None,
-        {},
-        {"value": {}},
-        {"id": "summary"},
-        {"id": "", "value": {}},
-        {"id": "summary", "value": {}, "extra": True},
-    ],
-)
-def test_format_rejects_invalid_internal_output(invalid_output):
-    with pytest.raises(ValueError):
-        format_process_result(invalid_output, "raw")
+@pytest.mark.parametrize("response", [None, [], "unsupported"])
+def test_manager_rejects_invalid_response(manager, response):
+    with pytest.raises(InvalidExecutionRequestError):
+        manager.execute_process("test", {}, requested_response=response)
+
+
+def test_manager_rejects_callbacks(manager):
+    with pytest.raises(InvalidExecutionRequestError, match="callbacks"):
+        manager.execute_process("test", {}, subscriber=object())
+
+
+def test_manager_preserves_native_bytes_and_media_type(manager, monkeypatch):
+    class NativeProcessor:
+        def execute(self, data, outputs=None):
+            return "image/tiff", b"TIFF bytes"
+
+    monkeypatch.setattr(manager, "get_processor", lambda _: NativeProcessor())
+    _, media_type, result, _, headers = manager.execute_process(
+        "native", {}, execution_mode=RequestedProcessExecutionMode.respond_async
+    )
+    assert media_type == "image/tiff"
+    assert result == b"TIFF bytes"
+    assert not headers
+    with pytest.raises(InvalidExecutionRequestError, match="document"):
+        manager.execute_process("native", {}, requested_response="document")
+
+
+def test_manager_delegates_multi_output_formatting(manager, monkeypatch):
+    class Processor:
+        def execute(self, data, outputs=None):
+            return "application/json", {"a": 1, "b": 2}
+
+        def format_result(self, value, response):
+            return value
+
+    monkeypatch.setattr(manager, "get_processor", lambda _: Processor())
+    assert manager.execute_process("example", {}, requested_response="document")[2] == {"a": 1, "b": 2}
+
+
+def test_unexpected_processor_failure_is_sanitized(manager, monkeypatch):
+    class BrokenProcessor:
+        def execute(self, *args, **kwargs):
+            raise RuntimeError("/private/path")
+
+    monkeypatch.setattr(manager, "get_processor", lambda _: BrokenProcessor())
+    with pytest.raises(ProcessorExecuteError) as error:
+        manager.execute_process("broken", {})
+    assert error.value.http_status_code == 500
+    assert error.value.message == "process execution failed"

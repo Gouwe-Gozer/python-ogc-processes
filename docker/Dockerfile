@@ -1,34 +1,34 @@
-FROM geopython/pygeoapi:0.23.4@sha256:c8adf6b8e245d315d937eb06f33c3f1cf867e007871d3ac975c9944371ce720b
+FROM geopython/pygeoapi:0.24.0@sha256:a62895f2585ef1fcd1fc97ec35bf13177becc1334a622172a2c5c4d2145b8f0a
 
-LABEL org.opencontainers.image.title="BGT Land-cover Summary API" \
-      org.opencontainers.image.description="Synchronous BGT land-cover summary process built on pygeoapi" \
-      org.opencontainers.image.version="0.2.0" \
+LABEL org.opencontainers.image.title="Terrio Processes API" \
+      org.opencontainers.image.description="Bounded synchronous Terrio operations built on pygeoapi" \
+      org.opencontainers.image.version="0.1.0" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.vendor="Breinstein Informatiemanagement B.V." \
-      org.opencontainers.image.base.name="docker.io/geopython/pygeoapi:0.23.4"
+      org.opencontainers.image.vendor="Gouwe-Gozer" \
+      org.opencontainers.image.base.name="docker.io/geopython/pygeoapi:0.24.0"
 
 ENV CONTAINER_PORT=8080 \
     PYTHONPATH=/pygeoapi \
     PYGEOAPI_ASYNCAPI=/tmp/pygeoapi.asyncapi.yml \
     PYGEOAPI_OPENAPI=/tmp/pygeoapi.openapi.yml \
-    WSGI_APP=bkn_terrain_processes.app:APP
+    PYGEOAPI_CONFIG=/pygeoapi/local.config.yml \
+    PYTHONDONTWRITEBYTECODE=1 \
+    WSGI_APP=terrio_processes.app:APP
 
 COPY config/pygeoapi.yml /pygeoapi/local.config.yml
-COPY src/bkn_terrain_processes /pygeoapi/bkn_terrain_processes
-COPY LICENSE THIRD_PARTY_NOTICES.md /licenses/bkn-terrain-processes/
+COPY src/terrio_processes /pygeoapi/terrio_processes
+COPY LICENSE THIRD_PARTY_NOTICES.md /licenses/terrio-processes/
 
-COPY scripts/patch_pygeoapi_openapi.py /pygeoapi/patch_pygeoapi_openapi.py
+COPY docker/entrypoint.sh /terrio-entrypoint.sh
 
-# pygeoapi 0.23.4 regenerates its OpenAPI file at startup. Apply the narrowly
-# scoped v1 compatibility corrections after generation and before Gunicorn.
-# Reassess this patch whenever the base image is upgraded.
-RUN grep -q 'echo "openapi.yml generated continue to pygeoapi"' /entrypoint.sh \
-    && sed -i '/echo "openapi.yml generated continue to pygeoapi"/i \
-/venv/bin/python3 /pygeoapi/patch_pygeoapi_openapi.py "${PYGEOAPI_OPENAPI}" --config "${PYGEOAPI_CONFIG}" || exit 1' /entrypoint.sh
+# Install into the interpreter actually used by Gunicorn. Fail if no wheel exists.
+RUN /venv/bin/python3 -m pip install --no-cache-dir --only-binary=:all: "terrio==0.4.2"
 
 RUN /venv/bin/python3 -c \
-    'import bkn_terrain_processes; from bkn_terrain_processes.process import BgtLandCoverSummaryProcessor'
+    'import terrio, pygeoapi; from terrio_processes.processes.info import TerrioInfoProcessor'
 
 USER 10001:10001
 
 EXPOSE 8080
+
+ENTRYPOINT ["/bin/sh", "/terrio-entrypoint.sh"]

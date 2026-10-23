@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    image: bkn-terrain-processes-dev:0.2.0
+    image: terrio-processes-dev:0.1.0
     pull_policy: build
     ports:
       - "${API_PORT:-5001}:8080"
@@ -11,7 +11,7 @@ services:
       PYGEOAPI_SERVER_URL: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
     volumes:
       - ./config/pygeoapi.yml:/pygeoapi/local.config.yml:ro
-      - ./src/bkn_terrain_processes:/pygeoapi/bkn_terrain_processes:ro
+      - ./src/terrio_processes:/pygeoapi/terrio_processes:ro
     healthcheck:
       test:
         - CMD

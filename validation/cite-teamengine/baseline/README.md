@@ -1,3 +1,6 @@
+> Historical predecessor results. These do not validate Terrio Processes;
+> the inputs, image and commit below identify the original service.
+
 # CITE/TEAM Engine baseline — 2026-08-24
 
 This directory records the latest OGC API - Processes 1.0 CITE run against

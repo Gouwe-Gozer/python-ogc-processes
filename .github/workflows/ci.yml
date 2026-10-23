@@ -44,10 +44,9 @@ jobs:
         run: |
           uv run pygeoapi config validate \
             --config config/pygeoapi.yml
-          uv run pygeoapi openapi generate \
-            --format yaml \
-            --output-file /tmp/public-openapi.yml \
-            config/pygeoapi.yml
+          uv run python -m terrio_processes.openapi \
+            --config config/pygeoapi.yml \
+            --output /tmp/public-openapi.yml
           uv run pygeoapi openapi validate \
             /tmp/public-openapi.yml
 
@@ -65,7 +64,7 @@ jobs:
             /tmp/integration-openapi.yml
 
       - name: Test with coverage
-        run: uv run pytest --cov=bkn_terrain_processes --cov-report=term-missing --cov-fail-under=70
+        run: uv run pytest --cov=terrio_processes --cov-report=term-missing --cov-fail-under=70
 
   api-validation:
     name: API runtime and conformance
@@ -75,6 +74,15 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Install locked dependencies
+        run: uv sync --locked --all-groups
 
       - name: Install Node.js for the Geonovum checker
         if: github.event_name != 'push'
@@ -97,15 +105,15 @@ jobs:
         run: docker compose --file compose.release.yml up --build --detach
 
       - name: Check API discovery resources
-        run: python3 scripts/smoke_discovery.py --base-url http://127.0.0.1:5001 --wait-seconds 60
+        run: uv run python scripts/smoke_discovery.py --base-url http://127.0.0.1:5001 --wait-seconds 60
 
       - name: Check release-container isolation
-        run: python3 scripts/check_release_container.py
+        run: uv run python scripts/check_release_container.py
 
       - name: Compare Geonovum diagnostics with the reviewed baseline
         if: github.event_name != 'push'
         run: |
-          python3 scripts/check_geonovum_baseline.py \
+          uv run python scripts/check_geonovum_baseline.py \
             --raw-output /tmp/geonovum-checker.json
 
       - name: Upload Geonovum checker output after failure
@@ -132,44 +140,3 @@ jobs:
       - name: Stop API
         if: always()
         run: docker compose --file compose.release.yml down --volumes --remove-orphans
-
-  live-point-baseline:
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    needs: quality
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Install uv and Python
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-          python-version: "3.12"
-
-      - name: Install locked dependencies
-        run: uv sync --locked --all-groups
-
-      - name: Compare calculations with the live point baseline
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-        run: |
-          case_args=()
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            case_args+=(--case gouwzee-near-monnickergat)
-            case_args+=(--case amsterdam-rembrandtpark-roundabout)
-            case_args+=(--strict-historical)
-          fi
-
-          status=0
-          uv run python scripts/check_live_point_baseline.py "${case_args[@]}" || status=$?
-
-          if [ "$status" -eq 2 ]; then
-            echo "PDOK data was unavailable; retrying once after 15 seconds."
-            sleep 15
-            status=0
-            uv run python scripts/check_live_point_baseline.py "${case_args[@]}" || status=$?
-          fi
-
-          exit "$status"

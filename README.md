@@ -1,167 +1,70 @@
-# BGT Land-cover Summary API
+# Terrio Processes
 
-A synchronous OGC API Processes prototype that summarises selected land-cover
-categories around a Dutch coordinate. The calculation retrieves current BGT
-features through PDOK and reports percentages for two circular areas.
+A small OGC API – Processes service built on pygeoapi and Terrio's Rust-backed
+Python binding. The first process, **`terrio-info`**, inspects a bundled GeoTIFF
+and returns metadata, georeferencing and exact band statistics. It runs offline
+and synchronously.
 
-The categories are application-defined ecological proxies. The result is not
-an official Basiskwaliteit Natuur (BKN) assessment and does not replace source
-data review or ecological expertise.
-
-## Project status
-
-This repository began as technical exploration for Breinstein's proposal for
-Geonovum nLDT Testbed 2026 Phase 2, Adoption Topic 1. In the end, Breinstein 
-was assigned a different testbed topic. This project is not a Geonovum 
-deliverable and does not form part of the nLDT Testbed 2026 Phase 2. 
-
-Breinstein publishes it as an independent prototype and technical reference.
-Its development history is retained in the git commithistory
-
-| Capability | Status |
-| --- | --- |
-| Live, paginated PDOK BGT retrieval | Implemented |
-| Latitude/longitude input with two circular radii | Implemented |
-| Synchronous OGC API Processes execution | Implemented |
-| Raw and document response forms | Implemented |
-| Automated source, schema and HTTP contract tests | Implemented |
-| Self-contained, non-root release container | Implemented |
-| GeoJSON Point, Polygon or MultiPolygon input | Not implemented |
-| Referenced input files | Not implemented |
-| Asynchronous terrain jobs and persistent results | Not implemented |
-| OGC subscriber callbacks | Not implemented |
-| Full OGC API Processes conformance | Not claimed |
-| Production deployment or support | Not provided |
-
-## What the prototype demonstrates
-
-- keeping calculation code separate from pygeoapi's HTTP and process-manager
-  integration;
-- buffering WGS 84 coordinates in the Dutch RD New projected coordinate
-  system (EPSG:28992);
-- following PDOK cursor pagination and requesting a consistent point in time;
-- exposing an explicit synchronous process contract and rejecting unsupported
-  subscriber options;
-- returning a single JSON output in OGC API Processes raw or document form;
-- testing calculation, input validation, generated API descriptions and the
-  running HTTP service at different layers; and
-- preserving incomplete conformance-check results with their limitations
-  instead of presenting them as certification.
-
-## Requirements
-
-- Docker Engine or Docker Desktop with Compose; and
-- Git.
-
-Python 3.12 and [uv](https://docs.astral.sh/uv/) are additionally required to
-run the checks directly on the host.
-
-## Start the self-contained API
-
-```bash
-cp .env.example .env
-docker compose --file compose.release.yml up --build --detach
-docker compose --file compose.release.yml ps
-```
-
-The API is available at <http://localhost:5001> by default.
-
-Useful resources:
-
-- landing page: <http://localhost:5001/>;
-- conformance declaration: <http://localhost:5001/conformance>;
-- process list: <http://localhost:5001/processes>;
-- process description: <http://localhost:5001/processes/bgt-land-cover-summary>;
-- OpenAPI document: <http://localhost:5001/openapi>.
-
-## Execute the process
-
-```bash
-curl -sS -X POST \
-  http://localhost:5001/processes/bgt-land-cover-summary/execution \
-  -H 'Content-Type: application/json' \
-  --data @examples/current-point-request.json \
-  | python3 -m json.tool
-```
-
-The request contains WGS 84 latitude and longitude values and two radii in
-metres. The response includes percentages for both circular areas, source and
-collection counts, timing information and the classification method used.
-Because the process queries live PDOK data, its exact result can change as the
-source registration changes.
-
-The release stack uses the application and configuration copied into the
-image. It runs without host mounts as a non-root user with a read-only root
-filesystem. See [Release image](docs/release-image.md) for its guarantees and
-the production concerns that remain outside this repository.
-
-Developers can instead start the bind-mounted configuration with
-`docker compose up --build --detach`; source changes then become available
-after restarting the API container.
-
-## Run the checks
+## Run it
 
 ```bash
 uv sync --locked --all-groups
-uv run ruff format --check src tests scripts
-uv run ruff check src tests scripts
-uv run bandit -r src scripts -c pyproject.toml
-uv run pytest --cov=bkn_terrain_processes --cov-report=term-missing --cov-fail-under=70
+docker compose up --build --detach
 ```
 
-The repository also contains a container smoke check, black-box tests of the
-public synchronous process, historical live-PDOK regression cases and stored
-output from the Geonovum checker and OGC CITE/TEAM Engine. See
-[Validation](docs/validation.md) before interpreting those results.
-
-## Integration-only validation fixture
-
-The normal configuration exposes only the BGT process. The integration
-configuration adds `async-echo`, a predictable CITE-compatible process backed
-by disposable TinyDB storage:
+Open <http://localhost:5001/processes/terrio-info?f=json> for the process
+schema and <http://localhost:5001/openapi> for interactive API documentation.
+If port 5001 is occupied, set both variables when starting Compose:
 
 ```bash
-docker compose -f compose.yml -f compose.integration.yml up --build --detach
+API_PORT=5002 PYGEOAPI_SERVER_URL=http://localhost:5002 docker compose up --build --detach
 ```
 
-This fixture lets CITE exercise generic synchronous and asynchronous pygeoapi
-routes without terrain-specific inputs or live PDOK data. It is not part of
-the product API and does not prove asynchronous execution of the terrain
-process.
+Inspect the demo raster (omitted `response` defaults to `raw`):
 
-## Known limitations
+```bash
+curl --fail-with-body http://localhost:5001/processes/terrio-info/execution \
+  -H 'Content-Type: application/json' \
+  --data '{"inputs":{"source":"demo-dem"}}'
+```
 
-- Inputs are separate scalar coordinate and radius values; GeoJSON geometry
-  and referenced inputs are not supported.
-- The terrain process is synchronous only. There is no persistent job store,
-  restart recovery, job dismissal or subscriber delivery.
-- The application-defined BGT-to-category mapping has not been independently
-  validated as a BKN method.
-- BGT `relatieveHoogteligging` is not used, so geometries at different relative
-  heights can be combined by the current overlap-removal logic.
-- Six of the eight live point baselines are historical regression values, not
-  independently calculated ground truth.
-- The release image is self-contained but is not a managed production service:
-  TLS termination, authentication, hosting, monitoring and support remain
-  deployment responsibilities.
+HTTP 200, `application/json`: the native Terrio dictionary, including
+`"size": [4, 3]`, `"band_count": 1`, EPSG:28992 and band statistics with
+minimum 1, maximum 12, mean 6.5 and 12 valid cells.
 
-## Documentation
+Request an OGC results document:
 
-- [Architecture](docs/architecture.md)
-- [Development workflow](docs/development.md)
-- [Release image](docs/release-image.md)
-- [Validation and evidence boundaries](docs/validation.md)
-- [Security policy](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
-- [Contributors](CONTRIBUTORS.md)
+```bash
+curl --fail-with-body http://localhost:5001/processes/terrio-info/execution \
+  -H 'Content-Type: application/json' \
+  --data '{"inputs":{"source":"demo-dem"},"outputs":{"info":{"transmissionMode":"value"}},"response":"document"}'
+```
 
-## Licence and source data
+HTTP 200, `application/json`: `{"info":{"value":{...raster information...}}}`.
+The output identifier is `info`. Omitting `outputs` selects it; omitting
+`transmissionMode` selects `value`. `Prefer: respond-async` still returns a
+synchronous 200 with no job URL. Invalid inputs or unsupported options return
+JSON 400 errors; an unavailable configured dataset returns a sanitized 500.
 
-Breinstein's source code is released under the [MIT License](LICENSE).
-Licences and copyright notices for included third-party software are recorded
-in [Third-party notices](THIRD_PARTY_NOTICES.md).
+## Scope
 
-The process retrieves Basisregistratie Grootschalige Topografie (BGT) data
-from the [PDOK BGT OGC API](https://api.pdok.nl/lv/bgt/ogc/v1?f=html&lang=en).
-The dataset provider is Kadaster (LV-BGT); PDOK publishes the service under the
-[CC0 1.0 public-domain dedication](https://creativecommons.org/publicdomain/zero/1.0/).
+`source` is an inline string from the published dataset enum. Currently only
+`demo-dem` is accepted, mapped to a read-only, bundled 352-byte GeoTIFF.
+Paths, URLs, OGC input references, callbacks, async jobs, file downloads and
+reference output transmission are outside this milestone. No runtime request
+contacts a remote data service.
+
+The adapter has no pygeoapi dependency. Each operation owns its process
+metadata, input validation and result representation. Shared request/manager
+code does not assume every future operation returns one JSON output.
+
+Pinned versions: **pygeoapi 0.24.0**, **Terrio 0.4.2**, Python **3.12**.
+Both run in the same interpreter in the Docker image. This project derives
+reusable infrastructure from BKN; required notices remain in [LICENSE](LICENSE)
+and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+See [development commands](docs/development.md), [architecture](docs/architecture.md),
+[validation limits](docs/validation.md), [release deployment](docs/release-image.md)
+and the [migration report](docs/migration.md). Passing local tests is not OGC
+certification. The next milestone is `terrio-warp`, after deciding how to serve
+and expire downloadable results.

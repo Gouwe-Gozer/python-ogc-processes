@@ -1,4 +1,4 @@
-"""Check that the container exposes the expected OGC API discovery resources."""
+"""Check container discovery and execute the bounded Terrio process."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
-PROCESS_ID = "bgt-land-cover-summary"
+PROCESS_ID = "terrio-info"
 
 
 class SmokeTestError(RuntimeError):
@@ -109,6 +109,24 @@ def run(base_url: str, wait_seconds: int) -> None:
     )
     _require(PROCESS_ID in process_ids, f"process list contains {PROCESS_ID}")
     _require(process.get("id") == PROCESS_ID, f"process description identifies {PROCESS_ID}")
+
+    results = {}
+    for mode in ("raw", "document"):
+        payload = json.dumps({"inputs": {"source": "demo-dem"}, "response": mode}).encode()
+        request = urllib.request.Request(
+            _url(base_url, f"/processes/{PROCESS_ID}/execution"),
+            data=payload,
+            headers={"Content-Type": "application/json", "Prefer": "respond-async"},
+        )
+        # base_url was validated above; the client intentionally reaches this service.
+        with urllib.request.urlopen(request, timeout=10) as response:  # nosec B310
+            _require(response.status == 200, f"{mode} execution returns HTTP 200")
+            _require(response.headers.get_content_type() == "application/json", "execution returns application/json")
+            _require("Location" not in response.headers, "execution does not promise an async job")
+            results[mode] = json.load(response)
+    _require(results["document"] == {"info": {"value": results["raw"]}}, "document result matches raw output")
+    _require(results["raw"]["size"] == [4, 3], "Terrio inspected the bundled 4 by 3 raster")
+    _require(results["raw"]["bands"][0]["statistics"]["mean"] == 6.5, "Terrio computed exact band statistics")
 
 
 def main() -> int:

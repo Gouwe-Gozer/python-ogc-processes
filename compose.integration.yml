@@ -2,5 +2,5 @@ services:
   api:
     volumes:
       - ./config/pygeoapi.integration.yml:/pygeoapi/local.config.yml:ro
-      - ./src/bkn_terrain_processes:/pygeoapi/bkn_terrain_processes:ro
+      - ./src/terrio_processes:/pygeoapi/terrio_processes:ro
       - ./tests/fixtures/test_processes:/pygeoapi/test_processes:ro

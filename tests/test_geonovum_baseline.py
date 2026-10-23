@@ -116,3 +116,15 @@ def test_checker_rejects_duplicate_diagnostic_identities():
 
     with pytest.raises(geonovum.CheckerOperationalError, match="duplicate"):
         geonovum.normalize_report(report(duplicate, duplicate))
+
+
+def test_input_source_normalization_preserves_diagnostics_across_ports():
+    first = diagnostic("rule", ["paths"])
+    second = {**first, "source": "http://127.0.0.1:5002/openapi?f=json"}
+    first["source"] = "http://127.0.0.1:5001/openapi?f=json"
+    left = geonovum.normalize_report(report(first), first["source"])
+    right = geonovum.normalize_report(report(second), second["source"])
+    assert left == right
+    assert left["diagnostics"][0] == {**first, "source": "<input>"}
+    unchanged = geonovum.normalize_report(report(first), "http://different.test/openapi")
+    assert unchanged["diagnostics"][0]["source"] == first["source"]

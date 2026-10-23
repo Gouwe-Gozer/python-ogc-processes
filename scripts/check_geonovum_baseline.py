@@ -90,7 +90,7 @@ def normalize_diagnostic(diagnostic: Any) -> dict[str, Any]:
     return normalized
 
 
-def normalize_report(report: Any) -> dict[str, Any]:
+def normalize_report(report: Any, input_url: str | None = None) -> dict[str, Any]:
     """Convert checker output into the stable repository baseline format."""
     if not isinstance(report, dict):
         raise CheckerOperationalError("Checker output is not a JSON object")
@@ -102,6 +102,11 @@ def normalize_report(report: Any) -> dict[str, Any]:
         raise CheckerOperationalError("Checker output has no valid rulesets array")
 
     diagnostics = [normalize_diagnostic(item) for item in report["diagnostics"]]
+    for diagnostic in diagnostics:
+        # The checker reports the tested URL as source. Keep comparisons
+        # independent of the local port without masking other source changes.
+        if input_url is not None and diagnostic["source"] == input_url:
+            diagnostic["source"] = "<input>"
     diagnostics.sort(key=lambda item: json.dumps(diagnostic_identity(item), separators=(",", ":")))
 
     identities = [diagnostic_identity(item) for item in diagnostics]
@@ -200,7 +205,7 @@ def run_checker(
                         write_json(raw_output, report)
                     transient = transient_diagnostics(report)
                     if not transient:
-                        return normalize_report(report)
+                        return normalize_report(report, input_url)
                     codes = ", ".join(str(item.get("code", "unknown")) for item in transient)
                     last_problem = f"incomplete schema resolution ({codes})"
 

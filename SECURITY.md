@@ -1,20 +1,15 @@
 # Security policy
 
-Do not report a suspected vulnerability in a public issue. Use GitHub's
-**Security** tab and private vulnerability-reporting option when it is
-available for this repository.
+Use the repository's private GitHub vulnerability reporting when available.
+Include the affected version, reproduction and likely impact without secrets.
 
-Include the affected version or commit, a concise reproduction and the likely
-impact. Do not include secrets or personal data.
+The initial public process accepts only the `demo-dem` dataset identifier. It
+maps to a fixed bundled GeoTIFF; requests cannot select server paths, remote
+URLs, CLI arguments, callbacks or output files. No raster data is fetched over
+the network. Invalid requests return controlled JSON client errors. Engine
+failures return sanitized server errors; detailed errors belong in server logs.
 
-This repository provides a self-contained prototype image, not a managed
-production service. The release Compose configuration runs as a non-root user,
-uses a read-only root filesystem, drops Linux capabilities and prevents
-privilege escalation. Its public process accepts numeric values and makes
-outbound requests only to configured PDOK collection URLs. The integration-only
-configuration and TinyDB job manager are test fixtures and must not be exposed
-as a public service.
-
-Before any internet-facing deployment, the image and dependencies, resource
-limits, network policy, logging, secrets, update policy and operational
-ownership require a separate security review.
+The release runs non-root, with a read-only root, bounded temporary filesystem,
+all capabilities dropped and privilege escalation disabled. The diagnostic
+TinyDB/async-echo configuration is for local standards testing only. Authentication,
+TLS termination and broader input/resource policies remain deployment decisions.

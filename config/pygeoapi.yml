@@ -1,62 +1,51 @@
 server:
-    bind:
-        host: 0.0.0.0
-        port: 8080
-    url: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
-    mimetype: application/json; charset=UTF-8
-    encoding: utf-8
-    gzip: false
-    language: en-US
-    cors: true
-    pretty_print: true
-    admin: false
-    limits:
-        default_items: 10
-        max_items: 50
-    map:
-        url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
-        attribution: '&copy; OpenStreetMap contributors'
-    ogc_schemas_location: /schemas.opengis.net
-    manager:
-        name: bkn_terrain_processes.manager.OgcSynchronousManager
-        # Required strings in pygeoapi's manager configuration schema; the
-        # synchronous manager does not use either value for storage.
-        connection: unused
-        output_dir: /tmp
-
+  bind:
+    host: 0.0.0.0
+    port: 8080
+  url: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
+  mimetype: application/json; charset=UTF-8
+  encoding: utf-8
+  gzip: false
+  language: en-US
+  cors: true
+  pretty_print: true
+  admin: false
+  limits:
+    default_items: 10
+    max_items: 50
+  map:
+    url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+    attribution: '&copy; OpenStreetMap contributors'
+  ogc_schemas_location: /schemas.opengis.net
+  manager:
+    name: terrio_processes.manager.OgcSynchronousManager
+    connection: unused
+    output_dir: /tmp
 logging:
-    level: INFO
-
+  level: INFO
 metadata:
-    identification:
-        title: BGT Land-cover Summary API
-        description: >-
-            Synchronous prototype for calculating BKN-oriented land-cover
-            proxies from PDOK BGT data. Results are not an official
-            Basiskwaliteit Natuur assessment.
-        keywords:
-            - Basiskwaliteit Natuur
-            - BKN
-            - BGT
-            - PDOK
-            - land cover
-            - OGC API Processes
-        keywords_type: theme
-        terms_of_service: ${PYGEOAPI_TERMS_OF_SERVICE:-https://opensource.org/license/mit}
-        url: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
-    license:
-        name: MIT
-        url: https://opensource.org/license/mit
-    provider:
-        name: Breinstein Informatiemanagement B.V.
-    contact:
-        # Required by pygeoapi's configuration schema. The incomplete contact
-        # object is omitted from the published OpenAPI document.
-        name: Breinstein Informatiemanagement B.V.
-        role: pointOfContact
-
+  identification:
+    title: Terrio Processes API
+    description: Bounded synchronous raster operations powered by Terrio. The initial
+      terrio-info process inspects a bundled GeoTIFF.
+    keywords:
+    - Terrio
+    - raster
+    - GeoTIFF
+    - OGC API Processes
+    keywords_type: theme
+    terms_of_service: ${PYGEOAPI_TERMS_OF_SERVICE:-https://opensource.org/license/mit}
+    url: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
+  license:
+    name: MIT
+    url: https://opensource.org/license/mit
+  provider:
+    name: Gouwe-Gozer
+  contact:
+    name: Gouwe-Gozer
+    role: pointOfContact
 resources:
-    bgt-land-cover-summary:
-        type: process
-        processor:
-            name: bkn_terrain_processes.process.BgtLandCoverSummaryProcessor
+  terrio-info:
+    type: process
+    processor:
+      name: terrio_processes.processes.info.TerrioInfoProcessor

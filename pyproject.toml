@@ -1,16 +1,14 @@
 [project]
-name = "bkn-terrain-processes"
-version = "0.2.0"
-description = "Synchronous BGT land-cover summaries exposed through OGC API Processes"
+name = "terrio-processes"
+version = "0.1.0"
+description = "Bounded Terrio operations exposed through OGC API Processes"
 readme = "README.md"
 license = { file = "LICENSE" }
-authors = [{ name = "Breinstein Informatiemanagement B.V." }]
+authors = [{ name = "Gouwe-Gozer" }]
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "pygeoapi==0.23.4",
-    "pyproj>=3.6.1,<4",
-    "requests>=2.31,<3",
-    "shapely>=2.0.3,<3",
+    "pygeoapi==0.24.0",
+    "terrio==0.4.2",
 ]
 
 [build-system]
@@ -18,7 +16,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/bkn_terrain_processes", "scripts"]
+packages = ["src/terrio_processes", "scripts"]
 
 [tool.ruff]
 line-length = 120
@@ -36,7 +34,7 @@ select = [
 ]
 
 [tool.bandit]
-targets = ["src/bkn_terrain_processes", "scripts"]
+targets = ["src/terrio_processes", "scripts"]
 exclude_dirs = [".venv", "tests"]
 skips = ["B101"]
 
@@ -46,7 +44,7 @@ pythonpath = ["tests/fixtures"]
 addopts = "--strict-markers --strict-config"
 
 [tool.coverage.run]
-source = ["bkn_terrain_processes"]
+source = ["terrio_processes"]
 branch = true
 
 [tool.coverage.report]

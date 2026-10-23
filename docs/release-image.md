@@ -1,73 +1,30 @@
 # Release image
 
-## Purpose
+The application builds on the official `geopython/pygeoapi:0.24.0` image,
+pinned by manifest digest in `docker/Dockerfile`. Terrio 0.4.2 is installed using
+`/venv/bin/python3 -m pip` inside the image, with wheel-only installation. The
+same `/venv` interpreter runs Gunicorn and imports the configured processor.
+No host Python packages or OS packages are installed.
 
-The release image packages the synchronous BGT process, pygeoapi
-configuration, OpenAPI compatibility correction and licence notices into one
-portable artifact. It does not need the repository or a source-code mount at
-runtime.
+The owned entrypoint generates the corrected OpenAPI document in `/tmp`, then
+execs Gunicorn with two synchronous workers and a 30-second worker timeout.
+`WSGI_WORKERS` and `WSGI_WORKER_TIMEOUT` can be overridden. The upstream image's
+base dependencies are fixed by its digest; they are not all identical to the
+local uv lockfile. The pygeoapi and Terrio versions match in both environments.
 
-Build and start it with:
+The release Compose service has no host mounts. It runs as UID/GID 10001,
+with a read-only root, a 64 MB `/tmp` tmpfs, all Linux capabilities dropped and
+`no-new-privileges`. A health check fetches `/conformance`. The smoke script
+also executes the raster process, and the isolation checker inspects Docker's
+actual runtime settings.
 
 ```bash
-cp .env.example .env
 docker compose --file compose.release.yml up --build --detach
+uv run python scripts/smoke_discovery.py --base-url http://localhost:5001
+uv run python scripts/check_release_container.py
+docker compose --file compose.release.yml exec -T api /venv/bin/python3 -c 'import terrio, pygeoapi; from terrio_processes.processes.info import TerrioInfoProcessor; print(terrio.__version__, pygeoapi.__version__)'
 ```
 
-The API is available at <http://localhost:5001>. Stop the stack with:
-
-```bash
-docker compose --file compose.release.yml down --volumes --remove-orphans
-```
-
-## Reproducible runtime boundary
-
-The Dockerfile pins `geopython/pygeoapi:0.23.4` by immutable image digest. That
-base supplies pygeoapi and the Python runtime dependencies used by the process.
-Breinstein source and configuration are copied on top. Rebuilding a specific
-Git commit therefore cannot silently move to a different base image under the
-same tag.
-
-The image version appears in `pyproject.toml`, the package, Docker labels and
-Compose image names. Update these together when preparing another release.
-
-## Runtime controls
-
-The image itself runs as UID/GID `10001:10001` and listens on container port
-8080. The release Compose file additionally:
-
-- mounts no host source, configuration or persistent volume;
-- makes the root filesystem read-only;
-- provides a temporary, size-limited `/tmp` for generated API documents and
-  process-manager scratch paths;
-- drops all Linux capabilities; and
-- prevents the process from gaining additional privileges.
-
-CI starts this configuration, checks those properties and exercises the API's
-discovery resources.
-
-## Configuration
-
-Copy `.env.example` to `.env` to change the host port, public server URL or
-terms-of-service URL. `PYGEOAPI_SERVER_URL` must be the address that clients use
-to reach the API because pygeoapi places it in generated links.
-
-The canonical `config/pygeoapi.yml` is baked into the image. Changing it
-requires rebuilding the image. The development Compose configuration mounts
-the same local file so that release and development metadata cannot drift.
-
-## What this does not provide
-
-A self-contained image is a deployable artifact, not a complete production
-service. An internet-facing deployment still needs decisions and ownership for:
-
-- TLS termination and network exposure;
-- authentication or access restrictions, if required;
-- CPU, memory and request concurrency limits;
-- central logging, monitoring and alerting;
-- container-registry publication and vulnerability scanning;
-- update and incident-response procedures; and
-- availability and support expectations.
-
-The current synchronous process stores no durable application state, so there
-is no job database or application backup in this image.
+This is a local prototype, without authentication, persistent output storage,
+TLS termination or production deployment automation. File-producing operations
+will require an explicitly writable, bounded output location and HTTP delivery.
