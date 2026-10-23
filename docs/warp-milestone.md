@@ -128,3 +128,8 @@ The established lifecycle can support `terrio-hillshade` in a later branch.
 Remote fetching, user uploads, authentication, object storage, async execution
 and distributed coordination remain separate future decisions. Local dataset
 identifiers are not presented as OGC external-input reference support.
+
+For the current priority and sequencing, see the [roadmap](roadmap.md) and
+[Rasterio pivot](rasterio-pivot.md). Processing users' own rasters remains the
+first useful-service milestone after migration, before a large process catalogue.
+This report records only the completed demo-based Terrio warp work.

@@ -6,6 +6,11 @@ pinned by manifest digest in `docker/Dockerfile`. Terrio 0.4.2 is installed usin
 same `/venv` interpreter runs Gunicorn and imports the configured processor.
 No host Python packages or OS packages are installed.
 
+The processing adapter uses Terrio's native binding without a GDAL backend.
+The inherited pygeoapi environment still includes Rasterio; this image is not
+claimed to be GDAL-free. The approved [pivot](rasterio-pivot.md) will remove
+Terrio and use Rasterio directly; this section describes the current image.
+
 The owned entrypoint generates the corrected OpenAPI document in `/tmp`, then
 execs Gunicorn with two synchronous workers and a 30-second worker timeout.
 `WSGI_WORKERS` and `WSGI_WORKER_TIMEOUT` can be overridden. The upstream image's

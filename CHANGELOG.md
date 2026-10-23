@@ -2,6 +2,10 @@
 
 ## 0.1.0 — Unreleased
 
+- Record the accepted `geo-processes`/Rasterio pivot before implementation,
+  retaining users' own rasters as the first useful-service milestone.
+- Document the roadmap toward user-supplied data and raster/vector processes, with
+  OGC review pointers, test evidence and explicit remaining conformance gaps.
 - Add `terrio-warp` for approved local GeoTIFFs, three target CRSs and
   nearest/bilinear resampling, with native, base64 and reference responses.
 - Persist bounded results in a named volume with configurable 24-hour expiry,
