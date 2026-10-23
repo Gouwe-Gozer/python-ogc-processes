@@ -32,6 +32,20 @@ Use the application generator above to match `/openapi`. The upstream
 `pygeoapi openapi generate` command produces an uncorrected diagnostic document.
 The compatibility tests explicitly compare that output with the runtime contract.
 
+## Extending the service
+
+The [roadmap](roadmap.md) prioritizes processing users' own rasters. Input
+references, uploads and new operations remain planned work, not features of the
+current demo. Implement the approved [Rasterio pivot](rasterio-pivot.md) first.
+Keep each operation's processor and contract separate, use small Python adapters,
+and reuse the input/result lifecycle where appropriate.
+Follow the [OGC review guide](validation.md#ogc-review-guide) for descriptions,
+request validation, representations, OpenAPI and meaningful HTTP/raster tests.
+Update README examples and the handover with the resulting public capabilities;
+retain an explicit distinction between planned work and implemented behavior.
+
+## Container and integration checks
+
 Start and test the self-contained release:
 
 ```bash

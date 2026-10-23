@@ -1,9 +1,19 @@
 # terrio-processes
 
+**Direction update:** the approved next change renames this project to
+**geo-processes** and replaces Terrio with Rasterio. See the
+[pivot decision](docs/rasterio-pivot.md) and [roadmap](docs/roadmap.md).
+The commands and endpoints below describe the current, pre-migration runtime.
+
 A small OGC API – Processes service built on pygeoapi and Terrio's Rust-backed
 Python binding. **`terrio-info`** inspects an approved local GeoTIFF;
 **`terrio-warp`** reprojects it and delivers a GeoTIFF by value or download
 reference. Both operations run offline and synchronously.
+
+The intended service lets **users submit their own rasters**. The bundled demo
+is the current prototype input; user submission is the next useful-service
+milestone, ahead of a large process catalogue. See the [roadmap](docs/roadmap.md)
+for input-route choices, process additions and the path to a hosted service.
 
 ## Run it
 
@@ -108,10 +118,12 @@ Pinned versions: **pygeoapi 0.24.0**, **Terrio 0.4.2**, Python **3.12**.
 Both dependencies run in the same interpreter in the Docker image.
 
 See [development commands](docs/development.md), [architecture](docs/architecture.md),
-[validation limits](docs/validation.md), [release deployment](docs/release-image.md),
+[OGC review guidance and validation limits](docs/validation.md),
+[release deployment](docs/release-image.md),
 [warp milestone](docs/warp-milestone.md)
 and the [historical migration report](docs/migration.md). Passing local tests is not OGC
-certification. Additional operations and remote inputs remain future milestones.
+certification. User inputs and additional operations are planned in the
+[roadmap](docs/roadmap.md); neither is part of the current demo-only contract.
 
 ## License and origins
 

@@ -96,3 +96,6 @@ Only `demo-dem` is currently registered in `datasets.py`. Adding another local
 raster is an operator code/configuration change requiring metadata and bounds
 tests. Remote input references, uploads, object storage, distributed workers,
 authentication and file-output operations beyond warp remain outside this scope.
+
+The [roadmap](roadmap.md) prioritizes user-supplied rasters as the next service
+milestone, with input storage and expiry designed separately from these outputs.

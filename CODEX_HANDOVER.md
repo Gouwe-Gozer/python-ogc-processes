@@ -1,10 +1,29 @@
 # terrio-processes — current handover
 
+## Approved pivot — implement next
+
+The user approved **geo-processes** (`geo_processes`) and replacing the Terrio
+runtime with **Rasterio/GDAL**. Read the [decision](docs/rasterio-pivot.md) first.
+Public IDs become `raster-info` and `raster-warp`; active code, dependencies,
+tests, packaging, containers and documentation must migrate together. GDAL-free
+deployment is no longer a goal. Shapely/Pyogrio/GeoPandas are later additions
+when a concrete process needs them. Do not build a generic engine framework.
+
+The implementation inventory below still describes the pre-migration Terrio
+baseline. Update it only when the Rasterio migration is implemented and tested.
+The pivot branch is `refactor/rasterio-pivot`, based on the warp checkpoint
+`0b6de7c`. Commit the direction/roadmap first, then a validated migration. Preserve
+the existing branch and MIT notices; pushing or merging is a separate action.
+
 `terrio-processes` exposes bounded Terrio operations through OGC API – Processes
 using the official pygeoapi package. Maintainer: Minnert Wijnands (Gouwe-Gozer).
 `terrio-info` and the first file-producing operation, `terrio-warp`, are
 implemented. See [README](README.md) for usage and
 [development](docs/development.md) for setup and checks.
+
+The end goal is processing **users' own rasters**, not only an operator-hosted
+catalogue. Follow the [roadmap](docs/roadmap.md) for the proposed next milestones
+and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract work.
 
 ## Current implementation
 
@@ -77,23 +96,36 @@ Python constraints and compatibility before changing the interpreter.
 
 Keep operations independent and narrowly defined. Shared infrastructure must
 not assume that every future process has one JSON output or value transmission.
-Do not add a generic engine plugin system, a GDAL backend, asynchronous jobs or
+Do not add a generic engine plugin system, asynchronous jobs or
 arbitrary remote data access as incidental work on the current milestone.
 Do not commit, push or publish unless the user requests it.
 
 ## Further milestones
 
-`terrio-hillshade` can follow as a separately authorized operation using the
-tested result lifecycle. Remote inputs and uploads remain separate decisions:
-external OGC `href` inputs need protocol/destination restrictions, redirect
-handling, timeouts, size limits and content validation. Do not treat local
-dataset identifiers as implemented external-reference interoperability.
+Complete the [Rasterio pivot](docs/rasterio-pivot.md), then prioritize a usable
+flow for user-supplied rasters before expanding the process catalogue.
+The [roadmap](docs/roadmap.md) proposes controlled OGC `href` inputs
+as the first route; upload versus reference ingestion remains an open design
+choice. Both are currently unsupported. A configurable local catalogue is
+optional, not the intended end state. Plan input validation, temporary storage,
+representative raster tests and measured limits together; account for secondary
+fetches as well as the initial URL. Do not treat local dataset identifiers or
+an upload endpoint as implemented OGC input-reference interoperability.
+
+Useful warp resolution/extent controls and subsequent raster processes can build
+on that input flow and the tested result lifecycle. Map each algorithm to the
+available Rasterio/Python capabilities rather than retaining a Terrio dependency.
 
 Preserve the four tested warp response combinations, default value transmission,
 expiry, capacity controls and independent-client download checks when adding
 another file-producing operation. No additional operation or asynchronous
 infrastructure is part of the completed warp scope. See the
 [warp milestone report](docs/warp-milestone.md) for validation and known limits.
+
+Track conformance gaps alongside usability. Supporting references must be
+reviewed against Core input resolution/validation requirements; full Core job
+resources and Annex A coverage remain unresolved. Keep future work distinct
+from the current public capabilities and from historical checker/CITE evidence.
 
 ## Licence and origins
 
@@ -108,7 +140,10 @@ checkout is needed for routine work.
 ## Standards and upstream references
 
 Use the normative [OGC API – Processes Part 1: Core 1.0.0](https://docs.ogc.org/is/18-062r2/18-062r2.html),
-especially sections 7.10–7.11, section 8 and [Annex A](https://docs.ogc.org/is/18-062r2/18-062r2.html#_abstract_test_suite).
+especially sections 7.4, 7.9–7.13, 8 and 10, and
+[Annex A](https://docs.ogc.org/is/18-062r2/18-062r2.html#_abstract_test_suite).
+The [OGC review guide](docs/validation.md#ogc-review-guide) maps these to local
+tests and distinguishes implemented behavior from remaining conformance work.
 The [official schemas](https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/)
 and [JSON examples](https://schemas.opengis.net/ogcapi/processes/part1/1.0/examples/json/)
 serve different purposes: examples are not schemas. Offline schema fixtures

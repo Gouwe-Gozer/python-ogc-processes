@@ -1,5 +1,9 @@
 # Architecture
 
+The following describes the current Terrio runtime. The approved
+[Rasterio pivot](rasterio-pivot.md) replaces its raster adapter and project/process
+names while preserving the OGC, result-storage and deployment boundaries.
+
 The official pygeoapi package supplies discovery, configuration, Flask routes
 and process registration. `TerrioInfoProcessor` and `TerrioWarpProcessor`
 validate each operation's inputs and output options, then call the plain
@@ -48,3 +52,12 @@ resolution follows the reprojected extent. Clients select only an approved
 dataset, one of three target CRSs and nearest/bilinear resampling. Enlarging the
 input catalogue requires operator review and tests. External input `href`
 support needs a separate safe fetch/validation design.
+
+The target service processes users' own rasters. The fixed registry is the
+prototype input boundary; a larger hosted catalogue is optional. The
+[roadmap](roadmap.md) puts a user-submission flow before a large process
+catalogue. Its proposed input resolver should be separate from OGC processors
+and the Terrio adapter, with input cleanup independent of output retention.
+Any shared raster-response helper should preserve per-operation contracts and
+the existing response/transmission combinations. See the
+[OGC review guide](validation.md#ogc-review-guide) before changing these contracts.
