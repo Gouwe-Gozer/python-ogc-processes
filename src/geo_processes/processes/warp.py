@@ -8,8 +8,8 @@ from urllib.parse import urlsplit
 
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
-from terrio_processes import engine
-from terrio_processes.contracts.warp import (
+from geo_processes import engine
+from geo_processes.contracts.warp import (
     DOCUMENT_SCHEMA,
     EXECUTE_SCHEMA,
     PROCESS_METADATA,
@@ -17,10 +17,10 @@ from terrio_processes.contracts.warp import (
     TARGET_CRSS,
     TIFF_TYPE,
 )
-from terrio_processes.datasets import DATASETS
-from terrio_processes.manager import InvalidExecutionRequestError
-from terrio_processes.responses import ProcessResponse
-from terrio_processes.storage import (
+from geo_processes.datasets import DATASETS
+from geo_processes.manager import InvalidExecutionRequestError
+from geo_processes.responses import ProcessResponse
+from geo_processes.storage import (
     ResultStore,
     ResultStoreBusyError,
     ResultStoreError,
@@ -43,7 +43,7 @@ class WarpOutput:
     store: ResultStore
 
 
-class TerrioWarpProcessor(BaseProcessor):
+class RasterWarpProcessor(BaseProcessor):
     def __init__(self, processor_def):
         super().__init__(processor_def, deepcopy(PROCESS_METADATA))
         self.supports_outputs = True

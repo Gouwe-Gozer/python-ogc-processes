@@ -8,22 +8,31 @@ import urllib.request
 from urllib.parse import urlsplit
 
 import pytest
-import terrio
+import rasterio
 from jsonschema import Draft202012Validator
 
-from terrio_processes import engine
-from terrio_processes.contracts.warp import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, RESAMPLING_METHODS, TARGET_CRSS
-from terrio_processes.datasets import DATASETS
-from terrio_processes.storage import ResultStore
+from geo_processes import engine
+from geo_processes.contracts.warp import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, RESAMPLING_METHODS, TARGET_CRSS
+from geo_processes.datasets import DATASETS
+from geo_processes.storage import ResultStore
 
-EXECUTION = "/processes/terrio-warp/execution"
+EXECUTION = "/processes/raster-warp/execution"
 INPUTS = {"source": "demo-dem", "target_crs": "EPSG:4326"}
 
 
 def inspect_bytes(data, tmp_path):
     path = tmp_path / "download.tif"
     path.write_bytes(data)
-    return terrio.info(str(path), stats=True)
+    with rasterio.open(path) as raster:
+        return {
+            "driver": raster.driver,
+            "crs": {"epsg": raster.crs.to_epsg()},
+            "size": [raster.width, raster.height],
+            "band_count": raster.count,
+            "geo_transform": list(raster.transform.to_gdal()),
+            "extent": list(raster.bounds),
+            "bands": [{"statistics": {"valid_count": int(raster.read(1, masked=True).count())}}],
+        }
 
 
 def assert_raster(data, tmp_path, epsg=4326):
@@ -54,7 +63,8 @@ def test_resampling_choice_changes_reprojected_samples(tmp_path):
     for method in RESAMPLING_METHODS:
         output = tmp_path / f"{method}.tif"
         engine.warp_raster(DATASETS["demo-dem"], output, "EPSG:4326", method)
-        pixels.append(terrio.open_raster(str(output)).read(1))
+        with rasterio.open(output) as raster:
+            pixels.append(raster.read(1))
     assert not (pixels[0] == pixels[1]).all()
 
 
@@ -69,7 +79,13 @@ def test_engine_limits_are_checked_before_warp(tmp_path, monkeypatch):
         width = engine.MAX_SAMPLES + 1
         height = count = 1
 
-    monkeypatch.setattr(engine.terrio, "open_raster", lambda *args, **kwargs: OversizedRaster())
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            pass
+
+    monkeypatch.setattr(engine.rasterio, "open", lambda *args, **kwargs: OversizedRaster())
     with pytest.raises(engine.RasterWarpError):
         engine.warp_raster(DATASETS["demo-dem"], tmp_path / "output.tif", "EPSG:4326", "bilinear")
 
@@ -80,7 +96,7 @@ def test_all_response_and_transmission_combinations(http_client, tmp_path, mode,
     request = {"inputs": INPUTS, "response": mode, "outputs": {"result": {"transmissionMode": transmission}}}
     Draft202012Validator(EXECUTE_SCHEMA).validate(request)
     response = http_client.post(EXECUTION, json=request)
-    assert "X-Terrio-Internal-Status" not in response.headers
+    assert "X-Geo-Internal-Status" not in response.headers
     assert "Location" not in response.headers
     if mode == "raw" and transmission == "reference":
         assert response.status_code == 204
@@ -166,9 +182,9 @@ def test_async_preference_is_still_synchronous(http_client):
         {"inputs": INPUTS, "subscriber": {"successUri": "https://example.test/callback"}},
     ],
 )
-def test_invalid_warp_requests_never_start_terrio(http_client, monkeypatch, document):
+def test_invalid_warp_requests_never_start_rasterio(http_client, monkeypatch, document):
     def forbidden(*args, **kwargs):
-        pytest.fail("invalid input must not reach Terrio")
+        pytest.fail("invalid input must not reach Rasterio")
 
     monkeypatch.setattr(engine, "warp_raster", forbidden)
     assert not Draft202012Validator(EXECUTE_SCHEMA).is_valid(document)
@@ -180,8 +196,8 @@ def test_invalid_warp_requests_never_start_terrio(http_client, monkeypatch, docu
 
 
 def test_capacity_and_busy_storage_are_controlled_503s(http_client, tmp_path, monkeypatch):
-    monkeypatch.setenv("TERRIO_OUTPUT_DIR", str(tmp_path))
-    monkeypatch.setenv("TERRIO_RESULT_MAX_COUNT", "1")
+    monkeypatch.setenv("GEO_OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setenv("GEO_RESULT_MAX_COUNT", "1")
     assert http_client.post(EXECUTION, json={"inputs": INPUTS}).status_code == 200
     response = http_client.post(EXECUTION, json={"inputs": INPUTS})
     assert response.status_code == 503
@@ -193,12 +209,12 @@ def test_capacity_and_busy_storage_are_controlled_503s(http_client, tmp_path, mo
 
 
 def test_engine_failure_is_sanitized_and_cleans_workspace(http_client, tmp_path, monkeypatch):
-    monkeypatch.setenv("TERRIO_OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setenv("GEO_OUTPUT_DIR", str(tmp_path))
 
     def fail(*args, **kwargs):
         raise RuntimeError("/secret/internal/raster.tif")
 
-    monkeypatch.setattr(engine.terrio, "warp", fail)
+    monkeypatch.setattr(engine, "reproject", fail)
     response = http_client.post(EXECUTION, json={"inputs": INPUTS})
     assert response.status_code == 500
     assert "secret" not in response.text
@@ -207,7 +223,7 @@ def test_engine_failure_is_sanitized_and_cleans_workspace(http_client, tmp_path,
 
 
 def test_download_rejects_expired_missing_or_invalid_ids(http_client, tmp_path, monkeypatch):
-    monkeypatch.setenv("TERRIO_OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setenv("GEO_OUTPUT_DIR", str(tmp_path))
     document = {"inputs": INPUTS, "response": "document", "outputs": {"result": {"transmissionMode": "reference"}}}
     response = http_client.post(EXECUTION, json=document)
     href = response.get_json()["result"]["href"]
@@ -224,7 +240,7 @@ def test_download_rejects_expired_missing_or_invalid_ids(http_client, tmp_path, 
 
 
 def test_description_and_openapi_match_actual_modes(http_client):
-    description = http_client.get("/processes/terrio-warp?f=json").get_json()
+    description = http_client.get("/processes/raster-warp?f=json").get_json()
     assert description["jobControlOptions"] == ["sync-execute"]
     assert description["outputTransmission"] == ["value", "reference"]
     assert description["outputs"]["result"]["schema"]["contentMediaType"] == "image/tiff"
@@ -304,7 +320,7 @@ def test_invalid_public_url_prevents_reference_processing(http_client, monkeypat
 
 
 def test_result_read_failure_is_sanitized(http_client, monkeypatch):
-    from terrio_processes.storage import ResultStoreError
+    from geo_processes.storage import ResultStoreError
 
     def fail(*args, **kwargs):
         raise ResultStoreError("/secret/storage/path")

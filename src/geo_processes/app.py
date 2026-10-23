@@ -6,8 +6,8 @@ from email.utils import formatdate
 from flask import jsonify, make_response, request
 from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_
 
-from terrio_processes.responses import STATUS_HEADER
-from terrio_processes.storage import ResultNotFoundError, ResultStore, ResultStoreError
+from geo_processes.responses import STATUS_HEADER
+from geo_processes.storage import ResultNotFoundError, ResultStore, ResultStoreError
 
 api_.manager.result_base_url = api_.base_url
 APP.config["MAX_CONTENT_LENGTH"] = 16 * 1024

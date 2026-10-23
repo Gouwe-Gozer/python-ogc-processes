@@ -10,7 +10,7 @@ the network. Invalid requests return controlled JSON client errors. Engine
 failures return sanitized server errors; detailed errors belong in server logs.
 
 Warp requests select only an approved CRS and nearest/bilinear resampling.
-Request bodies are capped at 16 KiB; approved input rasters at 16 MiB and
+Request bodies are capped at 16 KiB; both info and warp inputs at 16 MiB and
 1,048,576 samples including bands. Output dimensions are fixed to the source.
 One writer per result volume runs at a time. Outputs have random IDs, bounded
 capacity, atomic publication and enforced expiry. Downloads cannot traverse

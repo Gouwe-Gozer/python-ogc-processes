@@ -1,16 +1,16 @@
-"""OGC boundary for the bounded terrio-info operation."""
+"""OGC boundary for the bounded raster-info operation."""
 
 from collections.abc import Mapping
 from copy import deepcopy
 
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
-from terrio_processes import engine
-from terrio_processes.contracts.info import DATASETS, DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA, PROCESS_METADATA
-from terrio_processes.manager import InvalidExecutionRequestError
+from geo_processes import engine
+from geo_processes.contracts.info import DATASETS, DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA, PROCESS_METADATA
+from geo_processes.manager import InvalidExecutionRequestError
 
 
-class TerrioInfoProcessor(BaseProcessor):
+class RasterInfoProcessor(BaseProcessor):
     """Inspect only the operator-owned datasets listed in the description."""
 
     def __init__(self, processor_def):
@@ -67,7 +67,7 @@ class TerrioInfoProcessor(BaseProcessor):
             },
             "responses": {
                 "200": {
-                    "description": "Native raster information (raw) or an info-keyed results document (document).",
+                    "description": "Application-defined raster information (raw) or an info-keyed document (document).",
                     "content": {"application/json": {"schema": {"oneOf": [INFO_SCHEMA, DOCUMENT_SCHEMA]}}},
                 }
             },

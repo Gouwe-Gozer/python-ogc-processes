@@ -18,17 +18,17 @@ server:
     attribution: '&copy; OpenStreetMap contributors'
   ogc_schemas_location: /schemas.opengis.net
   manager:
-    name: terrio_processes.manager.OgcSynchronousManager
+    name: geo_processes.manager.OgcSynchronousManager
     connection: unused
     output_dir: /tmp
 logging:
   level: INFO
 metadata:
   identification:
-    title: Terrio Processes API
-    description: Bounded synchronous raster information and reprojection powered by Terrio.
+    title: Geo Processes API
+    description: Bounded synchronous raster information and reprojection powered by Rasterio.
     keywords:
-    - Terrio
+    - Rasterio
     - raster
     - GeoTIFF
     - OGC API Processes
@@ -44,11 +44,11 @@ metadata:
     name: Gouwe-Gozer
     role: pointOfContact
 resources:
-  terrio-info:
+  raster-info:
     type: process
     processor:
-      name: terrio_processes.processes.info.TerrioInfoProcessor
-  terrio-warp:
+      name: geo_processes.processes.info.RasterInfoProcessor
+  raster-warp:
     type: process
     processor:
-      name: terrio_processes.processes.warp.TerrioWarpProcessor
+      name: geo_processes.processes.warp.RasterWarpProcessor

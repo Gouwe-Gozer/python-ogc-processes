@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 # Private manager-to-Flask metadata. Removed before sending any HTTP response.
-STATUS_HEADER = "X-Terrio-Internal-Status"
+STATUS_HEADER = "X-Geo-Internal-Status"
 
 
 @dataclass(frozen=True)

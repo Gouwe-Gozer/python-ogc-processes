@@ -1,23 +1,15 @@
-# terrio-processes — current handover
+# geo-processes — current handover
 
-## Approved pivot — implement next
+The approved [Rasterio pivot](docs/rasterio-pivot.md) replaces the previous Terrio
+runtime and names with **geo-processes** (`geo_processes`). GDAL-free deployment
+is no longer a goal. The direction/roadmap was committed first as `99383c1` on
+`refactor/rasterio-pivot`, based on the tested warp checkpoint `0b6de7c`.
+The existing warp branch and MIT notices are preserved; pushing or merging is
+a separate action. The remote GitHub repository has not been renamed.
 
-The user approved **geo-processes** (`geo_processes`) and replacing the Terrio
-runtime with **Rasterio/GDAL**. Read the [decision](docs/rasterio-pivot.md) first.
-Public IDs become `raster-info` and `raster-warp`; active code, dependencies,
-tests, packaging, containers and documentation must migrate together. GDAL-free
-deployment is no longer a goal. Shapely/Pyogrio/GeoPandas are later additions
-when a concrete process needs them. Do not build a generic engine framework.
-
-The implementation inventory below still describes the pre-migration Terrio
-baseline. Update it only when the Rasterio migration is implemented and tested.
-The pivot branch is `refactor/rasterio-pivot`, based on the warp checkpoint
-`0b6de7c`. Commit the direction/roadmap first, then a validated migration. Preserve
-the existing branch and MIT notices; pushing or merging is a separate action.
-
-`terrio-processes` exposes bounded Terrio operations through OGC API – Processes
+`geo-processes` exposes bounded Rasterio operations through OGC API – Processes
 using the official pygeoapi package. Maintainer: Minnert Wijnands (Gouwe-Gozer).
-`terrio-info` and the first file-producing operation, `terrio-warp`, are
+`raster-info` and the first file-producing operation, `raster-warp`, are
 implemented. See [README](README.md) for usage and
 [development](docs/development.md) for setup and checks.
 
@@ -27,19 +19,21 @@ and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract wor
 
 ## Current implementation
 
-- Python 3.12, pygeoapi **0.24.0** and Terrio **0.4.2**, with project-local
+- Python 3.12, pygeoapi **0.24.0**, Rasterio **1.4.3** and NumPy **1.26.4**, with project-local
   dependencies managed by `uv` and pinned in `uv.lock`.
-- Two public processes: **`terrio-info`** and **`terrio-warp`**. Their required
+- Two public processes: **`raster-info`** and **`raster-warp`**. Their required
   `source` input is the inline string `demo-dem`, mapped to a bundled 4 by 3
   GeoTIFF in EPSG:28992.
-  Clients cannot choose filesystem paths, URLs or arbitrary Terrio options.
-- The plain Python adapter calls `terrio.info(path, stats=True)` and `terrio.warp` directly.
+  Clients cannot choose filesystem paths, URLs or arbitrary Rasterio options.
+- The plain Python adapter reads metadata with Rasterio, computes exact finite
+  masked statistics with NumPy and calls `rasterio.warp.reproject` for each band.
+  Metadata uses an [application-owned contract](docs/raster-info.md).
   Each processor owns its input validation, description and result formatting.
 - Synchronous execution only: `jobControlOptions: ["sync-execute"]`.
   Info offers value transmission; warp offers value and reference. Omitted
   `response` means `raw`; omitted `outputs` selects the defined output; omitted
   transmission means `value`.
-- Info raw execution returns native raster information with HTTP 200 and
+- Info raw execution returns application-defined raster information with HTTP 200 and
   `application/json`. Document execution returns HTTP 200 and
   `{"info":{"value":{...raster information...}}}`. `Prefer: respond-async`
   remains synchronous and does not advertise a job URL.
@@ -54,7 +48,7 @@ and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract wor
 - Unknown inputs/outputs, unsupported formats/transmission, callbacks and
   malformed requests are rejected with JSON client errors. Engine failures
   return sanitized server errors.
-- Docker uses the pinned official pygeoapi image and installs Terrio in the
+- Docker uses the pinned official pygeoapi image and installs Rasterio in the
   same `/venv` used by Gunicorn. Release Compose retains non-root execution,
   a read-only root, bounded `/tmp`, dropped capabilities and no-new-privileges.
 
@@ -62,15 +56,15 @@ and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract wor
 
 | Location | Responsibility |
 | --- | --- |
-| `src/terrio_processes/engine.py` | Terrio adapter without pygeoapi imports |
-| `src/terrio_processes/processes/` | Independent info and warp validation/representations |
-| `src/terrio_processes/contracts/` | Per-operation metadata and schemas |
-| `src/terrio_processes/datasets.py` | Operator-approved local raster registry |
-| `src/terrio_processes/storage.py` | Bounded local output publication, expiry and cleanup |
-| `src/terrio_processes/responses.py` | Explicit process HTTP representation |
-| `src/terrio_processes/app.py` | Boundary validation for registered execution routes |
-| `src/terrio_processes/manager.py` | Synchronous execution and typed/sanitized errors |
-| `src/terrio_processes/openapi.py` | Version-checked corrections to upstream OpenAPI |
+| `src/geo_processes/engine.py` | Rasterio adapter without pygeoapi imports |
+| `src/geo_processes/processes/` | Independent info and warp validation/representations |
+| `src/geo_processes/contracts/` | Per-operation metadata and schemas |
+| `src/geo_processes/datasets.py` | Operator-approved local raster registry |
+| `src/geo_processes/storage.py` | Bounded local output publication, expiry and cleanup |
+| `src/geo_processes/responses.py` | Explicit process HTTP representation |
+| `src/geo_processes/app.py` | Boundary validation for registered execution routes |
+| `src/geo_processes/manager.py` | Synchronous execution and typed/sanitized errors |
+| `src/geo_processes/openapi.py` | Version-checked corrections to upstream OpenAPI |
 | `config/pygeoapi.yml` | Public resource and manager registration |
 | `docker/`, `compose*.yml` | Application startup and deployment configurations |
 | `tests/`, `scripts/`, `.github/workflows/ci.yml` | Unit, official-schema, HTTP, quality and container checks |
@@ -102,8 +96,7 @@ Do not commit, push or publish unless the user requests it.
 
 ## Further milestones
 
-Complete the [Rasterio pivot](docs/rasterio-pivot.md), then prioritize a usable
-flow for user-supplied rasters before expanding the process catalogue.
+Prioritize a usable flow for user-supplied rasters before expanding the process catalogue.
 The [roadmap](docs/roadmap.md) proposes controlled OGC `href` inputs
 as the first route; upload versus reference ingestion remains an open design
 choice. Both are currently unsupported. A configurable local catalogue is
@@ -114,13 +107,15 @@ an upload endpoint as implemented OGC input-reference interoperability.
 
 Useful warp resolution/extent controls and subsequent raster processes can build
 on that input flow and the tested result lifecycle. Map each algorithm to the
-available Rasterio/Python capabilities rather than retaining a Terrio dependency.
+available Rasterio/Python capabilities. Add Shapely/Pyogrio/GeoPandas when an
+implemented operation needs them. Do not add an engine plugin framework.
 
 Preserve the four tested warp response combinations, default value transmission,
 expiry, capacity controls and independent-client download checks when adding
 another file-producing operation. No additional operation or asynchronous
 infrastructure is part of the completed warp scope. See the
-[warp milestone report](docs/warp-milestone.md) for validation and known limits.
+[historical Terrio warp report](docs/warp-milestone.md) and
+[current pivot validation](docs/rasterio-pivot.md#validation-status).
 
 Track conformance gaps alongside usability. Supporting references must be
 reviewed against Core input resolution/validation requirements; full Core job
@@ -150,4 +145,4 @@ serve different purposes: examples are not schemas. Offline schema fixtures
 live under `tests/schemas/ogc-processes-1.0`.
 
 - [pygeoapi](https://github.com/geopython/pygeoapi) and its [0.24.0 release](https://github.com/geopython/pygeoapi/releases/tag/0.24.0)
-- [Terrio](https://github.com/opengeos/terrio) and its [Python API](https://terrio.opengeos.org/python/)
+- [Rasterio](https://rasterio.readthedocs.io/en/stable/) and [NumPy](https://numpy.org/doc/stable/)

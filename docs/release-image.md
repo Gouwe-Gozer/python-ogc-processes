@@ -1,24 +1,25 @@
 # Release image
 
 The application builds on the official `geopython/pygeoapi:0.24.0` image,
-pinned by manifest digest in `docker/Dockerfile`. Terrio 0.4.2 is installed using
+pinned by manifest digest in `docker/Dockerfile`. Rasterio 1.4.3 and NumPy 1.26.4
+are explicitly installed using
 `/venv/bin/python3 -m pip` inside the image, with wheel-only installation. The
 same `/venv` interpreter runs Gunicorn and imports the configured processor.
 No host Python packages or OS packages are installed.
 
-The processing adapter uses Terrio's native binding without a GDAL backend.
-The inherited pygeoapi environment still includes Rasterio; this image is not
-claimed to be GDAL-free. The approved [pivot](rasterio-pivot.md) will remove
-Terrio and use Rasterio directly; this section describes the current image.
+The adapter uses Rasterio/GDAL. The [pivot](rasterio-pivot.md) removes Terrio
+from the runtime. Matching the base image's Rasterio/NumPy versions avoids
+an unrelated NumPy 2 migration. GDAL versions bundled by the base image and
+local wheels can differ; validate both environments.
 
 The owned entrypoint generates the corrected OpenAPI document in `/tmp`, then
 execs Gunicorn with two synchronous workers and a 30-second worker timeout.
 `WSGI_WORKERS` and `WSGI_WORKER_TIMEOUT` can be overridden. The upstream image's
 base dependencies are fixed by its digest; they are not all identical to the
-local uv lockfile. The pygeoapi and Terrio versions match in both environments.
+local uv lockfile. The pygeoapi, Rasterio and NumPy versions match in both environments.
 
 The release Compose service has no host bind mounts. It has one writable named
-volume, mounted at `/var/lib/terrio/results`, for persistent bounded outputs.
+volume, mounted at `/var/lib/geo/results`, for persistent bounded outputs.
 The image seeds that directory with UID/GID 10001 ownership before dropping
 privileges; no runtime root initialization is required. The service runs as UID/GID 10001,
 with a read-only root, a 64 MB `/tmp` tmpfs, all Linux capabilities dropped and
@@ -34,7 +35,7 @@ docker compose --file compose.release.yml up --build --detach
 uv run python scripts/smoke_discovery.py --base-url http://localhost:5001
 uv run python scripts/smoke_warp.py --base-url http://localhost:5001
 uv run python scripts/check_release_container.py
-docker compose --file compose.release.yml exec -T api /venv/bin/python3 -c 'import terrio, pygeoapi; from terrio_processes.processes.info import TerrioInfoProcessor; print(terrio.__version__, pygeoapi.__version__)'
+docker compose --file compose.release.yml exec -T api /venv/bin/python3 -c 'import rasterio, numpy, pygeoapi; print(rasterio.__version__, rasterio.__gdal_version__, numpy.__version__, pygeoapi.__version__)'
 ```
 
 Result URLs are built from `PYGEOAPI_SERVER_URL`, not the requesting Host header.
@@ -42,6 +43,8 @@ Set it to the client-facing address when running behind a proxy or on another
 port. The named volume retains results when the service is restarted or
 recreated. A normal `docker compose down` preserves it; `down --volumes` deletes
 the results. Cleanup removes expired files without evicting unexpired outputs.
+When upgrading the renamed project, retain the previous Compose project name
+to reuse its volume; see the [upgrade instructions](rasterio-pivot.md#upgrade-names-and-preserve-results).
 
 This remains a local prototype without authentication, TLS termination or
 production deployment automation. Result download URLs are opaque, but are

@@ -41,7 +41,7 @@
       "message": "A successful asynchronous execution SHALL be reported with HTTP status code `201`. \"responses[201]\" property must be truthy",
       "path": [
         "paths",
-        "/processes/terrio-info/execution",
+        "/processes/raster-info/execution",
         "post",
         "responses"
       ],
@@ -54,7 +54,7 @@
       "message": "A successful asynchronous execution SHALL be reported with HTTP status code `201`. \"responses[201]\" property must be truthy",
       "path": [
         "paths",
-        "/processes/terrio-warp/execution",
+        "/processes/raster-warp/execution",
         "post",
         "responses"
       ],

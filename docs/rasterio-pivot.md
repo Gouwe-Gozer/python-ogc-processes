@@ -5,10 +5,9 @@ service for processing **users' own geospatial data**, starting with rasters.
 Rasterio replaces Terrio as the raster implementation. Shapely, Pyogrio and
 GeoPandas can support later vector processes when those processes need them.
 
-This decision is documented before implementation. At this checkpoint, the
-running code is still the Terrio implementation described in the README.
-The migration commit must update the runtime documentation and record its
-validation here. The [roadmap](roadmap.md) describes subsequent service work.
+This decision was committed before implementation in `99383c1`. The migration
+implements the scope below and updates the runtime documentation. The
+[roadmap](roadmap.md) describes subsequent service work.
 
 ## Why change direction
 
@@ -46,9 +45,39 @@ libraries. Algorithm coverage and numerical behavior must be checked per process
    milestone/validation reports. Historical Terrio references need not be erased.
 
 This is an intentional pre-release API/package rename. Existing execution URLs,
-imports and deployment names will change; no compatibility aliases are planned.
-Changing a result-volume name must not silently discard earlier outputs. Document
-how to retain or deliberately replace storage before changing deployment names.
+imports and deployment names change; no compatibility aliases are provided.
+
+## Upgrade names and preserve results
+
+| Previous name or behavior | Current name or behavior |
+| --- | --- |
+| `terrio-processes`, `terrio_processes` | `geo-processes`, `geo_processes` |
+| `terrio-info`, `terrio-warp` | `raster-info`, `raster-warp` |
+| `TerrioInfoProcessor`, `TerrioWarpProcessor` | `RasterInfoProcessor`, `RasterWarpProcessor` |
+| `TERRIO_OUTPUT_DIR`, `TERRIO_RESULT_*` | `GEO_OUTPUT_DIR`, `GEO_RESULT_*` |
+| `/var/lib/terrio/results` inside the container | `/var/lib/geo/results` inside the container |
+| Terrio-native info dictionary | [Application-defined metadata](raster-info.md), including dtype names, nullable CRS/statistics and a tags object |
+
+Update local environment settings, client URLs/imports, launch commands and any
+image references. Previous environment variable names are no longer read.
+The GitHub remote still points to `Gouwe-Gozer/terrio-processes`; the owner can
+rename it separately. The repository directory can retain its existing name.
+
+The logical Compose volume remains `results`. Its Docker name depends on the
+Compose project, so **retain the previous project name** when upgrading an
+existing installation. An internal mount-path change does not rename that
+volume. For the default project created from this repository's existing folder:
+
+```bash
+docker compose --project-name terrio-processes --file compose.release.yml up --build --detach
+```
+
+If the installation used a custom project name, supply that same name instead.
+Keep using it after renaming the checkout directory. Do not add `--volumes` to
+`down` when retaining results. Unexpired files keep their original timestamps
+and `/results/<id>/output.tif` URLs when the canonical server URL is unchanged.
+An isolated old-image to new-image test verified an issued URL and identical
+file checksum across the upgrade; it did not touch an existing user's volume.
 
 ## Boundaries and follow-up
 
@@ -81,8 +110,35 @@ claims and explicitly track input-reference and job-resource gaps.
 
 ## Validation status
 
-Before migration, the unchanged Terrio baseline has 197 passing tests and 96.40%
-coverage, plus passing Ruff and Bandit checks. A local, in-memory Rasterio
-feasibility check reads the fixture's exact statistics and produces valid
-4 by 3 GeoTIFFs for all six current CRS/resampling combinations. These checks
-establish feasibility only; they are not the migrated service's test results.
+The pre-migration Terrio baseline had 197 passing tests and 96.40% coverage.
+The migrated implementation has **210 passing tests and 96.35% coverage**, with
+Ruff formatting/lint and Bandit passing. The additional cases cover nodata and
+non-finite samples, empty bands, missing/custom CRS, complex-raster rejection,
+input bounds and multiband identity reprojection. Existing HTTP, schema,
+storage, concurrency, expiry and error coverage is retained.
+
+The checked application versions are pygeoapi **0.24.0**, Rasterio **1.4.3** and
+NumPy **1.26.4** on Python **3.12**. Rasterio/NumPy match the pinned base image;
+using Rasterio 1.5 would also require NumPy 2, which is a separate dependency
+upgrade. The local wheel bundles GDAL **3.9.3**, while the image uses GDAL
+**3.11.4**. Both environments pass all six CRS/resampling combinations.
+
+Additional verification:
+
+- Public and integration configuration/OpenAPI validation, all Compose
+  configurations and an offline wheel build/inspection pass.
+- The self-contained release starts with no source/configuration host mounts.
+  Runtime inspection confirms non-root execution, read-only root, dropped
+  capabilities, no privilege escalation and the dedicated result volume.
+- Discovery and all four warp response/transmission combinations pass through
+  Gunicorn, the host client and an independent client container. An issued URL
+  remains usable after restart. The old-image volume upgrade is verified above.
+- Terrio and the old application module are absent from the new image; Terrio
+  is absent from the local locked environment and wheel requirements.
+- The pinned Geonovum checker completed against the migrated service. Its five
+  diagnostics differ only in the two renamed execution paths; see the
+  [reviewed baseline](../validation/geonovum/README.md).
+
+The inherited upstream Pydantic deprecation warning remains. No remote CI run,
+new TEAM Engine/CITE run or OGC certification is claimed. Input references and
+uploads remain unimplemented. See the [OGC evidence boundary](validation.md).

@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from terrio_processes.openapi import generate_openapi
+from geo_processes.openapi import generate_openapi
 
 
 @pytest.fixture(scope="session")
@@ -28,8 +28,8 @@ def app(service_config, tmp_path_factory):
     with pytest.MonkeyPatch.context() as environment:
         environment.setenv("PYGEOAPI_CONFIG", str(config_path))
         environment.setenv("PYGEOAPI_OPENAPI", str(openapi_path))
-        environment.setenv("TERRIO_OUTPUT_DIR", str(temporary_directory / "results"))
-        from terrio_processes.app import APP
+        environment.setenv("GEO_OUTPUT_DIR", str(temporary_directory / "results"))
+        from geo_processes.app import APP
 
         APP.config["TESTING"] = True
         yield APP

@@ -14,7 +14,7 @@ from pygeoapi.openapi import get_oas
 from pygeoapi.plugin import load_plugin
 from pygeoapi.util import yaml_load
 
-from terrio_processes import __version__
+from geo_processes import __version__
 
 SCHEMA_BASE = "https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas"
 
@@ -78,13 +78,13 @@ def generate_openapi(config):
                     "schema": {"type": "string", "enum": ["wait", "respond-async"]},
                 }
             ]
-    if "terrio-warp" in config["resources"]:
+    if "raster-warp" in config["resources"]:
         # This is application storage delivery, separate from OGC job management.
         paths["/results/{result_id}/output.tif"] = {
             "get": {
                 "summary": "Download an unexpired raster result",
                 "operationId": "downloadRasterResult",
-                "tags": ["terrio-warp"],
+                "tags": ["raster-warp"],
                 "parameters": [
                     {
                         "name": "result_id",

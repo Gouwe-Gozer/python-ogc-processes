@@ -1,11 +1,16 @@
-"""Contract verified against Terrio 0.4.2's raster information response."""
+"""Application-owned raster metadata contract, independent of the library API."""
 
-from terrio_processes import __version__
-from terrio_processes.datasets import DATASETS
+from geo_processes import __version__
+from geo_processes.datasets import DATASETS
 
 
 def _numbers(length):
     return {"type": "array", "items": {"type": "number"}, "minItems": length, "maxItems": length}
+
+
+def _nullable(schema):
+    # enum:null works in JSON Schema and avoids OpenAPI 3.0's unsupported type:null.
+    return {"anyOf": [schema, {"enum": [None]}]}
 
 
 INFO_SCHEMA = {
@@ -17,14 +22,16 @@ INFO_SCHEMA = {
         "size": {"type": "array", "items": {"type": "integer", "minimum": 1}, "minItems": 2, "maxItems": 2},
         "band_count": {"type": "integer", "minimum": 1},
         "geo_transform": _numbers(6),
-        "crs": {
-            "type": "object",
-            "required": ["epsg", "name", "wkt"],
-            "properties": {"epsg": {"type": "integer"}, "name": {"type": "string"}, "wkt": {"type": "string"}},
-            "additionalProperties": False,
-        },
+        "crs": _nullable(
+            {
+                "type": "object",
+                "required": ["epsg", "wkt"],
+                "properties": {"epsg": _nullable({"type": "integer"}), "wkt": {"type": "string"}},
+                "additionalProperties": False,
+            }
+        ),
         "extent": _numbers(4),
-        "wgs84_extent": _numbers(4),
+        "wgs84_extent": _nullable(_numbers(4)),
         "bands": {
             "type": "array",
             "minItems": 1,
@@ -34,15 +41,15 @@ INFO_SCHEMA = {
                 "properties": {
                     "band": {"type": "integer", "minimum": 1},
                     "data_type": {"type": "string"},
-                    "nodata": {"type": "number"},
+                    "nodata": {"anyOf": [_nullable({"type": "number"}), {"enum": ["NaN", "Infinity", "-Infinity"]}]},
                     "statistics": {
                         "type": "object",
                         "required": ["min", "max", "mean", "std_dev", "valid_count"],
                         "properties": {
-                            "min": {"type": "number"},
-                            "max": {"type": "number"},
-                            "mean": {"type": "number"},
-                            "std_dev": {"type": "number", "minimum": 0},
+                            "min": _nullable({"type": "number"}),
+                            "max": _nullable({"type": "number"}),
+                            "mean": _nullable({"type": "number"}),
+                            "std_dev": _nullable({"type": "number", "minimum": 0}),
                             "valid_count": {"type": "integer", "minimum": 0},
                         },
                         "additionalProperties": False,
@@ -51,20 +58,20 @@ INFO_SCHEMA = {
                 "additionalProperties": False,
             },
         },
-        "metadata": {"type": "array", "items": {}},
+        "metadata": {"type": "object", "additionalProperties": {"type": "string"}},
     },
     "additionalProperties": False,
 }
 
 PROCESS_METADATA = {
     "version": __version__,
-    "id": "terrio-info",
-    "title": "Terrio raster information",
-    "description": "Inspect a bundled, bounded GeoTIFF using Terrio, including exact band statistics.",
-    "keywords": ["Terrio", "raster", "GeoTIFF", "statistics"],
+    "id": "raster-info",
+    "title": "Raster information",
+    "description": "Inspect a bundled, bounded GeoTIFF using Rasterio, including exact band statistics.",
+    "keywords": ["Rasterio", "raster", "GeoTIFF", "statistics"],
     "jobControlOptions": ["sync-execute"],
     "outputTransmission": ["value"],
-    "links": [{"href": "https://terrio.opengeos.org/python/", "rel": "about", "type": "text/html"}],
+    "links": [{"href": "https://rasterio.readthedocs.io/en/stable/", "rel": "about", "type": "text/html"}],
     "inputs": {
         "source": {
             "title": "Dataset identifier",
@@ -77,7 +84,9 @@ PROCESS_METADATA = {
     "outputs": {
         "info": {
             "title": "Raster information",
-            "description": "Terrio raster metadata, georeferencing and exact band statistics as JSON.",
+            "description": (
+                "Application-defined raster metadata, georeferencing and exact finite band statistics as JSON."
+            ),
             "schema": {"contentMediaType": "application/json", **INFO_SCHEMA},
         }
     },

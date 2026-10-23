@@ -64,10 +64,10 @@ class ResultStore:
     @classmethod
     def from_environment(cls):
         return cls(
-            Path(os.environ.get("TERRIO_OUTPUT_DIR", "runtime-data/results")).resolve(),
-            retention_seconds=int(os.environ.get("TERRIO_RESULT_RETENTION_SECONDS", "86400")),
-            max_bytes=int(os.environ.get("TERRIO_RESULT_MAX_BYTES", str(64 * 1024 * 1024))),
-            max_results=int(os.environ.get("TERRIO_RESULT_MAX_COUNT", "256")),
+            Path(os.environ.get("GEO_OUTPUT_DIR", "runtime-data/results")).resolve(),
+            retention_seconds=int(os.environ.get("GEO_RESULT_RETENTION_SECONDS", "86400")),
+            max_bytes=int(os.environ.get("GEO_RESULT_MAX_BYTES", str(64 * 1024 * 1024))),
+            max_results=int(os.environ.get("GEO_RESULT_MAX_COUNT", "256")),
         )
 
     @contextmanager
