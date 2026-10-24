@@ -10,6 +10,8 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
+from geo_processes.datasets import demo_source
+
 PROCESS_ID = "raster-info"
 
 
@@ -112,7 +114,7 @@ def run(base_url: str, wait_seconds: int) -> None:
 
     results = {}
     for mode in ("raw", "document"):
-        payload = json.dumps({"inputs": {"source": "demo-dem"}, "response": mode}).encode()
+        payload = json.dumps({"inputs": {"source": demo_source()}, "response": mode}).encode()
         request = urllib.request.Request(
             _url(base_url, f"/processes/{PROCESS_ID}/execution"),
             data=payload,

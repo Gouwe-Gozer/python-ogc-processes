@@ -6,8 +6,9 @@ import pytest
 from jsonschema import Draft202012Validator
 from pygeoapi.openapi import get_oas, validate_openapi_document
 from pygeoapi.process.manager.dummy import DummyManager
+from raster_fixtures import DEMO_SOURCE
 
-from geo_processes.contracts.info import DATASETS
+from geo_processes.datasets import DEMO_RASTER
 from geo_processes.openapi import SCHEMA_BASE, generate_openapi
 
 
@@ -20,7 +21,7 @@ def test_upstream_still_needs_targeted_corrections(service_config):
     assert paths["/conformance"]["get"]["responses"]["200"]["$ref"].endswith("/LandingPage")
     assert not any(p.get("name") == "limit" for p in paths["/processes"]["get"]["parameters"])
     manager = DummyManager({"name": "Dummy", "processes": service_config["resources"]})
-    document = manager.execute_process("raster-info", {"source": "demo-dem"}, requested_response="document")[2]
+    document = manager.execute_process("raster-info", {"source": DEMO_SOURCE}, requested_response="document")[2]
     assert set(document) == {"outputs"}
     assert document["outputs"][0]["type"] == "raster"
 
@@ -51,11 +52,11 @@ def test_runtime_openapi_describes_real_responses(http_client):
     request_schema = operation["requestBody"]["content"]["application/json"]["schema"]
     result_schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
     for mode in ["raw", "document"]:
-        payload = {"inputs": {"source": "demo-dem"}, "response": mode}
+        payload = {"inputs": {"source": DEMO_SOURCE}, "response": mode}
         Draft202012Validator(request_schema).validate(payload)
         result = http_client.post("/processes/raster-info/execution", json=payload)
         Draft202012Validator(result_schema).validate(result.get_json())
-    assert DATASETS["demo-dem"].is_file()
+    assert DEMO_RASTER.is_file()
 
 
 def test_corrections_are_version_aware(service_config, monkeypatch):

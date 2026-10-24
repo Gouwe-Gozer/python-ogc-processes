@@ -175,7 +175,7 @@ def run_checker(
     """Run the checker, retrying only incomplete operational attempts."""
     npx = shutil.which("npx")
     if npx is None:
-        raise CheckerOperationalError("npx was not found; install Node.js 20.17 or newer")
+        raise CheckerOperationalError("npx was not found; install Node.js 24 LTS (the CI runtime)")
 
     last_problem = "checker did not run"
     last_output = ""
@@ -265,7 +265,7 @@ def compare_reports(
 
 def describe_diagnostic(diagnostic: dict[str, Any]) -> str:
     path = "/".join(str(component) for component in diagnostic["path"]) or "<document>"
-    return f"{diagnostic['code']} at {path}: {diagnostic['message']}"
+    return f"{diagnostic['code']} at {path} (source: {diagnostic['source']}): {diagnostic['message']}"
 
 
 def main() -> int:

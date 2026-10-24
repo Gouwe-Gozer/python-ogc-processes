@@ -1,7 +1,8 @@
 # Processing your own rasters
 
 Both `raster-info` and `raster-warp` accept a self-contained GeoTIFF through an
-HTTPS reference or a qualified inline base64 value. `demo-dem` remains available.
+HTTPS reference, inline base64 string or qualified inline base64 value. The
+bundled demo file remains a test fixture; `demo-dem` is not an API input.
 Each execution acquires its own input and discards the staged file afterward.
 There is no reusable input ID or separate upload endpoint. Outputs retain their
 independent [24-hour lifecycle](results.md).
@@ -66,7 +67,10 @@ Replace the example URL with a downloadable GeoTIFF:
 }
 ```
 
-Reference `type` is optional; inline values require `mediaType` and `encoding`.
+Reference `type` is optional; qualified inline objects require `mediaType` and `encoding`.
+An unwrapped base64 string is also accepted; its GeoTIFF media type is supplied
+by the process description. Qualified inline objects retain their explicit
+`mediaType` and `encoding`, as in the local-file example above.
 Accepted types are `image/tiff`, `application/tiff` and
 `application/tiff; application=geotiff`. The actual file is always validated.
 The origin must return a complete HTTP 200 response without HTTP content
@@ -129,8 +133,12 @@ return 503. Internal storage/processing failures return sanitized 500 responses.
 ## OGC scope and deployment
 
 References use an OGC link; binary values use qualified
-`value`/`mediaType`/`encoding`. Process metadata describes raster values, while
-execution schemas describe supported wire forms. See the
+`value`/`mediaType`/`encoding` or a direct base64 string. Process metadata describes
+one binary GeoTIFF value with `type: string`, `format: byte`,
+`contentEncoding: binary` and `contentMediaType: image/tiff`. The other accepted
+TIFF media types are aliases of this same format. No `anyOf` or `oneOf` is needed
+in that value schema to select transport. Execution schemas separately describe
+the supported request forms. See the
 [OGC review guide](validation.md#ogc-review-guide), Core requirements 18, 22 and
 24, and [official schema snapshot](../tests/schemas/ogc-processes-1.0/README.md).
 
@@ -140,14 +148,32 @@ and real TIFF decoding; see the [limitation](validation.md#published-binary-sche
 Scalar CRS/resampling references, multipart outputs and Core job resources
 remain unsupported. Complete OGC conformance or certification is not claimed.
 
+The input-description review follows [18-062r2](https://docs.ogc.org/is/18-062r2/18-062r2.html),
+requirements 18 and 22 (reference/inline delivery), 49–50 (value schemas and binary
+values), and 51 (`oneOf` for actual mixed-type inputs). The official
+[ProcessDescription.json](https://schemas.opengis.net/ogcapi/processes/part1/1.0/examples/json/ProcessDescription.json)
+describes binary images with `contentEncoding` and `contentMediaType`; its
+[Execute.json](https://schemas.opengis.net/ogcapi/processes/part1/1.0/examples/json/Execute.json)
+shows link and qualified-base64 transport. These examples guide interpretation;
+advertised descriptions are validated against the unchanged normative
+`process.yaml`/`schema.yaml` snapshot. A local file picker remains a client UI
+choice; this schema change does not by itself verify a particular client.
+
 This remains a bounded synchronous pilot. Authentication, TLS termination,
 egress firewall policy, rate limits and private-data handling are deployment
 decisions. Output URLs remain accessible to anyone who knows them until expiry.
 
 ## Milestone validation
 
-Checked on **2026-10-24** on `feat/user-raster-inputs`, based directly on the
-merged Rasterio pivot (`main` at `88a83a2`). The local suite passes **293 tests**
+The input-description review on `feat/user-raster-inputs` passes **311 tests**
+with **95.80% coverage**. Both advertised raster descriptions validate against
+the normative OGC schemas, while HTTP tests cover reference, direct base64 and
+qualified base64 delivery and rejection of the retired demo identifier.
+The rebuilt release also passes discovery, all warp modes, direct-base64 and
+executable-example checks, plus the independent-container user-raster smoke test.
+
+The initial user-input checkpoint (`eafb167`), checked on **2026-10-24**, was
+based on the merged Rasterio pivot (`main` at `88a83a2`) and passed **293 tests**
 with **95.78% coverage**. Ruff format/lint, Bandit, public/integration configuration
 and OpenAPI validation, and all Compose configurations pass. The only pytest
 warning is the existing upstream Pydantic configuration deprecation.

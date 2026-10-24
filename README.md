@@ -7,7 +7,7 @@ reference. Both operations run synchronously. HTTPS inputs use a bounded
 resolver; raster processing uses a validated local file.
 
 **Submit your own raster** as an HTTPS reference or inline base64 GeoTIFF.
-The bundled `demo-dem` remains available for quick examples. See
+The examples submit a small bundled GeoTIFF as ordinary inline data. See
 [user inputs](docs/inputs.md) for local-file requests, URL policy and limits,
 and the [roadmap](docs/roadmap.md) for later service milestones.
 
@@ -26,49 +26,42 @@ If port 5001 is occupied, set both variables when starting Compose:
 API_PORT=5002 PYGEOAPI_SERVER_URL=http://localhost:5002 docker compose up --build --detach
 ```
 
-Inspect the demo raster (omitted `response` defaults to `raw`):
+Inspect the small demo file through the same input contract as your own rasters:
 
 ```bash
 curl --fail-with-body http://localhost:5001/processes/raster-info/execution \
   -H 'Content-Type: application/json' \
-  --data '{"inputs":{"source":"demo-dem"}}'
-```
-
-HTTP 200, `application/json`: application-defined raster metadata, including
-`"size": [4, 3]`, `"band_count": 1`, EPSG:28992 and band statistics with
-minimum 1, maximum 12, mean 6.5 and 12 valid cells.
-
-Request an OGC results document:
-
-```bash
-curl --fail-with-body http://localhost:5001/processes/raster-info/execution \
-  -H 'Content-Type: application/json' \
-  --data '{"inputs":{"source":"demo-dem"},"outputs":{"info":{"transmissionMode":"value"}},"response":"document"}'
+  --data-binary @examples/info-request.json
 ```
 
 HTTP 200, `application/json`: `{"info":{"value":{...raster information...}}}`.
+The example requests a document response. Its `info.value` includes
+`"size": [4, 3]`, `"band_count": 1`, EPSG:28992 and band statistics with
+minimum 1, maximum 12, mean 6.5 and 12 valid cells.
+
+Omitting `response` defaults to `raw`, returning the raster information directly.
 The output identifier is `info`. Omitting `outputs` selects it; omitting
 `transmissionMode` selects `value`. `Prefer: respond-async` still returns a
 synchronous 200 with no job URL. Invalid inputs or unsupported options return
-JSON 400 errors; an unavailable configured dataset returns a sanitized 500.
+JSON 400 errors; internal processing failures return a sanitized 500.
 
 ## Reproject a raster
 
-To use your own HTTPS-hosted raster, replace `"demo-dem"` with
+To use your own HTTPS-hosted raster, replace the example's `source` value with
 `{"href":"https://data.example.org/my-dem.tif","type":"image/tiff"}` in the
 examples below. For a local file, use the [inline submission example](docs/inputs.md#submit-a-local-file-inline).
 
 Choose a target CRS from **EPSG:28992**, **EPSG:4326** or **EPSG:3857**.
 Resampling is **bilinear** by default; **nearest** is also supported. The target
 grid retains the source width and height, with pixel size determined by the
-transformed extent. For `demo-dem`, the output remains four columns by three rows.
+transformed extent. The example file has four columns and three rows.
 
 The default raw/value response is an actual GeoTIFF:
 
 ```bash
 curl --fail-with-body http://localhost:5001/processes/raster-warp/execution \
   -H 'Content-Type: application/json' \
-  --data '{"inputs":{"source":"demo-dem","target_crs":"EPSG:4326"}}' \
+  --data-binary @examples/warp-value-request.json \
   --output warped.tif
 ```
 
@@ -77,7 +70,7 @@ For a downloadable reference, explicitly request reference transmission:
 ```bash
 curl --fail-with-body http://localhost:5001/processes/raster-warp/execution \
   -H 'Content-Type: application/json' \
-  --data '{"inputs":{"source":"demo-dem","target_crs":"EPSG:4326","resampling":"nearest"},"outputs":{"result":{"transmissionMode":"reference"}},"response":"document"}'
+  --data-binary @examples/warp-reference-request.json
 ```
 
 HTTP 200, `application/json` (the identifier varies):
@@ -104,8 +97,9 @@ for configuration, cleanup and limits.
 
 ## Scope
 
-`source` accepts a controlled HTTPS reference, qualified inline base64 GeoTIFF
-or `demo-dem`. Inputs are limited to 16 MiB and 1,048,576 samples including bands;
+`source` accepts a controlled HTTPS reference, inline base64 string or qualified
+inline base64 GeoTIFF. Dataset identifiers such as `demo-dem` are not API inputs.
+Inputs are limited to 16 MiB and 1,048,576 samples including bands;
 JSON requests to 24 MiB. Paths, raw URL strings, callbacks and async jobs are
 unsupported. HTTPS destinations must resolve exclusively to public addresses.
 `raster-info` still offers only JSON value transmission; `raster-warp` also
@@ -128,6 +122,7 @@ The GitHub repository retains its existing name until its owner renames it.
 
 See [development commands](docs/development.md), [architecture](docs/architecture.md),
 [OGC review guidance and validation limits](docs/validation.md),
+[client interoperability log](docs/client-interoperability.md),
 [release deployment](docs/release-image.md),
 [warp milestone](docs/warp-milestone.md)
 and the [historical migration report](docs/migration.md). Passing local tests is not OGC

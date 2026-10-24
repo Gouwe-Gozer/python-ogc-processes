@@ -6,6 +6,7 @@ import errno
 import fcntl
 import ipaddress
 import os
+import re
 import shutil
 import socket
 import ssl
@@ -18,7 +19,6 @@ from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
 from geo_processes import engine
-from geo_processes.datasets import DATASETS
 
 MAX_ENCODED_BYTES = 4 * ((engine.MAX_INPUT_BYTES + 2) // 3)
 MAX_EXECUTION_BYTES = 24 * 1024 * 1024
@@ -71,10 +71,14 @@ def _url_parts(url):
 
 def validate_source(source):
     """Validate the wire shape without decoding data, accessing disk or fetching."""
-    if isinstance(source, str) and source in DATASETS:
+    if isinstance(source, str):
+        if len(source) > MAX_ENCODED_BYTES:
+            raise RasterInputTooLargeError("source exceeds the 16 MiB input limit")
+        if len(source) % 4 or re.fullmatch(r"[A-Za-z0-9+/]*={0,2}", source) is None:
+            raise RasterInputError("inline source must be a base64 string")
         return
     if not isinstance(source, Mapping):
-        raise RasterInputError("source must be demo-dem, an HTTPS reference or a qualified base64 GeoTIFF")
+        raise RasterInputError("source must be an HTTPS reference or an inline base64 GeoTIFF")
     if "href" in source:
         if set(source) - {"href", "type"} or source.get("type", "image/tiff") not in MEDIA_TYPES:
             raise RasterInputError("source reference supports only href and a GeoTIFF type")
@@ -229,11 +233,8 @@ def _workspace():
 def resolve_source(source, *, require_crs=False):
     """Stage, validate, use and discard one raster, including on handled errors."""
     validate_source(source)
-    if isinstance(source, str):
-        yield DATASETS[source]
-        return
     with _workspace() as destination:
-        if "href" in source:
+        if isinstance(source, Mapping) and "href" in source:
             try:
                 _fetch(source["href"], destination)
             except (HTTPException, OSError, ValueError) as error:
@@ -253,7 +254,7 @@ def resolve_source(source, *, require_crs=False):
                 raise RasterInputError("source HTTPS download failed") from error
         else:
             try:
-                data = base64.b64decode(source["value"], validate=True)
+                data = base64.b64decode(source if isinstance(source, str) else source["value"], validate=True)
             except (ValueError, binascii.Error) as error:
                 raise RasterInputError("source value is not valid base64") from error
             if len(data) > engine.MAX_INPUT_BYTES:

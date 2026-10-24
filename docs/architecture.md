@@ -11,11 +11,11 @@ or secondary backend is involved. NumPy supplies masked statistics.
 The [metadata contract](raster-info.md) belongs to this application.
 
 `contracts/info.py` and `contracts/warp.py` describe the independent operations.
-`datasets.py` is their shared operator-owned input registry. The
-GeoTIFF ships inside the Python package. `demo-dem` resolves through a fixed
-operator-owned registry; user data comes from `inputs.py` as a private local
-path. Raw URL strings and driver strings never reach GDAL.
-The raster is Float32, one band, four columns by three rows, EPSG:28992,
+User data comes from `inputs.py` as a private local path. Raw URL strings and
+driver strings never reach GDAL. `datasets.py` supplies a bundled GeoTIFF fixture
+to tests and smoke clients, which submit its bytes through the ordinary input
+contract; there is no public dataset identifier. The fixture is Float32, one
+band, four columns by three rows, EPSG:28992,
 10-metre pixels, nodata -9999, with values 1 through 12 in row-major order.
 Its origin is (155000, 463000). Tests verify its actual Rasterio output.
 Info handles absent CRS/nodata and empty bands explicitly and excludes masked
@@ -58,8 +58,8 @@ Warp output dimensions are pinned to the source grid to bound allocation;
 resolution follows the reprojected extent. Clients supply a supported source,
 one of three target CRSs and nearest/bilinear resampling.
 
-The service processes users' rasters through HTTPS references and qualified
-base64 values. `contracts/sources.py` separates logical raster schemas from
+The service processes users' rasters through HTTPS references and direct or
+qualified base64 values. `contracts/sources.py` separates the binary raster value schema from
 supported wire representations. `inputs.py` owns DNS/TLS policy, bounded
 downloads and two locked temporary slots with cleanup and crash recovery.
 Input lifetime is independent of output retention; see [inputs](inputs.md).

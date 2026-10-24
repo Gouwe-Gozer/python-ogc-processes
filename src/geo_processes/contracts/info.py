@@ -2,7 +2,6 @@
 
 from geo_processes import __version__
 from geo_processes.contracts.sources import SOURCE_DESCRIPTION, SOURCE_EXECUTE_SCHEMA, SOURCE_VALUE_SCHEMA
-from geo_processes.datasets import DATASETS as DATASETS
 
 
 def _numbers(length):
@@ -68,9 +67,7 @@ PROCESS_METADATA = {
     "version": __version__,
     "id": "raster-info",
     "title": "Raster information",
-    "description": (
-        "Inspect a bounded GeoTIFF supplied by the user or the bundled demo, including exact finite statistics."
-    ),
+    "description": ("Inspect a bounded GeoTIFF supplied by the user, including exact finite statistics."),
     "keywords": ["Rasterio", "raster", "GeoTIFF", "statistics"],
     "jobControlOptions": ["sync-execute"],
     "outputTransmission": ["value"],
@@ -93,7 +90,7 @@ PROCESS_METADATA = {
             "schema": {"contentMediaType": "application/json", **INFO_SCHEMA},
         }
     },
-    "example": {"inputs": {"source": "demo-dem"}},
+    "example": {"inputs": {"source": {"href": "https://data.example.org/dem.tif", "type": "image/tiff"}}},
 }
 
 EXECUTE_SCHEMA = {

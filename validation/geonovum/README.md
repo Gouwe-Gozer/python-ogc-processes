@@ -31,6 +31,16 @@ port 5001/5002 runs comparable; other sources and all diagnostic fields remain
 significant. The original raw report remains available when `--raw-output` is
 requested. Rulesets and diagnostic changes are still compared exactly.
 
+The failed [CI run](https://github.com/Gouwe-Gozer/terrio-processes/actions/runs/40028464582/job/120670598998)
+reported the same five findings as both added and removed. A local comparison
+with checker 1.2.0 and npm 11.6.0 reproduced this under Node **20.20.2**: diagnostic
+sources were the Core and Job List conformance URIs. Under Node **24.22.1**, the
+source was the tested OpenAPI URL, and normalization matched the existing
+baseline. CI now uses Node 24. The baseline and normalization policy were not
+relaxed. Mismatch messages now include `source` so this distinction is visible
+without downloading the raw artifact. This is a checker-runtime comparison,
+not a change in the service's supported capabilities.
+
 With Node/npm available, compare or deliberately update the baseline:
 
 ```bash

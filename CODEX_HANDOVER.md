@@ -22,8 +22,9 @@ and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract wor
 - Python 3.12, pygeoapi **0.24.0**, Rasterio **1.4.3** and NumPy **1.26.4**, with project-local
   dependencies managed by `uv` and pinned in `uv.lock`.
 - Two public processes: **`raster-info`** and **`raster-warp`**. Their required
-  `source` accepts a controlled HTTPS reference, qualified inline base64 GeoTIFF
-  or `demo-dem`, the bundled 4 by 3 GeoTIFF in EPSG:28992. Clients cannot choose
+  `source` accepts a controlled HTTPS reference, direct base64 string or qualified
+  inline base64 GeoTIFF. The bundled 4 by 3 fixture is submitted as ordinary input
+  by tests and smoke clients; `demo-dem` is not a public input. Clients cannot choose
   filesystem paths, raw URL strings or arbitrary Rasterio options.
 - The shared [input resolver](src/geo_processes/inputs.py) stages at most two
   private inputs, checks public destinations/redirects, pins TLS connections and
@@ -68,7 +69,7 @@ and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract wor
 | `src/geo_processes/engine.py` | Rasterio adapter without pygeoapi imports |
 | `src/geo_processes/processes/` | Independent info and warp validation/representations |
 | `src/geo_processes/contracts/` | Per-operation metadata and schemas |
-| `src/geo_processes/datasets.py` | Operator-approved local raster registry |
+| `src/geo_processes/datasets.py` | Demo file and ordinary inline requests for tests/smoke clients |
 | `src/geo_processes/inputs.py` | Bounded HTTPS/base64 resolution and private input lifecycle |
 | `src/geo_processes/contracts/sources.py` | Raster value schemas and supported OGC wire forms |
 | `src/geo_processes/storage.py` | Bounded local output publication, expiry and cleanup |
@@ -92,8 +93,10 @@ diagnostics. Historical CITE results describe the predecessor service, not this
 implementation. See [validation](docs/validation.md) for the evidence boundary
 and [migration report](docs/migration.md) for the initial compatibility inventory.
 
-The user-input milestone has 293 passing tests and 95.78% coverage, with checked
-host/container input flows and a representative Float32 workload. See
+The current suite has 313 passing tests and 95.80% coverage, including checker
+source-comparison regressions. CI uses Node 24 and native Node 24 actions.
+It uses the OGC binary value convention without a demo/transport union. Earlier
+milestone evidence includes checked host/container flows and a Float32 workload. See
 [milestone evidence](docs/inputs.md#milestone-validation); retain the limits until
 broader workloads justify increasing them.
 

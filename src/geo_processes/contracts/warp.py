@@ -72,7 +72,7 @@ PROCESS_METADATA = {
     "version": __version__,
     "title": "Raster reprojection",
     "description": (
-        "Reproject a bounded user-supplied GeoTIFF or the bundled demo, retaining its grid dimensions. "
+        "Reproject a bounded user-supplied GeoTIFF, retaining its grid dimensions. "
         "Raw/value returns TIFF bytes; document/value returns base64. Explicit reference transmission "
         "returns a download URL (document) or HTTP 204 with a Link header (raw). "
         "Results are retained for 24 hours by default, subject to configured storage limits."
@@ -109,5 +109,10 @@ PROCESS_METADATA = {
             "schema": {"type": "string", "format": "binary", "contentMediaType": TIFF_TYPE},
         }
     },
-    "example": {"inputs": {"source": "demo-dem", "target_crs": "EPSG:4326"}},
+    "example": {
+        "inputs": {
+            "source": {"href": "https://data.example.org/dem.tif", "type": "image/tiff"},
+            "target_crs": "EPSG:4326",
+        }
+    },
 }

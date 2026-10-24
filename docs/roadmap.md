@@ -6,8 +6,8 @@ catalogue is not the intended end state. Supporting user-supplied data belongs
 in the first useful-service milestone, before building a large process catalogue.
 
 This document distinguishes implemented foundations from future milestones.
-The API accepts user GeoTIFFs through HTTPS references or inline base64, plus
-`demo-dem`; see [inputs](inputs.md), [README](../README.md) and
+The API accepts user GeoTIFFs through HTTPS references or inline base64;
+see [inputs](inputs.md), [README](../README.md) and
 [validation](validation.md) for the contract and evidence boundary.
 
 ## Completed foundation: Rasterio pivot

@@ -52,7 +52,7 @@ matrix. The [roadmap](roadmap.md) records the user-raster goal and future scope.
 | Review area | Standard pointer | Current evidence or remaining work |
 | --- | --- | --- |
 | Discovery and claims | Sections 7.4, 7.9–7.10 | [HTTP tests](../tests/test_http_contract.py), [official-schema tests](../tests/test_ogc_schemas.py); claims still need a full audit |
-| Per-operation descriptions | Section 8 | [Contracts](../src/geo_processes/contracts/) and [OpenAPI tests](../tests/test_openapi_patch.py) |
+| Per-operation descriptions | Section 8, requirements 49–51 | [Binary input review](inputs.md#ogc-scope-and-deployment), [official-schema tests](../tests/test_ogc_schemas.py), [contracts](../src/geo_processes/contracts/) and [OpenAPI tests](../tests/test_openapi_patch.py) |
 | Input references and validation | Section 7.11.2, requirements 18, 22 and 24 | [HTTPS/base64 policy](inputs.md), [input tests](../tests/test_inputs.py); scalar references remain unsupported |
 | Execution preferences/defaults | Section 7.11.2, requirements 25–27 | [Info HTTP tests](../tests/test_http_contract.py) and [warp tests](../tests/test_warp.py) |
 | Synchronous results | Section 7.11.4, requirements 28, 30 and 32 | Four single-output warp combinations; [result lifecycle](results.md) |
@@ -104,7 +104,7 @@ records the overlap for both execution inputs and result documents. The normativ
 binary example uses base64 with `encoding` and `mediaType`, which is what inline
 raster inputs accept and document/value warp responses return.
 
-Process discovery, dataset-ID/reference execution requests, exceptions and
+Process discovery, reference execution requests, exceptions and
 reference result documents are validated against the official offline schemas.
 Inline binary requests and responses are validated against the explicit
 application schemas and decoded into real GeoTIFFs. No upstream schema fixture

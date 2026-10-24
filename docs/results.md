@@ -1,6 +1,6 @@
 # Raster results and lifecycle
 
-`raster-warp` writes the demo or validated [user inputs](inputs.md) to GeoTIFF. All executions create a
+`raster-warp` writes validated [user inputs](inputs.md) to GeoTIFF. All executions create a
 stored result, including requests that return the raster by value. The public
 output identifier is `result`. No persistent OGC job resource is created.
 
@@ -92,8 +92,8 @@ The release uses two synchronous Gunicorn workers with a 30-second worker
 timeout and container limits of 512 MiB RAM, one CPU and 128 processes. A killed
 worker may leave an unpublished workspace, which the next writer removes.
 
-User inputs arrive through HTTPS references or inline base64; `demo-dem` remains
-registered in `datasets.py`. Input staging uses separate temporary slots and is
+User inputs arrive through HTTPS references or inline base64. The demo fixture
+is submitted as ordinary data by test clients. Input staging uses separate temporary slots and is
 removed after execution. Reusable uploads, object storage, distributed workers,
 authentication and additional operations remain future work; see
 [inputs](inputs.md) and the [roadmap](roadmap.md).

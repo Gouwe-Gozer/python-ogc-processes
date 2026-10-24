@@ -42,7 +42,11 @@ def check_reference(url, shape=(3, 4), bands=1):
     print("PASS independent HTTP client downloaded and opened the referenced GeoTIFF")
 
 
-def run(base_url, save_reference=None, *, source="demo-dem", shape=(3, 4), bands=1):
+def run(base_url, save_reference=None, *, source=None, shape=(3, 4), bands=1):
+    if source is None:
+        from geo_processes.datasets import demo_source
+
+        source = demo_source()
     reference = None
     for mode in ("raw", "document"):
         for transmission in ("value", "reference"):

@@ -2,8 +2,16 @@
 
 ## 0.1.0 — Unreleased
 
+- Move the CI checker and JavaScript actions to Node 24, resolving the reproduced
+  diagnostic source-label mismatch without changing the reviewed baseline.
+- Include sources in checker mismatch messages and add comparison regressions.
+- Describe raster inputs as a binary GeoTIFF using OGC media-type/encoding
+  conventions; remove the development dataset identifier from the public input
+  contract and submit the demo fixture as ordinary data in examples and tests.
+- Accept direct base64 strings alongside HTTPS references and qualified inline
+  values, with normative process-description and execution coverage.
 - Accept users' own GeoTIFFs in both processes through controlled HTTPS
-  references and qualified inline base64, retaining the demo shortcut.
+  references and inline base64.
 - Bound downloads, decoding and temporary workspaces; verify TLS and public
   destinations on every redirect, and remove staged inputs after execution.
 - Extend schemas, HTTP tests, independent-client smoke checks and documentation

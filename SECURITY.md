@@ -3,8 +3,8 @@
 Use the repository's private GitHub vulnerability reporting when available.
 Include the affected version, reproduction and likely impact without secrets.
 
-The public processes accept qualified base64 GeoTIFFs, controlled HTTPS references
-and the bundled `demo-dem`. Requests cannot select server paths, CLI arguments,
+The public processes accept inline base64 GeoTIFFs and controlled HTTPS references.
+Dataset identifiers are not public inputs. Requests cannot select server paths, CLI arguments,
 callbacks or output filenames. HTTPS uses verified TLS, pinned public addresses,
 bounded downloads, redirect checks and no ambient proxies. An optional exact-host
 allowlist narrows destinations. Private/loopback/link-local addresses, URL

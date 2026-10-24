@@ -18,7 +18,7 @@ from geo_processes.manager import InputBusyError, InputTooLargeError, InvalidExe
 
 
 class RasterInfoProcessor(BaseProcessor):
-    """Inspect the demo raster or a bounded user-supplied GeoTIFF."""
+    """Inspect a bounded user-supplied GeoTIFF."""
 
     def __init__(self, processor_def):
         # Upstream OpenAPI generation pops contentMediaType from metadata.

@@ -256,6 +256,8 @@ def test_encoded_and_decoded_limits_are_enforced(monkeypatch, raster_payload):
     monkeypatch.setattr(inputs, "MAX_ENCODED_BYTES", 3)
     with pytest.raises(inputs.RasterInputTooLargeError):
         inputs.validate_source(inline(raster_payload))
+    with pytest.raises(inputs.RasterInputTooLargeError):
+        inputs.validate_source(inline(raster_payload)["value"])
     monkeypatch.setattr(inputs, "MAX_ENCODED_BYTES", 100000)
     monkeypatch.setattr(engine, "MAX_INPUT_BYTES", len(raster_payload) - 1)
     with pytest.raises(inputs.RasterInputTooLargeError), inputs.resolve_source(inline(raster_payload)):
@@ -350,11 +352,13 @@ def test_certificate_validation_cannot_be_disabled_by_the_client(https_origin, m
         pytest.fail("untrusted TLS certificate was accepted")
 
 
-@pytest.mark.parametrize("method", ["inline", "href"])
+@pytest.mark.parametrize("method", ["inline", "base64", "href"])
 @pytest.mark.parametrize("mode", ["raw", "document"])
 def test_user_raster_info_http_contract(http_client, raster_payload, https_origin, method, mode):
     origin, _seen = https_origin
     source = inline(raster_payload) if method == "inline" else {"href": origin + "/dem.tif"}
+    if method == "base64":
+        source = inline(raster_payload)["value"]
     Draft202012Validator(SOURCE_EXECUTE_SCHEMA).validate(source)
     response = http_client.post(
         "/processes/raster-info/execution", json={"inputs": {"source": source}, "response": mode}
@@ -367,7 +371,7 @@ def test_user_raster_info_http_contract(http_client, raster_payload, https_origi
     assert info["crs"]["epsg"] == 28992
 
 
-@pytest.mark.parametrize("method", ["inline", "href"])
+@pytest.mark.parametrize("method", ["inline", "base64", "href"])
 @pytest.mark.parametrize("mode", ["raw", "document"])
 @pytest.mark.parametrize("transmission", ["value", "reference"])
 def test_user_raster_warp_preserves_response_modes(
@@ -375,6 +379,8 @@ def test_user_raster_warp_preserves_response_modes(
 ):
     origin, _seen = https_origin
     source = inline(raster_payload) if method == "inline" else {"href": origin + "/dem.tif"}
+    if method == "base64":
+        source = inline(raster_payload)["value"]
     response = http_client.post(
         "/processes/raster-warp/execution",
         json={
@@ -445,11 +451,33 @@ def test_invalid_output_options_never_fetch_rasters(monkeypatch, http_client):
 
 def test_source_schema_describes_values_separately_from_wire_wrappers(http_client):
     description = http_client.get("/processes/raster-info?f=json").get_json()
-    assert description["inputs"]["source"]["schema"]["anyOf"][1]["contentMediaType"] == "image/tiff"
+    assert description["inputs"]["source"]["schema"]["contentMediaType"] == "image/tiff"
     operation = http_client.get("/openapi?f=json").get_json()["paths"]["/processes/raster-info/execution"]["post"]
     assert "503" in operation["responses"]
     wire = operation["requestBody"]["content"]["application/json"]["schema"]
     assert len(wire["properties"]["inputs"]["properties"]["source"]["oneOf"]) == 3
+
+
+@pytest.mark.parametrize("process", ["raster-info", "raster-warp"])
+def test_demo_identifier_is_not_a_public_input(http_client, process):
+    data = {"source": "demo-dem"}
+    if process == "raster-warp":
+        data["target_crs"] = "EPSG:4326"
+    response = http_client.post(f"/processes/{process}/execution", json={"inputs": data})
+    assert response.status_code == 400 and response.is_json
+
+
+@pytest.mark.parametrize("media_type", inputs.MEDIA_TYPES)
+@pytest.mark.parametrize("method", ["inline", "href"])
+def test_geotiff_media_type_aliases_remain_supported(http_client, raster_payload, https_origin, media_type, method):
+    origin, _seen = https_origin
+    source = (
+        {"href": origin + "/dem.tif", "type": media_type}
+        if method == "href"
+        else inline(raster_payload) | {"mediaType": media_type}
+    )
+    response = http_client.post("/processes/raster-info/execution", json={"inputs": {"source": source}})
+    assert response.status_code == 200 and response.get_json()["size"] == [64, 48]
 
 
 def test_engine_driver_restriction_prevents_vrt_dispatch(tmp_path):

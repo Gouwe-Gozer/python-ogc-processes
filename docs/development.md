@@ -95,3 +95,11 @@ retains quality checks, coverage, API validation, container execution/isolation
 and pinned Geonovum diagnostics. CI also downloads results from an independent
 client container and verifies persistence across restart. Public process tests use
 bundled or generated rasters and a local TLS fixture, without a live data dependency.
+
+CI runs the Geonovum checker with Node.js 24 and npm 11.6.0. Its checkout,
+Node setup and artifact-upload actions use releases with a native Node 24
+runtime; `setup-uv@v7` also uses Node 24. Action runtimes and the checker runtime
+are configured separately. Node/npm version output is retained in the job log.
+The [checker baseline notes](../validation/geonovum/README.md) record the reproduced
+Node 20/24 source-label difference. Diagnostic mismatch messages include their
+source; inspect that field when findings appear as both added and removed.

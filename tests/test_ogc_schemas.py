@@ -1,14 +1,15 @@
 """Validate actual HTTP documents against the official, offline OGC schemas."""
 
-import base64
-import binascii
 from pathlib import Path
 
 import pytest
 import yaml
-from jsonschema import Draft4Validator, FormatChecker
+from jsonschema import Draft4Validator
+from raster_fixtures import DEMO_SOURCE, FORMATS
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT4
+
+from geo_processes.datasets import DEMO_RASTER
 
 SCHEMA_BASE = "https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/"
 SCHEMA_ROOT = Path(__file__).parent / "schemas" / "ogc-processes-1.0"
@@ -16,21 +17,20 @@ REGISTRY = Registry().with_resources(
     (SCHEMA_BASE + path.name, Resource.from_contents(yaml.safe_load(path.read_text()), default_specification=DRAFT4))
     for path in SCHEMA_ROOT.glob("*.yaml")
 )
-FORMATS = FormatChecker()
-
-
-@FORMATS.checks("byte", raises=(ValueError, binascii.Error))
-def is_base64(value):
-    # OGC's inline string and binary branches use oneOf. OpenAPI's byte
-    # format must be checked or every string incorrectly matches both.
-    if not isinstance(value, str):
-        return True
-    base64.b64decode(value, validate=True)
-    return True
 
 
 def validate_official(document, name):
     Draft4Validator({"$ref": SCHEMA_BASE + name}, registry=REGISTRY, format_checker=FORMATS).validate(document)
+
+
+@pytest.fixture()
+def reference_source(monkeypatch):
+    # Schema/response tests use a staged fixture; actual verified TLS transport
+    # and both raster operations are exercised together in test_inputs.py.
+    monkeypatch.setattr(
+        "geo_processes.inputs._fetch", lambda _url, destination: destination.write_bytes(DEMO_RASTER.read_bytes())
+    )
+    return {"href": "https://example.test/dem.tif", "type": "image/tiff"}
 
 
 @pytest.mark.parametrize(
@@ -48,8 +48,8 @@ def test_discovery_matches_official_schemas(http_client, path, schema):
     validate_official(response.get_json(), schema)
 
 
-def test_execute_and_results_match_official_schemas(http_client):
-    document = {"inputs": {"source": "demo-dem"}, "response": "document"}
+def test_execute_and_results_match_official_schemas(http_client, reference_source):
+    document = {"inputs": {"source": reference_source}, "response": "document"}
     validate_official(document, "execute.yaml")
     response = http_client.post("/processes/raster-info/execution", json=document)
     assert response.status_code == 200
@@ -69,9 +69,9 @@ def test_boundary_guard_is_required_by_pinned_upstream(app, http_client, monkeyp
         http_client.post("/processes/raster-info/execution", json=[])
 
 
-def test_warp_reference_matches_official_execute_and_results_schemas(http_client):
+def test_warp_reference_matches_official_execute_and_results_schemas(http_client, reference_source):
     payload = {
-        "inputs": {"source": "demo-dem", "target_crs": "EPSG:4326"},
+        "inputs": {"source": reference_source, "target_crs": "EPSG:4326"},
         "response": "document",
         "outputs": {"result": {"transmissionMode": "reference"}},
     }
@@ -87,15 +87,37 @@ def test_source_reference_request_matches_official_schema():
     )
 
 
-def test_inline_source_keeps_the_published_binary_schema_limitation():
+@pytest.mark.parametrize("qualified", [False, True])
+def test_inline_source_keeps_the_published_binary_schema_limitation(qualified):
     from jsonschema import ValidationError
 
     from geo_processes.contracts.sources import SOURCE_EXECUTE_SCHEMA
 
-    source = {"value": "SUkrAA==", "mediaType": "image/tiff", "encoding": "base64"}
+    source = DEMO_SOURCE if qualified else DEMO_SOURCE["value"]
     Draft4Validator(SOURCE_EXECUTE_SCHEMA, format_checker=FORMATS).validate(source)
     with pytest.raises(ValidationError):
         validate_official({"inputs": {"source": source}}, "execute.yaml")
+
+
+@pytest.mark.parametrize("process", ["raster-info", "raster-warp"])
+def test_raster_description_uses_ogc_binary_value_conventions(http_client, process):
+    description = http_client.get(f"/processes/{process}?f=json").get_json()
+    validate_official(description, "process.yaml")
+    source = description["inputs"]["source"]
+    schema = source["schema"]
+    validate_official(schema, "schema.yaml")
+    # Req. 49-50: describe the raster value, following the binary image schema
+    # in official ProcessDescription.json. No union is needed for transport or
+    # for media-type aliases of the same supported GeoTIFF format (req. 51).
+    assert schema == {
+        "type": "string",
+        "format": "byte",
+        "contentEncoding": "binary",
+        "contentMediaType": "image/tiff",
+    }
+    assert "demo-dem" not in str(description)
+    Draft4Validator(schema, format_checker=FORMATS).validate(DEMO_SOURCE["value"])
+    assert not Draft4Validator(schema, format_checker=FORMATS).is_valid("demo-dem")
 
 
 def test_official_binary_schema_has_overlapping_string_branches():

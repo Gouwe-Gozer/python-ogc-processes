@@ -25,7 +25,7 @@ numeric NaN or infinity tokens. Complex rasters are unsupported.
 Both current raster operations enforce 16 MiB per input and 1,048,576 samples
 including bands. Info reads one band at a time for exact statistics. It can
 inspect a raster without a CRS; warp rejects that raster. Both processes accept
-[user GeoTIFFs](inputs.md) or the `demo-dem` identifier. Source files are validated
+[user GeoTIFFs](inputs.md) through HTTPS references or inline base64. Source files are validated
 and staged privately; metadata and all statistics refer to the supplied file.
 
 Raw execution returns this object directly. Document execution returns
