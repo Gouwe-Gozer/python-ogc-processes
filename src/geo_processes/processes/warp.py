@@ -1,10 +1,7 @@
 """OGC boundary for approved, bounded raster reprojection."""
 
-import base64
 from collections.abc import Mapping
 from copy import deepcopy
-from dataclasses import dataclass
-from urllib.parse import urlsplit
 
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
@@ -17,6 +14,7 @@ from geo_processes.contracts.warp import (
     TARGET_CRSS,
     TIFF_TYPE,
 )
+from geo_processes.delivery import FileOutput, ResultCapacityError, format_file, output_transmission, result_base_url
 from geo_processes.inputs import (
     RasterInputBusyError,
     RasterInputError,
@@ -26,31 +24,17 @@ from geo_processes.inputs import (
     validate_source,
 )
 from geo_processes.manager import InputBusyError, InputTooLargeError, InvalidExecutionRequestError
-from geo_processes.responses import ProcessResponse
 from geo_processes.storage import (
     ResultStore,
     ResultStoreBusyError,
     ResultStoreError,
     ResultStoreFullError,
-    StoredResult,
 )
 
 
-class ResultCapacityError(ProcessorExecuteError):
-    """A bounded local service currently cannot accept another raster."""
-
-    http_status_code = 503
-    ogc_exception_code = "ServerBusy"
-
-
-@dataclass(frozen=True)
-class WarpOutput:
-    result: StoredResult
-    transmission: str
-    store: ResultStore
-
-
 class RasterWarpProcessor(BaseProcessor):
+    result_extension = "tif"
+
     def __init__(self, processor_def):
         super().__init__(processor_def, deepcopy(PROCESS_METADATA))
         self.supports_outputs = True
@@ -80,61 +64,17 @@ class RasterWarpProcessor(BaseProcessor):
             raise ResultCapacityError(user_msg=str(error)) from error
         except (engine.RasterWarpError, ResultStoreError, OSError) as error:
             raise ProcessorExecuteError(user_msg="raster output could not be created") from error
-        return TIFF_TYPE, WarpOutput(result, transmission, store)
+        return TIFF_TYPE, FileOutput(result, transmission, store)
 
     @staticmethod
     def _transmission(outputs):
-        if outputs is None:
-            return "value"
-        if not isinstance(outputs, Mapping) or set(outputs) != {"result"}:
-            raise InvalidExecutionRequestError("outputs must select the defined result output")
-        options = outputs["result"]
-        if not isinstance(options, Mapping) or set(options) - {"transmissionMode", "format"}:
-            raise InvalidExecutionRequestError("unsupported result output options")
-        mode = options.get("transmissionMode", "value")
-        if not isinstance(mode, str) or mode not in {"value", "reference"}:
-            raise InvalidExecutionRequestError("result transmissionMode must be value or reference")
-        output_format = options.get("format", {})
-        if not isinstance(output_format, Mapping) or set(output_format) - {"mediaType"}:
-            raise InvalidExecutionRequestError("unsupported result output format")
-        if output_format.get("mediaType", TIFF_TYPE) != TIFF_TYPE:
-            raise InvalidExecutionRequestError("result supports only image/tiff")
-        return mode
+        return output_transmission(outputs)
 
     def _base_url(self):
-        parsed = urlsplit(self.result_base_url)
-        if (
-            parsed.scheme not in {"http", "https"}
-            or not parsed.hostname
-            or parsed.query
-            or parsed.fragment
-            or parsed.username is not None
-        ):
-            raise ProcessorExecuteError(user_msg="public result URL is not configured correctly")
-        return self.result_base_url.rstrip("/")
+        return result_base_url(self.result_base_url)
 
     def format_result(self, value, response):
-        headers = {"Cache-Control": "no-store"}
-        if value.transmission == "reference":
-            url = f"{self._base_url()}/results/{value.result.identifier}/output.tif"
-            if response == "document":
-                return ProcessResponse(
-                    {"result": {"href": url, "type": TIFF_TYPE}}, "application/json", headers=headers
-                )
-            headers["Link"] = f'<{url}>; rel="item"; type="{TIFF_TYPE}"; title="result"'
-            return ProcessResponse(b"", TIFF_TYPE, status=204, headers=headers)
-        data, _ = value.store.read(value.result.identifier)
-        if response == "document":
-            document = {
-                "result": {
-                    "value": base64.b64encode(data).decode("ascii"),
-                    "mediaType": TIFF_TYPE,
-                    "encoding": "base64",
-                }
-            }
-            return ProcessResponse(document, "application/json", headers=headers)
-        headers["Content-Disposition"] = 'attachment; filename="output.tif"'
-        return ProcessResponse(data, TIFF_TYPE, headers=headers)
+        return format_file(value, response, self.result_base_url)
 
     @staticmethod
     def openapi_execution():

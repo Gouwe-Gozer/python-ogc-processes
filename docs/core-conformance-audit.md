@@ -1,9 +1,10 @@
 # Core audit — 2026-10-24
 
 Audit of [OGC API – Processes Part 1: Core 1.0.0](https://docs.ogc.org/is/18-062r2/18-062r2.html),
-Requirements 1–46, starting from `main` at `d762836`. The public profile has
-`raster-info` and `raster-warp`, synchronous execution, single-valued inputs,
-one output per process and no retained jobs. Optional conditions below are
+Requirements 1–46, starting from `main` at `d762836`, extended for sampling,
+reclassification and polygonization. The public profile now has five processes,
+synchronous execution, inputs with `maxOccurs: 1`, one output per process and
+no retained jobs. Optional conditions below are
 assessed against that profile, not implemented as artificial test processes.
 
 The confirmed implementation gaps were corrected and covered by regressions.
@@ -36,25 +37,25 @@ must be reassessed when adding new input/output types or execution capabilities.
 | 5–6: conformance | Official-schema and HTTP tests verify the endpoint, schema and current classes |
 | 7: HTTP | Unsupported execution methods return 405/Allow; release HTTP/1.1 verified against Gunicorn. Service TLS is a deployment responsibility if enabled |
 | 8–12: process list/limit/links | Core tests traverse limited pages and alternatives, check self-link fidelity, invalid parameters, and default/max limits with a 60-process test registry |
-| 13–14: description | Official-schema and HTTP tests retrieve both independent descriptions |
+| 13–14: description | Official-schema and HTTP tests retrieve all five independent descriptions |
 | 15: unknown process | Exception/Core tests verify 404 and `no-such-process` in JSON and HTML |
 | 16–17: execution operation/document | HTTP/input tests exercise actual POST routes, valid wire schemas and controlled malformed requests; binary snapshot caveat below |
-| 18: inline/reference inputs | Real local TLS tests exercise raster and scalar references, literals, base64 and qualified values, including ordinary link metadata |
-| 19: repeated inputs | Not triggered: all offered inputs have `maxOccurs: 1` |
-| 20: object-valued inputs | Not triggered: no object-valued process input; transport wrappers are not the value type |
-| 21: mixed-media inputs | Not triggered: one raster format plus string enums; TIFF aliases are not distinct value types |
+| 18: inline/reference inputs | Real local TLS tests exercise raster, scalar and structured JSON references, literals, base64 and qualified values, including ordinary link metadata |
+| 19: repeated inputs | Not triggered: all inputs have `maxOccurs: 1`; `classes` is one array-valued input, not repeated occurrences |
+| 20: object-valued inputs | Sampling accepts a qualified GeoJSON FeatureCollection object and rejects bare object values; actual execute/results documents validate against the official schemas |
+| 21: mixed-media inputs | Not triggered: each input has one value format; GeoJSON/JSON and TIFF media-type aliases do not introduce distinct value schemas |
 | 22: inline binary | Input/schema tests decode direct and qualified base64 into actual GeoTIFFs |
 | 23: bounding boxes | No bbox-valued input is offered; no extra operation is added to make this condition exercisable |
 | 24: input validation | Inputs are validated before processing; resolved scalar strings use the same choices as inline values. Tests cover invalid JSON, wrong types/values, transport limits and cleanup |
 | 25–26: execution mode | HTTP/warp tests verify synchronous defaults and synchronous handling of `Prefer: respond-async`, without an applied async preference or job Location |
 | 27: default outputs | Info/warp tests verify omission selects the defined output |
-| 28: raw/value, one output | Actual JSON info and native TIFF response tests verify media types, status and contents |
+| 28: raw/value, one output | Actual JSON info, TIFF and GeoJSON response tests verify media types, status and contents |
 | 29: raw/value, multiple outputs | Not triggered: each public process has one output |
-| 30: raw/reference | Warp/input tests verify empty 204 and downloadable Link targets |
+| 30: raw/reference | All four file-producing operations verify empty 204 and downloadable Link targets |
 | 31: mixed multi-output delivery | Not triggered: each public process has one output |
-| 32: document results | Info/warp tests verify output-keyed documents, qualified values and references; binary snapshot caveat below |
+| 32: document results | All processes verify output-keyed documents, qualified values and references; GeoJSON remains a qualified object, TIFF base64 retains the binary snapshot caveat below |
 | 33: synchronous job creation | Not triggered under Permission 7: no retained job is created or advertised |
-| 34: asynchronous execution success | Not triggered: neither public process negotiates asynchronous execution |
+| 34: asynchronous execution success | Not triggered: no public process negotiates asynchronous execution |
 | 35–38: job operations/status/errors | Existing routes accept GET; Core tests verify required unknown-job 404/type in JSON/HTML. No public known-job success exists because no jobs are retained |
 | 39–43: retained job results | Not triggered: no public retained jobs; direct execution/result downloads are tested separately |
 | 44: unknown job results | Core tests verify 404 and `no-such-job` |
@@ -64,16 +65,19 @@ must be reassessed when adding new input/output types or execution capabilities.
 Test files: [Core](../tests/test_core_conformance.py),
 [HTTP](../tests/test_http_contract.py), [inputs](../tests/test_inputs.py),
 [warp](../tests/test_warp.py), [exceptions](../tests/test_errors.py),
+[new raster operations](../tests/test_raster_operations.py),
 [official schemas](../tests/test_ogc_schemas.py), [OpenAPI](../tests/test_openapi_patch.py).
 The landing-page schema was added unchanged to the offline snapshot with its
 checksum; existing official schema files were not altered.
 
 ## Checker interpretation
 
-The [reviewed Geonovum baseline](../validation/geonovum/README.md) still has five
-findings. Two missing-job-path findings were replaced by expectations for job
-status/results HTTP 200. Those successful responses are unreachable without a
-retained job. Two async-201 findings and one optional Job List finding remain.
+The [reviewed Geonovum baseline](../validation/geonovum/README.md) has eight
+findings. The original audit replaced two missing-job-path findings with
+expectations for job status/results HTTP 200. Those responses are unreachable
+without a retained job. Five async-201 findings (one per synchronous process)
+and one optional Job List finding remain. Expanding the catalogue added only
+the three corresponding async expectations; all earlier findings were unchanged.
 OpenAPI therefore documents actual current responses instead of declaring
 unsupported 200/201 behavior solely to silence this checker.
 

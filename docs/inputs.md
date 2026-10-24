@@ -186,8 +186,14 @@ Only the GTiff driver opens staged files. VRTs, archives, subdatasets and comple
 rasters are unsupported. Sidecars/PAM are disabled and georeferencing comes from
 the TIFF itself. PROJ grid-network access is disabled at application startup.
 Rasterio receives a private local path, never the input URL. Metadata, dimensions,
-block bounds and all band data are validated before processing. Info supports
-missing CRS; warp requires a CRS.
+block bounds and all band data are validated before processing. Info/reclassify
+permit a missing CRS; warp/sample/polygonize require one.
+
+The new operations also accept bounded JSON parameters: GeoJSON points, class
+intervals, band and connectivity. They reuse this resolver's HTTPS transport,
+host policy and staging. Each JSON parameter is limited to 256 KiB. Object
+values use an OGC qualified `value` wrapper; see
+[operation contracts and examples](raster-operations.md).
 
 Malformed inputs, disallowed URLs, failed downloads and unsupported rasters
 return JSON 400. Oversized bodies or raster bytes return 413; busy input slots

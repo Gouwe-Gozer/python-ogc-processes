@@ -132,7 +132,13 @@ def test_discovery_links_descriptions_and_capabilities_agree(http_client):
     assert landing.status_code == 200
     assert landing.get_json()["title"] == "Geo Processes API"
     listing = http_client.get("/processes?f=json").get_json()
-    assert {process["id"] for process in listing["processes"]} == {"raster-info", "raster-warp"}
+    assert {process["id"] for process in listing["processes"]} == {
+        "raster-info",
+        "raster-warp",
+        "raster-sample-points",
+        "raster-reclassify",
+        "raster-polygonize",
+    }
     process = next(process for process in listing["processes"] if process["id"] == "raster-info")
     description_link = next(link for link in process["links"] if link["type"] == "application/json")
     parsed = urlsplit(description_link["href"])

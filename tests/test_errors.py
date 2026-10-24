@@ -72,7 +72,7 @@ def test_missing_result_is_distinct_from_an_ogc_job(http_client):
 
 
 def test_result_storage_failure_is_sanitized(http_client, monkeypatch):
-    def fail(*args):
+    def fail(*args, **kwargs):
         raise ResultStoreError("/private/storage/password")
 
     monkeypatch.setattr("geo_processes.storage.ResultStore.read", fail)

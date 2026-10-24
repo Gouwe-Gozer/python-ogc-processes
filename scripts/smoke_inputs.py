@@ -4,10 +4,12 @@ import argparse
 import base64
 import json
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import numpy as np
 import rasterio
 from rasterio.io import MemoryFile
+from rasterio.warp import transform
 
 from scripts.smoke_warp import _read, run
 
@@ -58,7 +60,86 @@ def check(base_url, data, *, href=None):
             raise RuntimeError("service did not inspect the supplied raster CRS")
         print(f"PASS {mode} info describes the independently supplied raster")
     run(base_url, source=source, shape=shape, bands=bands)
+    check_operations(base_url, source, data)
     print("PASS user-supplied raster inspection, all warp modes and independent result downloads")
+
+
+def check_operations(base_url, source, data):
+    """Check native GeoJSON, reclassification and vector download delivery."""
+    with MemoryFile(data) as memory, memory.open() as raster:
+        x, y = raster.xy(0, min(1, raster.width - 1))
+        longitude, latitude = transform(raster.crs, "EPSG:4326", [x], [y])
+        expected_sample = raster.read(1, masked=True)[0, min(1, raster.width - 1)]
+        values = np.ma.masked_invalid(raster.read(1, masked=True).astype("float64"))
+        if not values.count():
+            raise RuntimeError("operation smoke checks need at least one finite, valid pixel")
+        lower, upper = float(values.min()), float(np.nextafter(float(values.max()), np.inf))
+        polygon_supported = raster.width * raster.height <= 65536
+    point_collection = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {},
+                "geometry": {"type": "Point", "coordinates": [longitude[0], latitude[0]]},
+            }
+        ],
+    }
+    sample_payload = {"inputs": {"source": source, "points": {"value": point_collection}}}
+    status, headers, result = _read(f"{base_url.rstrip('/')}/processes/raster-sample-points/execution", sample_payload)
+    if status != 200 or headers.get_content_type() != "application/geo+json":
+        raise RuntimeError("sampling did not return HTTP 200 GeoJSON")
+    sampled = json.loads(result)["features"][0]["properties"]["value"]
+    expected = None if np.ma.is_masked(expected_sample) or not np.isfinite(expected_sample) else expected_sample.item()
+    if sampled != expected:
+        raise RuntimeError("sampling did not read the supplied point's pixel value")
+    print("PASS sampled point returns the supplied raster's value as GeoJSON")
+
+    classes = [{"min": lower, "max": upper, "value": 1}]
+    status, headers, classified = _read(
+        f"{base_url.rstrip('/')}/processes/raster-reclassify/execution",
+        {"inputs": {"source": source, "classes": classes}},
+    )
+    if status != 200 or headers.get_content_type() != "image/tiff":
+        raise RuntimeError("reclassification did not return HTTP 200 TIFF")
+    with MemoryFile(classified) as memory, memory.open() as raster:
+        if (
+            raster.count != 1
+            or raster.dtypes != ("int32",)
+            or not np.all(raster.read(1, masked=True).compressed() == 1)
+        ):
+            raise RuntimeError("reclassification output has incorrect classes or metadata")
+    print("PASS reclassification returns one integer class on the source grid")
+    if not polygon_supported:
+        print("SKIP polygonization: supplied raster exceeds its 65,536 pixel bound")
+        return
+    classified_source = {
+        "value": base64.b64encode(classified).decode("ascii"),
+        "mediaType": "image/tiff",
+        "encoding": "base64",
+    }
+    status, headers, result = _read(
+        f"{base_url.rstrip('/')}/processes/raster-polygonize/execution",
+        {
+            "inputs": {"source": classified_source},
+            "response": "document",
+            "outputs": {"result": {"transmissionMode": "reference"}},
+        },
+    )
+    if status != 200:
+        raise RuntimeError("polygonization did not return HTTP 200")
+    reference = json.loads(result)["result"]
+    result_url = reference["href"]
+    parsed = urlsplit(result_url)
+    if parsed.scheme not in {"http", "https"} or reference["type"] != "application/geo+json":
+        raise RuntimeError("polygonization did not advertise a GeoJSON download")
+    status, headers, result = _read(result_url)
+    collection = json.loads(result)
+    if status != 200 or headers.get_content_type() != "application/geo+json" or not collection["features"]:
+        raise RuntimeError("polygonization did not deliver a nonempty GeoJSON result")
+    if any(feature["properties"]["value"] != 1 for feature in collection["features"]):
+        raise RuntimeError("polygonization did not preserve the reclassified value")
+    print("PASS reclassified raster polygonizes into independently downloadable WGS84 GeoJSON")
 
 
 def main():

@@ -2,6 +2,11 @@
 
 ## 0.1.0 — Unreleased
 
+- Add synchronous point sampling, range reclassification and categorical
+  polygonization, with explicit band/CRS/complexity limits and GeoJSON contracts.
+- Reuse TIFF delivery for reclassification and extend shared expiry/quota/download
+  handling to GeoJSON, without new dependencies or asynchronous infrastructure.
+
 - Audit Core Requirements 1–46; fix scalar references, job exception URIs and
   descriptions, required landing links and traversable process pagination.
 - Reuse shared reference/error handling with async managers and record the

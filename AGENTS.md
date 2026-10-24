@@ -48,3 +48,6 @@ For documentation-only work, check examples, links and `git diff --check`.
 For behavior/deployment changes, also follow the configuration, OpenAPI and
 container checks in the development guide. Report checks that could not run and
 why. Never remove tests just to obtain a passing suite.
+
+## pygeoapi-first architecture
+ Prefer pygeoapi's existing APIs, managers, execution lifecycle and extension points over custom implementations. Before adding or changing shared infrastructure, inspect the relevant upstream pygeoapi interfaces and justify why existing functionality is insufficient. Keep custom behavior narrowly scoped and documented. Do not introduce internal contracts that unnecessarily couple processors to a particular manager.

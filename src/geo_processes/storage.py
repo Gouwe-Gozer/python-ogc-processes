@@ -22,6 +22,7 @@ from uuid import uuid4
 
 RESULT_ID = re.compile(r"[0-9a-f]{32}")
 MAX_RESULT_BYTES = 16 * 1024 * 1024
+RESULT_TYPES = {"tif": "image/tiff", "geojson": "application/geo+json"}
 
 
 class ResultStoreError(RuntimeError):
@@ -91,7 +92,7 @@ class ResultStore:
                 shutil.rmtree(path)
             elif (
                 RESULT_ID.fullmatch(path.stem)
-                and path.suffix == ".tif"
+                and path.suffix.lstrip(".") in RESULT_TYPES
                 and now - path.lstat().st_mtime >= self.retention_seconds
             ):
                 path.unlink()
@@ -101,16 +102,22 @@ class ResultStore:
         with self._writer():
             self._cleanup()
 
-    def publish(self, write: Callable[[Path], None]) -> StoredResult:
+    def publish(self, write: Callable[[Path], None], *, extension="tif") -> StoredResult:
         """Run one bounded writer, then atomically make its complete file visible."""
+        if extension not in RESULT_TYPES:
+            raise ValueError("unsupported result extension")
         with self._writer():
             self._cleanup()
-            results = [path for path in self.root.glob("*.tif") if RESULT_ID.fullmatch(path.stem)]
+            results = [
+                path
+                for path in self.root.iterdir()
+                if path.suffix.lstrip(".") in RESULT_TYPES and RESULT_ID.fullmatch(path.stem)
+            ]
             used_bytes = sum(path.lstat().st_size for path in results)
             if len(results) >= self.max_results or used_bytes >= self.max_bytes:
                 raise ResultStoreFullError("result storage is full; retry after results expire")
             with tempfile.TemporaryDirectory(prefix=".work-", dir=self.root) as directory:
-                output = Path(directory) / "output.tif"
+                output = Path(directory) / f"output.{extension}"
                 write(output)
                 size = output.stat().st_size
                 if size > MAX_RESULT_BYTES or size + used_bytes > self.max_bytes:
@@ -120,14 +127,14 @@ class ResultStore:
                 identifier = uuid4().hex
                 created_at = time.time()
                 os.utime(output, (created_at, created_at))
-                output.replace(self.root / f"{identifier}.tif")
+                output.replace(self.root / f"{identifier}.{extension}")
                 return StoredResult(identifier, created_at + self.retention_seconds)
 
-    def read(self, identifier: str) -> tuple[bytes, float]:
+    def read(self, identifier: str, *, extension="tif") -> tuple[bytes, float]:
         """Read only a bounded, unexpired, regular result file; never follow links."""
-        if not RESULT_ID.fullmatch(identifier):
+        if extension not in RESULT_TYPES or not RESULT_ID.fullmatch(identifier):
             raise ResultNotFoundError("result not found or expired")
-        path = self.root / f"{identifier}.tif"
+        path = self.root / f"{identifier}.{extension}"
         try:
             descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
             with os.fdopen(descriptor, "rb") as result:

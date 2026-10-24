@@ -6,6 +6,17 @@ have not been recorded. ZOO behavior is reported by the tester, not independentl
 Append issues with stable IDs; record client/service versions when available.
 Schema validation and usable form rendering are separate checks.
 
+## Pending GeoJSON acceptance checks
+
+The service now exposes `raster-sample-points` (Point FeatureCollection input
+and output) and `raster-polygonize` (polygon FeatureCollection output), advertised
+as `application/geo+json`. Test client file/HTTPS entry, qualified object
+submission, native GeoJSON rendering and reference downloads using the
+[requests and contracts](raster-operations.md). Initial input testing is recorded
+in CI-003 and CI-004; successful execution, output rendering and downloads through
+the external UI remain unverified. Record the client build and actual
+request/response when reproducing issues.
+
 ## CI-001 — GeoTIFF rendered as plain text
 
 - **Issue:** The tester expected file selection and HTTPS URL entry for the
@@ -58,6 +69,49 @@ Schema validation and usable form rendering are separate checks.
   as ordinary raster data. See [the input review](inputs.md#ogc-scope-and-deployment).
 - **Status:** Resolved in the service: the demo/`anyOf` description was
   removed and schema tests pass. The remaining plain-text rendering is CI-001.
+
+## CI-003 — MultiPoint rejected by the sampling contract
+
+- **Issue:** The tester supplied three map locations as a GeoJSON `MultiPoint`,
+  expecting raster sampling. The service returned HTTP 400 because the operation
+  currently accepts only a FeatureCollection containing individual Point features.
+- **Category:** Interoperability; UX. This is a supported-input restriction,
+  not an established OGC compliance defect.
+- **Responsibility:** Service for the narrow input contract.
+- **Evidence:** Submitted GeoJSON:
+
+  ```json
+  {"type":"MultiPoint","coordinates":[[4.836065,52.647618],[4.827911,52.645173],[4.834395,52.644807]]}
+  ```
+
+  Returned detail: `points must be a GeoJSON FeatureCollection without crs or foreign members`.
+  The [description](../src/geo_processes/contracts/sample.py) and
+  [validator](../src/geo_processes/processes/sample.py) explicitly require that
+  collection shape. A valid GeoJSON geometry need not satisfy a process-specific schema.
+- **Status:** Open — usability improvement proposed: accept Point/MultiPoint
+  as well as point FeatureCollections. Current workaround: submit individual
+  Point features inside a FeatureCollection. No contract change has been made.
+
+## CI-004 — Map drawing interfered with pasted JSON
+
+- **Issue:** After pasting a FeatureCollection example, the client reported
+  invalid JSON. The tester subsequently identified that previously drawn map
+  points were being inserted back into the edited field. Expected: pasting a
+  replacement value leaves one valid JSON document; actual: map/editor updates
+  interfered with the pasted content.
+- **Category:** UX; interoperability. No OGC compliance violation established.
+- **Responsibility:** Client for map/editor synchronization; the precise update
+  mechanism has not been independently reproduced.
+- **Evidence:** Reported client message:
+  `JSON.parse: expected ',' or ']' after array element at line 1 column 88 of the JSON data`.
+  The tester attributed it to map-drawn points appearing in the pasted JSON
+  field. Exact field contents, client build and event sequence were not captured;
+  this message supplies no evidence of a new service response.
+- **Status:** Open — reproduce by drawing points, pasting a replacement
+  FeatureCollection and checking the field before execution. Verify that map
+  updates replace or reconcile the editor value without concatenating content
+  or overwriting a newer manual edit. Clearing drawn points before pasting is
+  a possible workaround, not yet verified.
 
 ## Planned client workflow follow-up
 

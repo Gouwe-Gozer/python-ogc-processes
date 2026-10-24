@@ -2,6 +2,7 @@
 
 import base64
 import errno
+import json
 import socket
 import ssl
 import threading
@@ -65,6 +66,24 @@ def tls_origin(raster_payload):
                 seen["paths"].append(self.path)
                 seen["hosts"].append(self.headers.get("Host"))
                 scalars = {
+                    "/band.json": ("application/json", b"2"),
+                    "/classes.json": ("application/json", b'[{"min":0,"max":7000,"value":1}]'),
+                    "/points.geojson": (
+                        "application/geo+json",
+                        json.dumps(
+                            {
+                                "type": "FeatureCollection",
+                                "features": [
+                                    {
+                                        "type": "Feature",
+                                        "properties": {},
+                                        "geometry": {"type": "Point", "coordinates": [5.39, 52.15]},
+                                    }
+                                ],
+                            }
+                        ).encode(),
+                    ),
+                    "/large-json.json": ("application/json", b"x" * (256 * 1024 + 1)),
                     "/crs.json": ("application/json", b'"EPSG:4326"'),
                     "/method.txt": ("text/plain; charset=utf-8", b"nearest\n"),
                     "/bad-crs.json": ("application/json", b'"EPSG:9999"'),
@@ -656,4 +675,48 @@ def test_standard_reference_metadata_does_not_change_raster_resolution(https_ori
     Draft202012Validator(SOURCE_EXECUTE_SCHEMA).validate(source)
     with inputs.resolve_source(source) as path:
         assert path.exists()
+    assert not list(input_directory.glob("slot-*"))
+
+
+@pytest.mark.parametrize("process", ["raster-sample-points", "raster-reclassify", "raster-polygonize"])
+@pytest.mark.parametrize("source_form", ["inline", "reference"])
+def test_new_operations_share_verified_https_transport(
+    http_client, https_origin, raster_payload, input_directory, process, source_form
+):
+    origin, seen = https_origin
+    parameters = {
+        "source": inline(raster_payload) if source_form == "inline" else {"href": origin + "/dem.tif"},
+        "band": {"href": origin + "/band.json", "type": "application/json"},
+    }
+    if process == "raster-sample-points":
+        parameters["points"] = {"href": origin + "/points.geojson", "type": "application/geo+json"}
+    elif process == "raster-reclassify":
+        parameters["classes"] = {"href": origin + "/classes.json"}
+    response = http_client.post(f"/processes/{process}/execution", json={"inputs": parameters})
+    assert response.status_code == 200
+    if process == "raster-reclassify":
+        with MemoryFile(response.data) as memory, memory.open() as raster:
+            np.testing.assert_array_equal(raster.read(1), np.ones((48, 64)))
+    else:
+        document = json.loads(response.data)
+        assert document["type"] == "FeatureCollection" and document["features"]
+        if process == "raster-polygonize":
+            assert min(feature["properties"]["value"] for feature in document["features"]) == 3072
+    assert "/band.json" in seen["paths"]
+    assert not list(input_directory.glob("slot-*"))
+
+
+@pytest.mark.parametrize(
+    "path,status", [("/large-json.json", 413), ("/broken.json", 400), ("/wrong-type.json", 400), ("/private", 400)]
+)
+def test_structured_json_references_share_limits_and_errors(
+    http_client, https_origin, raster_payload, input_directory, path, status
+):
+    origin, _seen = https_origin
+    response = http_client.post(
+        "/processes/raster-reclassify/execution",
+        json={"inputs": {"source": inline(raster_payload), "classes": {"href": origin + path}}},
+    )
+    assert response.status_code == status
+    assert response.is_json
     assert not list(input_directory.glob("slot-*"))

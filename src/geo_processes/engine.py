@@ -53,11 +53,13 @@ def validate_raster(source: Path, *, require_crs=False):
         with rasterio.Env(**GDAL_OPTIONS), rasterio.open(source, driver="GTiff", GEOREF_SOURCES="INTERNAL") as raster:
             _check_bounds(source, raster)
             if require_crs and raster.crs is None:
-                raise ValueError("raster requires a CRS for reprojection")
+                raise ValueError("raster requires a CRS for this operation")
             for index in raster.indexes:
                 raster.read(index)
     except (rasterio.errors.RasterioError, ValueError) as error:
-        raise RasterValidationError("source must be a readable, bounded GeoTIFF; warp requires a CRS") from error
+        raise RasterValidationError(
+            "source must be a readable, bounded GeoTIFF; this operation may require a CRS"
+        ) from error
 
 
 def _nodata(value):

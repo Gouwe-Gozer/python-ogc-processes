@@ -2,7 +2,7 @@
 
 The goal is a ready-to-use API for **users' own rasters**, with a growing catalogue
 of useful operations. HTTPS and inline base64 input, information/reprojection,
-downloadable results and the local-file example are already implemented; see
+sampling, reclassification, polygonization, downloadable results and the local-file example are implemented; see
 [README](../README.md), [inputs](inputs.md) and [results](results.md).
 The items below are proposals or unresolved decisions, not advertised capabilities.
 
@@ -17,8 +17,8 @@ The items below are proposals or unresolved decisions, not advertised capabiliti
   not separate process implementations.
 - Add target resolution/extent controls only with an output-pixel budget checked
   before allocation. More file bytes alone are not a sufficient resource budget.
-- Reuse input/result lifecycle code. Extract common GeoTIFF delivery when the
-  next file operation needs it, preserving explicit output IDs and formats.
+- Reuse the shared input/result lifecycle and TIFF/GeoJSON delivery helpers,
+  preserving explicit output IDs and formats.
   Follow [adding a process](adding-a-process.md); keep registration explicit.
 
 ## Pilot and client workflow

@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "source": {
+      "href": "https://data.example.org/raster.tif",
+      "type": "image/tiff"
+    }
+  },
+  "response": "raw"
+}

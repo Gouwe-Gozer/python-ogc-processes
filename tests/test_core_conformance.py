@@ -58,8 +58,16 @@ def test_limited_process_list_can_be_traversed_without_losing_filters(http_clien
     second = http_client.get(local_path(links["next"]["href"])).get_json()
     validate_official(second, "processList.yaml")
     assert len(first["processes"]) == len(second["processes"]) == 1
-    assert {first["processes"][0]["id"], second["processes"][0]["id"]} == {"raster-info", "raster-warp"}
-    assert not any(link["rel"] == "next" for link in second["links"])
+    assert first["processes"][0]["id"] != second["processes"][0]["id"]
+    seen = {first["processes"][0]["id"], second["processes"][0]["id"]}
+    page = second
+    while next_link := next((link for link in page["links"] if link["rel"] == "next"), None):
+        page = http_client.get(local_path(next_link["href"])).get_json()
+        validate_official(page, "processList.yaml")
+        identifier = page["processes"][0]["id"]
+        assert identifier not in seen
+        seen.add(identifier)
+    assert seen == {"raster-info", "raster-warp", "raster-sample-points", "raster-reclassify", "raster-polygonize"}
     for link in first["links"]:
         alternate = http_client.get(local_path(link["href"]))
         assert alternate.status_code == 200
