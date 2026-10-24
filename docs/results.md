@@ -1,6 +1,6 @@
 # Raster results and lifecycle
 
-`raster-warp` writes approved local inputs to GeoTIFF. All executions create a
+`raster-warp` writes the demo or validated [user inputs](inputs.md) to GeoTIFF. All executions create a
 stored result, including requests that return the raster by value. The public
 output identifier is `result`. No persistent OGC job resource is created.
 
@@ -73,7 +73,7 @@ Compose fixes `GEO_OUTPUT_DIR` to the volume mount. The one active writer
 uses an additional staging file; the byte quota and 16 MiB output limit are
 checked after writing and before publication. These are application publication
 bounds, not filesystem quotas for staging or files an operator places in the
-volume. The approved input catalogue and fixed grid bound the current operation.
+volume. Input byte/sample/decode limits and the fixed grid bound the current operation.
 The service never evicts unexpired results to accept a
 new execution. A busy writer or full store returns JSON **503**; retry when the
 writer completes, files expire, or capacity is deliberately increased.
@@ -87,15 +87,13 @@ sharing this local volume. Downloads can proceed during another warp.
 
 Both info and warp inputs are limited to 16 MiB and 1,048,576 samples including bands. Warp
 retains source width and height, bounding the target sample count. Requests are
-limited to 16 KiB; clients cannot choose resolution, dimensions or extents.
+limited to 24 MiB for base64 inputs; clients cannot choose resolution, dimensions or extents.
 The release uses two synchronous Gunicorn workers with a 30-second worker
 timeout and container limits of 512 MiB RAM, one CPU and 128 processes. A killed
 worker may leave an unpublished workspace, which the next writer removes.
 
-Only `demo-dem` is currently registered in `datasets.py`. Adding another local
-raster is an operator code/configuration change requiring metadata and bounds
-tests. Remote input references, uploads, object storage, distributed workers,
-authentication and file-output operations beyond warp remain outside this scope.
-
-The [roadmap](roadmap.md) prioritizes user-supplied rasters as the next service
-milestone, with input storage and expiry designed separately from these outputs.
+User inputs arrive through HTTPS references or inline base64; `demo-dem` remains
+registered in `datasets.py`. Input staging uses separate temporary slots and is
+removed after execution. Reusable uploads, object storage, distributed workers,
+authentication and additional operations remain future work; see
+[inputs](inputs.md) and the [roadmap](roadmap.md).

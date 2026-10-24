@@ -1,14 +1,15 @@
 # geo-processes
 
 A small OGC API – Processes service built on pygeoapi and Rasterio/GDAL.
-**`raster-info`** inspects an approved local GeoTIFF;
+**`raster-info`** inspects a GeoTIFF supplied by the user;
 **`raster-warp`** reprojects it and delivers a GeoTIFF by value or download
-reference. Both operations run offline and synchronously.
+reference. Both operations run synchronously. HTTPS inputs use a bounded
+resolver; raster processing uses a validated local file.
 
-The intended service lets **users submit their own rasters**. The bundled demo
-is the current prototype input; user submission is the next useful-service
-milestone, ahead of a large process catalogue. See the [roadmap](docs/roadmap.md)
-for input-route choices, process additions and the path to a hosted service.
+**Submit your own raster** as an HTTPS reference or inline base64 GeoTIFF.
+The bundled `demo-dem` remains available for quick examples. See
+[user inputs](docs/inputs.md) for local-file requests, URL policy and limits,
+and the [roadmap](docs/roadmap.md) for later service milestones.
 
 ## Run it
 
@@ -52,6 +53,10 @@ synchronous 200 with no job URL. Invalid inputs or unsupported options return
 JSON 400 errors; an unavailable configured dataset returns a sanitized 500.
 
 ## Reproject a raster
+
+To use your own HTTPS-hosted raster, replace `"demo-dem"` with
+`{"href":"https://data.example.org/my-dem.tif","type":"image/tiff"}` in the
+examples below. For a local file, use the [inline submission example](docs/inputs.md#submit-a-local-file-inline).
 
 Choose a target CRS from **EPSG:28992**, **EPSG:4326** or **EPSG:3857**.
 Resampling is **bilinear** by default; **nearest** is also supported. The target
@@ -99,11 +104,13 @@ for configuration, cleanup and limits.
 
 ## Scope
 
-`source` is an inline string from the published dataset enum. Currently only
-`demo-dem` is accepted, mapped to a read-only, bundled 352-byte GeoTIFF.
-Paths, URLs, OGC input references, callbacks and async jobs are not accepted.
+`source` accepts a controlled HTTPS reference, qualified inline base64 GeoTIFF
+or `demo-dem`. Inputs are limited to 16 MiB and 1,048,576 samples including bands;
+JSON requests to 24 MiB. Paths, raw URL strings, callbacks and async jobs are
+unsupported. HTTPS destinations must resolve exclusively to public addresses.
 `raster-info` still offers only JSON value transmission; `raster-warp` also
-offers GeoTIFF references. No runtime request contacts a remote data service.
+offers GeoTIFF references. User inputs are removed after execution independently
+of output retention; see [input lifecycle](docs/inputs.md#limits-validation-and-cleanup).
 
 The adapter has no pygeoapi dependency. Each operation owns its process
 metadata, input validation and result representation. Shared request/manager
@@ -124,8 +131,8 @@ See [development commands](docs/development.md), [architecture](docs/architectur
 [release deployment](docs/release-image.md),
 [warp milestone](docs/warp-milestone.md)
 and the [historical migration report](docs/migration.md). Passing local tests is not OGC
-certification. User inputs and additional operations are planned in the
-[roadmap](docs/roadmap.md); neither is part of the current demo-only contract.
+certification. Additional operations, reusable uploads and deployment work remain
+in the [roadmap](docs/roadmap.md).
 
 ## License and origins
 

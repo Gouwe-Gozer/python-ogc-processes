@@ -6,12 +6,19 @@ from copy import deepcopy
 from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
 from geo_processes import engine
-from geo_processes.contracts.info import DATASETS, DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA, PROCESS_METADATA
-from geo_processes.manager import InvalidExecutionRequestError
+from geo_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA, PROCESS_METADATA
+from geo_processes.inputs import (
+    RasterInputBusyError,
+    RasterInputError,
+    RasterInputTooLargeError,
+    resolve_source,
+    validate_source,
+)
+from geo_processes.manager import InputBusyError, InputTooLargeError, InvalidExecutionRequestError
 
 
 class RasterInfoProcessor(BaseProcessor):
-    """Inspect only the operator-owned datasets listed in the description."""
+    """Inspect the demo raster or a bounded user-supplied GeoTIFF."""
 
     def __init__(self, processor_def):
         # Upstream OpenAPI generation pops contentMediaType from metadata.
@@ -24,11 +31,17 @@ class RasterInfoProcessor(BaseProcessor):
         if set(data) - {"source"}:
             raise InvalidExecutionRequestError("unsupported input identifier")
         source = data.get("source")
-        if not isinstance(source, str) or source not in DATASETS:
-            raise InvalidExecutionRequestError("source must be a published dataset identifier: demo-dem")
         self._validate_outputs(outputs)
         try:
-            info = engine.raster_info(DATASETS[source])
+            validate_source(source)
+            with resolve_source(source) as path:
+                info = engine.raster_info(path)
+        except RasterInputTooLargeError as error:
+            raise InputTooLargeError(user_msg=str(error)) from error
+        except RasterInputError as error:
+            raise InvalidExecutionRequestError(str(error)) from error
+        except RasterInputBusyError as error:
+            raise InputBusyError(user_msg=str(error)) from error
         except engine.RasterInfoError as error:
             raise ProcessorExecuteError(user_msg="configured raster could not be inspected") from error
         return "application/json", info
@@ -66,9 +79,13 @@ class RasterInfoProcessor(BaseProcessor):
                 },
             },
             "responses": {
+                "503": {
+                    "description": "Temporary input capacity is busy",
+                    "content": {"application/json": {"schema": {"type": "object"}}},
+                },
                 "200": {
                     "description": "Application-defined raster information (raw) or an info-keyed document (document).",
                     "content": {"application/json": {"schema": {"oneOf": [INFO_SCHEMA, DOCUMENT_SCHEMA]}}},
-                }
+                },
             },
         }

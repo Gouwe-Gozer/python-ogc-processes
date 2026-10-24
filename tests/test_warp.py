@@ -169,7 +169,7 @@ def test_async_preference_is_still_synchronous(http_client):
         {"inputs": {**INPUTS, "resolution": 1}},
         {"inputs": {**INPUTS, "source": "../../secret.tif"}},
         {"inputs": {**INPUTS, "source": "https://example.test/raster.tif"}},
-        {"inputs": {**INPUTS, "source": {"href": "https://example.test/raster.tif"}}},
+        {"inputs": {**INPUTS, "source": {"href": "file:///etc/passwd"}}},
         {"inputs": INPUTS, "outputs": {}},
         {"inputs": INPUTS, "outputs": {"unknown": {}}},
         {"inputs": INPUTS, "outputs": {"result": []}},
@@ -275,7 +275,9 @@ def test_reference_result_is_downloadable_over_real_http(http_server, tmp_path, 
 
 
 def test_oversized_execute_document_is_a_json_413(http_client):
-    response = http_client.post(EXECUTION, json={"inputs": {**INPUTS, "source": "x" * (16 * 1024)}})
+    from geo_processes.inputs import MAX_EXECUTION_BYTES
+
+    response = http_client.post(EXECUTION, json={"inputs": {**INPUTS, "source": "x" * MAX_EXECUTION_BYTES}})
     assert response.status_code == 413
     assert response.is_json
     assert response.get_json()["type"] == "RequestTooLarge"

@@ -81,6 +81,23 @@ def test_warp_reference_matches_official_execute_and_results_schemas(http_client
     validate_official(response.get_json(), "results.yaml")
 
 
+def test_source_reference_request_matches_official_schema():
+    validate_official(
+        {"inputs": {"source": {"href": "https://example.com/dem.tif", "type": "image/tiff"}}}, "execute.yaml"
+    )
+
+
+def test_inline_source_keeps_the_published_binary_schema_limitation():
+    from jsonschema import ValidationError
+
+    from geo_processes.contracts.sources import SOURCE_EXECUTE_SCHEMA
+
+    source = {"value": "SUkrAA==", "mediaType": "image/tiff", "encoding": "base64"}
+    Draft4Validator(SOURCE_EXECUTE_SCHEMA, format_checker=FORMATS).validate(source)
+    with pytest.raises(ValidationError):
+        validate_official({"inputs": {"source": source}}, "execute.yaml")
+
+
 def test_official_binary_schema_has_overlapping_string_branches():
     # The unchanged official oneOf includes both an unrestricted string and
     # a byte-formatted string. Valid base64 therefore matches both, even with

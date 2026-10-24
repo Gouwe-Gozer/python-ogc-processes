@@ -129,7 +129,6 @@ Remote fetching, user uploads, authentication, object storage, async execution
 and distributed coordination remain separate future decisions. Local dataset
 identifiers are not presented as OGC external-input reference support.
 
-For the current priority and sequencing, see the [roadmap](roadmap.md) and
-[Rasterio pivot](rasterio-pivot.md). Processing users' own rasters remains the
-first useful-service milestone after migration, before a large process catalogue.
-This report records only the completed demo-based Terrio warp work.
+For the current implementation and sequencing, see the [Rasterio pivot](rasterio-pivot.md),
+[user-input milestone](inputs.md) and [roadmap](roadmap.md). This report records
+only the completed demo-based Terrio warp work.

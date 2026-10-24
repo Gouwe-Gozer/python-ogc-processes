@@ -17,8 +17,14 @@ from geo_processes.contracts.warp import (
     TARGET_CRSS,
     TIFF_TYPE,
 )
-from geo_processes.datasets import DATASETS
-from geo_processes.manager import InvalidExecutionRequestError
+from geo_processes.inputs import (
+    RasterInputBusyError,
+    RasterInputError,
+    RasterInputTooLargeError,
+    resolve_source,
+    validate_source,
+)
+from geo_processes.manager import InputBusyError, InputTooLargeError, InvalidExecutionRequestError
 from geo_processes.responses import ProcessResponse
 from geo_processes.storage import (
     ResultStore,
@@ -53,8 +59,6 @@ class RasterWarpProcessor(BaseProcessor):
         if not isinstance(data, Mapping) or set(data) - {"source", "target_crs", "resampling"}:
             raise InvalidExecutionRequestError("inputs must contain only source, target_crs and resampling")
         source, target, resampling = data.get("source"), data.get("target_crs"), data.get("resampling", "bilinear")
-        if not isinstance(source, str) or source not in DATASETS:
-            raise InvalidExecutionRequestError("source must be a published dataset identifier: demo-dem")
         if not isinstance(target, str) or target not in TARGET_CRSS:
             raise InvalidExecutionRequestError("target_crs must be EPSG:28992, EPSG:4326 or EPSG:3857")
         if not isinstance(resampling, str) or resampling not in RESAMPLING_METHODS:
@@ -63,8 +67,16 @@ class RasterWarpProcessor(BaseProcessor):
         if transmission == "reference":
             self._base_url()
         try:
+            validate_source(source)
             store = ResultStore.from_environment()
-            result = store.publish(lambda output: engine.warp_raster(DATASETS[source], output, target, resampling))
+            with resolve_source(source, require_crs=True) as path:
+                result = store.publish(lambda output: engine.warp_raster(path, output, target, resampling))
+        except RasterInputTooLargeError as error:
+            raise InputTooLargeError(user_msg=str(error)) from error
+        except RasterInputError as error:
+            raise InvalidExecutionRequestError(str(error)) from error
+        except RasterInputBusyError as error:
+            raise InputBusyError(user_msg=str(error)) from error
         except (ResultStoreBusyError, ResultStoreFullError) as error:
             raise ResultCapacityError(user_msg=str(error)) from error
         except (engine.RasterWarpError, ResultStoreError, OSError) as error:
@@ -147,7 +159,7 @@ class RasterWarpProcessor(BaseProcessor):
                     "headers": {"Link": {"schema": {"type": "string"}, "description": "Result URL and media type"}},
                 },
                 "503": {
-                    "description": "Another warp is running or bounded result storage is full.",
+                    "description": "Temporary input capacity, the warp writer or bounded result storage is busy/full.",
                     "content": {"application/json": {"schema": {"type": "object"}}},
                 },
             },

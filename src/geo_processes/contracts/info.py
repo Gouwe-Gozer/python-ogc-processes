@@ -1,7 +1,8 @@
 """Application-owned raster metadata contract, independent of the library API."""
 
 from geo_processes import __version__
-from geo_processes.datasets import DATASETS
+from geo_processes.contracts.sources import SOURCE_DESCRIPTION, SOURCE_EXECUTE_SCHEMA, SOURCE_VALUE_SCHEMA
+from geo_processes.datasets import DATASETS as DATASETS
 
 
 def _numbers(length):
@@ -67,16 +68,18 @@ PROCESS_METADATA = {
     "version": __version__,
     "id": "raster-info",
     "title": "Raster information",
-    "description": "Inspect a bundled, bounded GeoTIFF using Rasterio, including exact band statistics.",
+    "description": (
+        "Inspect a bounded GeoTIFF supplied by the user or the bundled demo, including exact finite statistics."
+    ),
     "keywords": ["Rasterio", "raster", "GeoTIFF", "statistics"],
     "jobControlOptions": ["sync-execute"],
     "outputTransmission": ["value"],
     "links": [{"href": "https://rasterio.readthedocs.io/en/stable/", "rel": "about", "type": "text/html"}],
     "inputs": {
         "source": {
-            "title": "Dataset identifier",
-            "description": "Inline identifier of a bundled raster. demo-dem is a 4 by 3 Float32 DEM in EPSG:28992.",
-            "schema": {"type": "string", "enum": list(DATASETS)},
+            "title": "Source GeoTIFF",
+            "description": SOURCE_DESCRIPTION,
+            "schema": SOURCE_VALUE_SCHEMA,
             "minOccurs": 1,
             "maxOccurs": 1,
         }
@@ -100,7 +103,7 @@ EXECUTE_SCHEMA = {
         "inputs": {
             "type": "object",
             "required": ["source"],
-            "properties": {"source": PROCESS_METADATA["inputs"]["source"]["schema"]},
+            "properties": {"source": SOURCE_EXECUTE_SCHEMA},
             "additionalProperties": False,
         },
         "outputs": {

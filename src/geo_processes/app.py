@@ -6,11 +6,12 @@ from email.utils import formatdate
 from flask import jsonify, make_response, request
 from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_
 
+from geo_processes.inputs import MAX_EXECUTION_BYTES
 from geo_processes.responses import STATUS_HEADER
 from geo_processes.storage import ResultNotFoundError, ResultStore, ResultStoreError
 
 api_.manager.result_base_url = api_.base_url
-APP.config["MAX_CONTENT_LENGTH"] = 16 * 1024
+APP.config["MAX_CONTENT_LENGTH"] = MAX_EXECUTION_BYTES
 
 EXECUTION_PATHS = {
     f"/processes/{identifier}/execution"
@@ -26,7 +27,7 @@ def _invalid_request(description):
 
 @APP.errorhandler(413)
 def execution_document_too_large(_error):
-    return jsonify(type="RequestTooLarge", code="RequestTooLarge", description="request body exceeds 16 KiB"), 413
+    return jsonify(type="RequestTooLarge", code="RequestTooLarge", description="request body exceeds 24 MiB"), 413
 
 
 @APP.before_request

@@ -8,6 +8,7 @@ LABEL org.opencontainers.image.title="Geo Processes API" \
       org.opencontainers.image.base.name="docker.io/geopython/pygeoapi:0.24.0"
 
 ENV CONTAINER_PORT=8080 \
+    PROJ_NETWORK=OFF \
     PYTHONPATH=/pygeoapi \
     PYGEOAPI_ASYNCAPI=/tmp/pygeoapi.asyncapi.yml \
     PYGEOAPI_OPENAPI=/tmp/pygeoapi.openapi.yml \

@@ -51,7 +51,7 @@ def test_execution_defaults_and_explicit_options(http_client, response_mode, out
         {"inputs": []},
         {"inputs": {"source": 1}},
         {"inputs": {"source": True}},
-        {"inputs": {"source": {"href": "https://example.test/dem.tif"}}},
+        {"inputs": {"source": {"href": "file:///etc/passwd"}}},
         {"inputs": {"source": ["demo-dem"]}},
         {"inputs": {"source": "/etc/passwd"}},
         {"inputs": {"source": "../../demo-dem"}},
@@ -138,7 +138,7 @@ def test_discovery_links_descriptions_and_capabilities_agree(http_client):
     assert description["id"] == process["id"]
     assert description["jobControlOptions"] == ["sync-execute"]
     assert description["outputTransmission"] == ["value"]
-    assert description["inputs"]["source"]["schema"] == {"type": "string", "enum": ["demo-dem"]}
+    assert description["inputs"]["source"]["schema"]["anyOf"][0] == {"type": "string", "enum": ["demo-dem"]}
     assert description["outputs"]["info"]["schema"]["contentMediaType"] == "application/json"
     execution = next(link for link in description["links"] if link["rel"].endswith("/execute"))
     assert urlsplit(execution["href"]).path == EXECUTION_PATH

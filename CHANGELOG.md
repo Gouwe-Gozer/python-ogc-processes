@@ -2,6 +2,12 @@
 
 ## 0.1.0 — Unreleased
 
+- Accept users' own GeoTIFFs in both processes through controlled HTTPS
+  references and qualified inline base64, retaining the demo shortcut.
+- Bound downloads, decoding and temporary workspaces; verify TLS and public
+  destinations on every redirect, and remove staged inputs after execution.
+- Extend schemas, HTTP tests, independent-client smoke checks and documentation
+  for user inputs, preserving output modes and recording remaining OGC gaps.
 - Rename the project/package to `geo-processes`/`geo_processes` and processes to
   `raster-info`/`raster-warp`; migrate configuration, image references and CI.
 - Replace Terrio with Rasterio 1.4.3 and NumPy 1.26.4, declaring and locking

@@ -5,57 +5,36 @@ and receive usable results. A service limited to an operator's hosted dataset
 catalogue is not the intended end state. Supporting user-supplied data belongs
 in the first useful-service milestone, before building a large process catalogue.
 
-This document records direction and proposed milestones, not implemented
-features. The current API accepts only `demo-dem`; see the [README](../README.md)
-for its tested contract and [validation](validation.md) for the OGC evidence.
+This document distinguishes implemented foundations from future milestones.
+The API accepts user GeoTIFFs through HTTPS references or inline base64, plus
+`demo-dem`; see [inputs](inputs.md), [README](../README.md) and
+[validation](validation.md) for the contract and evidence boundary.
 
 ## Completed foundation: Rasterio pivot
 
 The [Rasterio pivot](rasterio-pivot.md) renames the project to `geo-processes`
 and implements Rasterio-backed `raster-info` and `raster-warp`, preserving the
-tested service infrastructure. User-supplied inputs are the next milestone.
+tested service infrastructure.
 
-## User-supplied rasters
+## Implemented user-raster milestone
 
-Choose and implement the first supported submission route. The choice is still
-open; neither route exists today:
+The user selected HTTPS references and qualified inline base64 for the first
+flow. Both current processes use the same input resolver, validate staged data
+and remove inputs after execution independently of result expiry. Tests cover
+actual local TLS, destination/redirect policy, both source forms and all four
+warp output modes. A separate client can create its own raster and run the
+complete flow; see [input examples and policy](inputs.md).
 
-| Route | Client experience | Implementation boundary |
-| --- | --- | --- |
-| Controlled OGC input reference | Supply an `href` to a raster the service can retrieve | Resolve and validate references under a documented network and resource policy |
-| Managed upload | Submit a local file, then use the returned input reference | Define an upload endpoint, temporary input storage, ownership and expiry |
+## Pilot follow-up
 
-Controlled OGC references are the recommended first route because they also
-address an existing standards gap. The policy must let intended users supply
-their data; it must not reduce the feature to a fixed operator dataset list.
-Uploads can follow or be prioritized if users cannot expose downloadable URLs.
-An upload endpoint would be a service extension, documented in OpenAPI; it does
-not by itself establish OGC input-reference interoperability. Review input
-resolution and validation against the [OGC guide](validation.md#ogc-review-guide).
-
-The milestone should include:
-
-- A documented request contract and examples for a user's raster, with one
-  complete submit, execute and download flow tested from an independent client.
-  Update the source schema and media-type description for raster data, rather
-  than merely relaxing the current dataset-ID string enum.
-- Shared input resolution separate from individual processors and raster
-  adapters. Clients must never choose server paths or raw GDAL driver strings.
-- For URL inputs, protocol/destination restrictions, redirect checks, timeouts,
-  bounded downloads and content validation. Check every fetch, including any
-  secondary resource access, rather than passing unchecked URLs to Rasterio/GDAL.
-- For uploads or downloaded inputs, a bounded temporary workspace, an explicit
-  retention policy, failure cleanup and a decision about access to private data.
-  Input lifetime must be independent of the existing output expiry policy.
-- A deliberately small initial format contract, such as self-contained
-  GeoTIFFs, verified through the pinned Rasterio environment. Broader format
-  and compression support should follow tested examples.
-- Representative DEM and imagery cases covering supported data types, band
-  counts, nodata and CRSs. Extend the pivot's metadata/nodata/multiband cases
-  to real user data and submission policies before advertising broader support.
-- Measurements of memory, runtime and output size, with explicit supported
-  limits. The existing warp bounds are 16 MiB per input and 1,048,576 samples
-  including bands; result and deployment limits are in [results](results.md).
+- Expand representative DEM and imagery cases across users' data types, band
+  counts, nodata and CRSs before broadening formats or increasing limits.
+- Measure memory, runtime and output size against the existing 16 MiB and
+  1,048,576-sample bounds; deployment/result limits are in [results](results.md).
+- Decide whether repeated processing needs reusable uploads or input storage.
+  That would be a documented extension with access, privacy and expiry policies.
+- Establish the intended users and hosting/access policies before opening a
+  shared public service. Keep the current synchronous pilot bounded.
 
 Keep the tiny bundled TIFF for deterministic regression tests. Small, suitably
 licensed representative fixtures should keep CI independent of public data
@@ -120,7 +99,7 @@ milestones. The current store permits one writer at a time and returns 503
 when busy or full; this must be accounted for when assessing pilot capacity.
 
 OGC conformance is a parallel workstream, not something implied by a usable
-pilot or a larger process catalogue. Review the outstanding input-reference
+pilot or a larger process catalogue. Review the outstanding scalar-input-reference
 and Core job-resource gaps, map evidence to Annex A and run appropriate current
 service checks before strengthening conformance claims. Async execution remains
 a separate workload decision; a static checker baseline is not certification.

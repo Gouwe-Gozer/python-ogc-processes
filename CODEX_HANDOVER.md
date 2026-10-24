@@ -2,10 +2,10 @@
 
 The approved [Rasterio pivot](docs/rasterio-pivot.md) replaces the previous Terrio
 runtime and names with **geo-processes** (`geo_processes`). GDAL-free deployment
-is no longer a goal. The direction/roadmap was committed first as `99383c1` on
-`refactor/rasterio-pivot`, based on the tested warp checkpoint `0b6de7c`.
-The existing warp branch and MIT notices are preserved; pushing or merging is
-a separate action. The remote GitHub repository has not been renamed.
+is no longer a goal. The pivot was merged into `main` at `88a83a2`; its obsolete
+branches were removed after verifying equivalent changes. User-raster work is
+on `feat/user-raster-inputs`, based directly on that merged `main`. The remote
+GitHub repository retains its existing name.
 
 `geo-processes` exposes bounded Rasterio operations through OGC API – Processes
 using the official pygeoapi package. Maintainer: Minnert Wijnands (Gouwe-Gozer).
@@ -22,12 +22,21 @@ and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract wor
 - Python 3.12, pygeoapi **0.24.0**, Rasterio **1.4.3** and NumPy **1.26.4**, with project-local
   dependencies managed by `uv` and pinned in `uv.lock`.
 - Two public processes: **`raster-info`** and **`raster-warp`**. Their required
-  `source` input is the inline string `demo-dem`, mapped to a bundled 4 by 3
-  GeoTIFF in EPSG:28992.
-  Clients cannot choose filesystem paths, URLs or arbitrary Rasterio options.
+  `source` accepts a controlled HTTPS reference, qualified inline base64 GeoTIFF
+  or `demo-dem`, the bundled 4 by 3 GeoTIFF in EPSG:28992. Clients cannot choose
+  filesystem paths, raw URL strings or arbitrary Rasterio options.
+- The shared [input resolver](src/geo_processes/inputs.py) stages at most two
+  private inputs, checks public destinations/redirects, pins TLS connections and
+  enforces limits. Files are removed after execution or cleaned on slot reuse
+  after a worker crash. See [input policy and examples](docs/inputs.md).
 - The plain Python adapter reads metadata with Rasterio, computes exact finite
   masked statistics with NumPy and calls `rasterio.warp.reproject` for each band.
   Metadata uses an [application-owned contract](docs/raster-info.md).
+  Only GTiff reads staged files; PAM/sidecars and PROJ networking are disabled.
+  User rasters are fully validated before processing. JSON requests are capped
+  at 24 MiB; raster bytes at 16 MiB, samples at 1,048,576 including bands, and
+  decoded blocks at 16 MiB. Invalid inputs return 400, oversized bytes/bodies
+  413, and busy temporary input slots 503.
   Each processor owns its input validation, description and result formatting.
 - Synchronous execution only: `jobControlOptions: ["sync-execute"]`.
   Info offers value transmission; warp offers value and reference. Omitted
@@ -60,6 +69,8 @@ and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract wor
 | `src/geo_processes/processes/` | Independent info and warp validation/representations |
 | `src/geo_processes/contracts/` | Per-operation metadata and schemas |
 | `src/geo_processes/datasets.py` | Operator-approved local raster registry |
+| `src/geo_processes/inputs.py` | Bounded HTTPS/base64 resolution and private input lifecycle |
+| `src/geo_processes/contracts/sources.py` | Raster value schemas and supported OGC wire forms |
 | `src/geo_processes/storage.py` | Bounded local output publication, expiry and cleanup |
 | `src/geo_processes/responses.py` | Explicit process HTTP representation |
 | `src/geo_processes/app.py` | Boundary validation for registered execution routes |
@@ -81,6 +92,11 @@ diagnostics. Historical CITE results describe the predecessor service, not this
 implementation. See [validation](docs/validation.md) for the evidence boundary
 and [migration report](docs/migration.md) for the initial compatibility inventory.
 
+The user-input milestone has 293 passing tests and 95.78% coverage, with checked
+host/container input flows and a representative Float32 workload. See
+[milestone evidence](docs/inputs.md#milestone-validation); retain the limits until
+broader workloads justify increasing them.
+
 ## Working rules
 
 Follow [AGENTS.md](AGENTS.md). Use user-installed `uv`, a local `.venv` and
@@ -96,14 +112,12 @@ Do not commit, push or publish unless the user requests it.
 
 ## Further milestones
 
-Prioritize a usable flow for user-supplied rasters before expanding the process catalogue.
-The [roadmap](docs/roadmap.md) proposes controlled OGC `href` inputs
-as the first route; upload versus reference ingestion remains an open design
-choice. Both are currently unsupported. A configurable local catalogue is
-optional, not the intended end state. Plan input validation, temporary storage,
-representative raster tests and measured limits together; account for secondary
-fetches as well as the initial URL. Do not treat local dataset identifiers or
-an upload endpoint as implemented OGC input-reference interoperability.
+The first own-raster flow supports HTTPS references and inline base64, as chosen
+by the user. Preserve this pilot while expanding representative real-data tests,
+useful warp grid controls and deployment policies. Reusable upload storage is a
+separate future decision; an operator catalogue is optional. See the
+[roadmap](docs/roadmap.md). Do not add arbitrary driver strings, private URL
+destinations or asynchronous infrastructure incidentally.
 
 Useful warp resolution/extent controls and subsequent raster processes can build
 on that input flow and the tested result lifecycle. Map each algorithm to the
@@ -117,9 +131,10 @@ infrastructure is part of the completed warp scope. See the
 [historical Terrio warp report](docs/warp-milestone.md) and
 [current pivot validation](docs/rasterio-pivot.md#validation-status).
 
-Track conformance gaps alongside usability. Supporting references must be
-reviewed against Core input resolution/validation requirements; full Core job
-resources and Annex A coverage remain unresolved. Keep future work distinct
+Track conformance gaps alongside usability. Raster source references and binary
+values are supported, but scalar CRS/resampling references, full Core job
+resources and Annex A coverage remain unresolved. The published binary-schema
+overlap also affects inline requests. Keep future work distinct
 from the current public capabilities and from historical checker/CITE evidence.
 
 ## Licence and origins

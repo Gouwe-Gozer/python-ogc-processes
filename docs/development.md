@@ -13,8 +13,9 @@ uv run bandit -r src scripts -c pyproject.toml
 uv run pytest --cov=geo_processes --cov-report=term-missing --cov-fail-under=70
 ```
 
-Tests include real loopback HTTP requests and need permission to bind a local
-socket. They never download raster data. `uv run ruff format src tests scripts`
+Tests include loopback HTTP and HTTPS servers and need permission to bind local
+sockets. TLS uses public test-only fixtures, with no production bypass flag.
+They never download public raster data. `uv run ruff format src tests scripts`
 applies formatting. Dependency changes must include `pyproject.toml` and
 `uv.lock` together. `.venv/`, project-local uv caches and generated API documents
 are ignored. Pre-commit is configured to run the same Ruff and Bandit checks:
@@ -34,9 +35,9 @@ The compatibility tests explicitly compare that output with the runtime contract
 
 ## Extending the service
 
-The [roadmap](roadmap.md) prioritizes processing users' own rasters. Input
-references, uploads and new operations remain planned work, not features of the
-current demo. The completed [Rasterio pivot](rasterio-pivot.md) is their baseline.
+The [input flow](inputs.md) supports HTTPS references and inline base64 for
+users' GeoTIFFs. Reusable uploads and new operations remain future work in the
+[roadmap](roadmap.md). The completed [Rasterio pivot](rasterio-pivot.md) is the baseline.
 Keep each operation's processor and contract separate, use small Python adapters,
 and reuse the input/result lifecycle where appropriate.
 Follow the [OGC review guide](validation.md#ogc-review-guide) for descriptions,
@@ -53,6 +54,7 @@ docker compose --file compose.release.yml config --quiet
 docker compose --file compose.release.yml up --build --detach
 uv run python scripts/smoke_discovery.py --base-url http://localhost:5001 --wait-seconds 60
 uv run python scripts/smoke_warp.py --base-url http://localhost:5001 --save-reference /tmp/warp-reference.txt
+uv run python scripts/smoke_inputs.py --base-url http://localhost:5001
 uv run python scripts/check_release_container.py
 docker compose --file compose.release.yml restart api
 uv run python scripts/smoke_discovery.py --base-url http://localhost:5001 --wait-seconds 60
@@ -66,6 +68,14 @@ reference verifies persistence across a service restart. `compose.yml` mounts
 source and configuration read-only for development; restart after changing them.
 Both stacks use a named result volume. Normal `down` retains it; adding
 `--volumes` deletes it and all stored results.
+
+The input smoke check creates a two-band raster independently of the bundled
+demo, submits it inline, checks info and all four warp modes, then downloads
+results. `--input-raster my-dem.tif` uses your file; `--source-href https://...`
+instead submits a hosted copy of that file for independent comparison. CI runs
+the inline check from both the host and a separate client container. The pytest
+suite exercises HTTPS through a local TLS origin and tests destination, redirect,
+deadline, capacity and cleanup policies without contacting public services.
 
 The local storage lock uses Linux `flock`; use Linux or Docker for this service.
 See [result storage](results.md) for settings and maintenance commands.
@@ -83,5 +93,5 @@ That diagnostic configuration uses upstream TinyDB and `async-echo`; it is not
 evidence that the public service implements asynchronous jobs. The public CI
 retains quality checks, coverage, API validation, container execution/isolation
 and pinned Geonovum diagnostics. CI also downloads results from an independent
-client container and verifies persistence across restart. Public process tests use the bundled raster
-and do not depend on a live data service.
+client container and verifies persistence across restart. Public process tests use
+bundled or generated rasters and a local TLS fixture, without a live data dependency.
