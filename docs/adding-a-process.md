@@ -2,7 +2,7 @@
 
 Give each operation a clear contract and a small Rasterio adapter. Follow
 `raster-info` for JSON results and `raster-warp` for a file result. Register a
-process explicitly; the present two operations do not need an auto-discovery
+process explicitly; the current operations do not need an auto-discovery
 system or a generalized engine plugin layer.
 
 ## 1. Define the operation and its bounds
@@ -35,7 +35,9 @@ when the operation needs georeferencing. Do not reopen a client-supplied URL
 through Rasterio or accept server filesystem paths.
 
 For file results, use `ResultStore.publish()` and its existing lifetime/quotas.
-Return a `ProcessResponse` where native bytes, headers or a 204 are needed.
+Reuse `delivery.FileOutput` / `format_file()` for TIFF or GeoJSON and declare
+`result_extension` for OpenAPI download registration. Return a `ProcessResponse`
+where native bytes, headers or a 204 are needed.
 Give the operation its own `format_result()` and `openapi_execution()` when
 appropriate. Shared code must preserve explicit output identifiers, supported
 media types and transmission modes; it must not assume one JSON output.
@@ -62,12 +64,14 @@ examples together:
   supported formats and value/reference transmission per output. Advertise only
   what the implementation accepts; do not inherit async/callback capabilities.
 - Check generated OpenAPI against the real HTTP contract. If a new file operation
-  needs the existing result route, extend its OpenAPI registration deliberately;
-  it is currently registered when `raster-warp` is present.
+  needs another format, extend the explicit result-extension allowlist and
+  download tests deliberately. Existing TIFF/GeoJSON routes are registered from
+  each processor's `result_extension`, independently of its process ID.
 
-Scalar input references, Core job resources and the published binary execute
-schema overlap remain documented gaps. Adding an operation does not resolve
-them or establish certification.
+Scalar references and Core job errors were addressed in the
+[Core audit](core-conformance-audit.md). Conditional checker findings and the
+published binary execute schema overlap remain documented limitations. Adding
+an operation does not establish certification.
 
 ## 4. Verify and document the behavior
 

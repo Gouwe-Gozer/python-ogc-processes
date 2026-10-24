@@ -10,12 +10,15 @@ masked statistics; [raster metadata](raster-info.md) is an application-owned con
 | Location | Responsibility |
 | --- | --- |
 | `config/pygeoapi.yml` | Explicit public process and synchronous manager registration |
-| `contracts/info.py`, `contracts/warp.py` | Independent operation descriptions and executable schemas |
+| `contracts/<operation>.py` | Independent operation descriptions and executable schemas |
+| `contracts/files.py` | Small schema builders for the repeated file-result contract |
 | `contracts/sources.py` | Binary raster value schema and supported execution representations |
-| `processes/info.py`, `processes/warp.py` | Per-operation validation, adapter calls and output formatting |
+| `processes/<operation>.py` | Independent BaseProcessor implementations, parameter checks and adapter calls |
+| `processes/common.py` | Narrow integer/band checks and typed error mapping for the new operations |
 | `engine.py` | Raster validation, metadata/statistics and bounded reprojection; no pygeoapi imports |
+| `operations/` | Point sampling, range classification, polygonization and bounded GeoJSON serialization |
 | `inputs.py` | Controlled HTTPS/base64 acquisition, private staging and cleanup |
-| `storage.py` | Bounded GeoTIFF publication, locking, expiry and cleanup |
+| `storage.py`, `delivery.py` | TIFF/GeoJSON publication, shared expiry/quotas and OGC file-result formatting |
 | `manager.py` | Synchronous execution, typed exceptions and delegated representations |
 | `responses.py` | Explicit response body, media type, status and headers |
 | `app.py` | Flask request guard, JSON exception normalization and result downloads |
@@ -72,11 +75,19 @@ conformance gaps are tracked in [validation](validation.md).
 ## Extension boundaries
 
 Give each new operation its own adapter, processor and contract, following the
-[contribution recipe](adding-a-process.md). Extract shared GeoTIFF delivery when
-another file-producing operation demonstrates the duplication. Formatting still
-lives in the warp processor, and the download route's OpenAPI registration is
-currently conditional on `raster-warp`; do not mistake that coupling for a
-requirement that every future operation use the same output ID.
+[contribution recipe](adding-a-process.md). Warp and the three new operations
+reuse a file formatter with explicit output ID, media type and transmission.
+Storage accepts only the two implemented extensions. Each file processor declares
+`result_extension` so its download route appears in OpenAPI even without warp.
+This is a small shared delivery helper, not an engine registry or processor base
+class; independent processors still subclass pygeoapi's `BaseProcessor` directly.
+
+The pinned upstream processor/manager interfaces were checked before this
+extraction. pygeoapi supplies registration, routing and execution dispatch; its
+stock manager does not supply our expiring non-job downloads or OGC result
+mapping. The existing formatter hook is reused, with no new manager coupling or
+job lifecycle. GeoJSON uses Rasterio/GDAL and the standard library; no vector
+library, driver plugin or asynchronous machinery is introduced.
 
 `scripts/process_raster.py` is a user-facing example client. Smoke scripts cover
 all supported representations for developer checks. Historical implementation

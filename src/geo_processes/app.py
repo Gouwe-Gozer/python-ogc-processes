@@ -12,7 +12,7 @@ from geo_processes.errors import exception_document, install_exception_renderer
 from geo_processes.inputs import MAX_EXECUTION_BYTES
 from geo_processes.responses import STATUS_HEADER
 from geo_processes.startup import validate_runtime
-from geo_processes.storage import ResultNotFoundError, ResultStore, ResultStoreError
+from geo_processes.storage import RESULT_TYPES, ResultNotFoundError, ResultStore, ResultStoreError
 
 runtime_settings = validate_runtime(CONFIG)
 api_.manager.result_base_url = runtime_settings.url
@@ -89,11 +89,11 @@ def apply_process_status(response):
     return response
 
 
-@APP.route(f"{(API_RULES.get_url_prefix('flask') or '').rstrip('/')}/results/<result_id>/output.tif")
-def download_result(result_id):
-    """Deliver a generated GeoTIFF, enforcing its lifetime on every retrieval."""
+@APP.route(f"{(API_RULES.get_url_prefix('flask') or '').rstrip('/')}/results/<result_id>/output.<extension>")
+def download_result(result_id, extension):
+    """Deliver only supported stored formats, enforcing lifetime on every read."""
     try:
-        data, expires_at = ResultStore.from_environment().read(result_id)
+        data, expires_at = ResultStore.from_environment().read(result_id, extension=extension)
     except ResultNotFoundError:
         return jsonify(exception_document("NoSuchResult", "result not found or expired", 404)), 404
     except (ResultStoreError, OSError):
@@ -102,8 +102,8 @@ def download_result(result_id):
     response = make_response(data)
     response.headers.update(
         {
-            "Content-Type": "image/tiff",
-            "Content-Disposition": 'attachment; filename="output.tif"',
+            "Content-Type": RESULT_TYPES[extension],
+            "Content-Disposition": f'attachment; filename="output.{extension}"',
             "Cache-Control": "no-store",
             "Expires": formatdate(expires_at, usegmt=True),
             "X-Content-Type-Options": "nosniff",

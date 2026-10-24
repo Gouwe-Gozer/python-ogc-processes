@@ -37,9 +37,9 @@ extension, not evidence of Core conformance.
 | --- | --- | --- |
 | Discovery and claims | Sections 7.4, 7.9–7.10 | HTTP and official-schema tests; scoped Core audit above |
 | Operation descriptions | Section 8, Requirements 49–51 | [Value/wire distinction](inputs.md#ogc-scope-and-deployment), independent contracts and `test_ogc_schemas.py` |
-| Input delivery/validation | Section 7.11.2, Requirements 18, 22, 24 | [Input policy](inputs.md), raster/scalar reference and inline tests |
+| Input delivery/validation | Section 7.11.2, Requirements 18, 20, 22, 24 | [Input policy](inputs.md), raster/scalar/JSON references, qualified GeoJSON objects and inline tests |
 | Execution preferences/defaults | Section 7.11.2, Requirements 25–27 | Info/warp HTTP tests; synchronous execution only |
-| Synchronous results | Section 7.11.4, Requirements 28, 30, 32 | [Four warp response modes](results.md#http-contract) and independent downloads |
+| Synchronous results | Section 7.11.4, Requirements 28, 30, 32 | [Four file-result response modes](results.md#http-contract), TIFF/GeoJSON documents and independent downloads |
 | Multiple raw outputs | Section 7.11.4, Requirements 29, 31 | Multipart delivery not implemented |
 | Job resources | Sections 7.12–7.13; Permission 7 | Existing routes return the required unknown-job errors and are documented; no retained synchronous jobs |
 | OpenAPI/exceptions | Section 10; Requirement 15 for unknown processes | [Catalogue](errors.md), generated definition and actual JSON exception/schema tests |
@@ -82,7 +82,8 @@ modified to hide the overlap; these checks do not establish complete conformance
 - Release smoke checks run processing through Gunicorn, download/open results
   from independent clients, inspect isolation and verify restart persistence.
 - [Geonovum 1.2.0](../validation/geonovum/README.md) checks OpenAPI statically.
-  Its five reviewed diagnostics are retained explicitly.
+  Its eight reviewed diagnostics are retained explicitly (including one
+  conditional async-201 expectation per synchronous process).
 - [CITE/TEAM Engine evidence](../validation/cite-teamengine/README.md) concerns
   the predecessor's integration-only echo fixture. No current raster-service
   TEAM Engine run or certification is claimed.
@@ -90,6 +91,15 @@ modified to hide the overlap; these checks do not establish complete conformance
 ## Recorded checks
 
 These are dated observations, not permanently current test counts or guarantees:
+
+- Raster operations, **2026-10-24**: **458 tests passed**, **95.18% coverage**.
+  Sampling, classification and polygonization cover HTTPS/inline inputs, band
+  selection, CRS handling, all four TIFF/GeoJSON delivery modes, downloads,
+  limits and errors. Quality/pre-commit, configuration/OpenAPI and release
+  isolation checks pass. Host and separate client-container smoke checks pass;
+  stored TIFF and GeoJSON downloads survive restart. The eight-finding Geonovum baseline
+  adds only one conditional async expectation per new process. External client
+  GeoJSON UI behavior remains untested.
 
 - Core audit, **2026-10-24**: **401 tests passed**, **95.40% coverage**, including
   real TLS scalar/raster references and compatibility with the existing async

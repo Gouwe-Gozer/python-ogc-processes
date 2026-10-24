@@ -1,6 +1,6 @@
 # Raster results and lifecycle
 
-`raster-warp` writes validated [user inputs](inputs.md) to GeoTIFF. All executions create a
+Warp/reclassify write GeoTIFF; sample/polygonize write WGS84 GeoJSON. All file-producing executions create a
 stored result, including requests that return the raster by value. The public
 output identifier is `result`. No persistent OGC job resource is created.
 
@@ -25,6 +25,13 @@ GET `/results/<id>/output.tif` returns `image/tiff`, an attachment filename,
 `Cache-Control: no-store`, and an `Expires` timestamp. Invalid, missing and
 expired IDs return JSON 404. Internal storage failures return sanitized JSON 500.
 
+The same four modes apply to `raster-reclassify`. For sampling/polygonization,
+replace TIFF with `application/geo+json` and `output.geojson`; document/value
+contains the GeoJSON object directly, without base64 or `encoding`. See
+[operation contracts and examples](raster-operations.md). Both extensions count
+toward the same byte/count quota and expire under the same policy. Supplying an
+unsupported extension, or the wrong extension for a stored result, returns 404.
+
 ## Storage and expiry
 
 Development and release Compose mount the named volume `results` at
@@ -40,7 +47,7 @@ existing files as well as new ones; volume deletion or storage failure can
 remove files before their normal expiry.
 
 Expired files and abandoned workspaces are physically removed before the next
-warp or during explicit cleanup. This is lazy cleanup: files may remain on disk
+file-producing operation or during explicit cleanup. This is lazy cleanup: files may remain on disk
 while the service is idle, but expired download URLs already return 404. There
 is no background job system. To clean the running release volume explicitly:
 

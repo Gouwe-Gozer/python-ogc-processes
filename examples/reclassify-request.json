@@ -1,0 +1,21 @@
+{
+  "inputs": {
+    "source": {
+      "href": "https://data.example.org/raster.tif",
+      "type": "image/tiff"
+    },
+    "classes": [
+      {
+        "min": 0,
+        "max": 10,
+        "value": 1
+      },
+      {
+        "min": 10,
+        "max": 100,
+        "value": 2
+      }
+    ]
+  },
+  "response": "raw"
+}

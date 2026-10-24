@@ -268,6 +268,41 @@ def resolve_scalar(value, *, name, choices):
     return value
 
 
+def resolve_json(value, *, name, media_types=("application/json",)):
+    """Resolve bounded JSON parameters with the same verified HTTPS transport.
+
+    Object values use OGC's qualified {value: ...} form, so an application
+    object can never be mistaken for a transport reference (Core req. 20/22).
+    Semantic validation remains the responsibility of the operation.
+    """
+    limit = 256 * 1024
+    if isinstance(value, Mapping):
+        if "href" in value:
+            _validate_reference(value, media_types, media_types[0])
+            with _workspace() as destination:
+                content_type = _download(value["href"], destination, max_bytes=limit, media_types=media_types)
+                actual_type = (content_type or value.get("type", media_types[0])).split(";", 1)[0].strip().lower()
+                if actual_type not in media_types or value.get("type", actual_type) != actual_type:
+                    raise RasterInputError(f"{name} reference has an unsupported JSON media type")
+                try:
+                    value = json.loads(destination.read_bytes().decode("utf-8"))
+                except (UnicodeError, ValueError) as error:
+                    raise RasterInputError(f"{name} reference must contain UTF-8 JSON") from error
+        elif "value" in value and not set(value) - {"value", "mediaType"}:
+            if value.get("mediaType", media_types[0]) not in media_types:
+                raise RasterInputError(f"{name} qualified value has an unsupported media type")
+            value = value["value"]
+        else:
+            raise RasterInputError(f"{name} object must be a qualified value or HTTPS reference")
+    try:
+        encoded = json.dumps(value, allow_nan=False).encode("utf-8")
+    except (ValueError, TypeError, OverflowError) as error:
+        raise RasterInputError(f"{name} must contain finite JSON values") from error
+    if len(encoded) > limit:
+        raise RasterInputTooLargeError(f"{name} exceeds the 256 KiB parameter limit")
+    return value
+
+
 @contextmanager
 def _workspace():
     root = Path(os.environ.get("GEO_INPUT_TMPDIR", "runtime-data/inputs"))

@@ -117,13 +117,23 @@ def generate_openapi(config):
                     "schema": {"type": "string", "enum": ["wait", "respond-async"]},
                 }
             ]
-    if "raster-warp" in config["resources"]:
+    from geo_processes.storage import RESULT_TYPES
+
+    for extension, media_type in RESULT_TYPES.items():
+        tags = [
+            identifier
+            for identifier, resource in config["resources"].items()
+            if resource["type"] == "process"
+            and getattr(load_plugin("process", resource["processor"]), "result_extension", None) == extension
+        ]
+        if not tags:
+            continue
         # This is application storage delivery, separate from OGC job management.
-        paths["/results/{result_id}/output.tif"] = {
+        paths[f"/results/{{result_id}}/output.{extension}"] = {
             "get": {
-                "summary": "Download an unexpired raster result",
-                "operationId": "downloadRasterResult",
-                "tags": ["raster-warp"],
+                "summary": "Download an unexpired processing result",
+                "operationId": f"downloadResult{extension.title()}",
+                "tags": tags,
                 "parameters": [
                     {
                         "name": "result_id",
@@ -134,8 +144,14 @@ def generate_openapi(config):
                 ],
                 "responses": {
                     "200": {
-                        "description": "GeoTIFF, available until the Expires time (24 hours by default)",
-                        "content": {"image/tiff": {"schema": {"type": "string", "format": "binary"}}},
+                        "description": "Stored result, available until the Expires time (24 hours by default)",
+                        "content": {
+                            media_type: {
+                                "schema": {"type": "object"}
+                                if extension == "geojson"
+                                else {"type": "string", "format": "binary"}
+                            }
+                        },
                         "headers": {"Expires": {"schema": {"type": "string"}, "description": "Result expiration time"}},
                     },
                     "404": exception_response("Result missing, invalid or expired", "NoSuchResult", 404, html=False),

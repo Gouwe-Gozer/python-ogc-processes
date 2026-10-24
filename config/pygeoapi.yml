@@ -26,7 +26,7 @@ logging:
 metadata:
   identification:
     title: Geo Processes API
-    description: Bounded synchronous raster information and reprojection powered by Rasterio.
+    description: Bounded synchronous raster inspection, reprojection, sampling, reclassification and polygonization powered by Rasterio.
     keywords:
     - Rasterio
     - raster
@@ -52,3 +52,15 @@ resources:
     type: process
     processor:
       name: geo_processes.processes.warp.RasterWarpProcessor
+  raster-sample-points:
+    type: process
+    processor:
+      name: geo_processes.processes.sample.RasterSamplePointsProcessor
+  raster-reclassify:
+    type: process
+    processor:
+      name: geo_processes.processes.reclassify.RasterReclassifyProcessor
+  raster-polygonize:
+    type: process
+    processor:
+      name: geo_processes.processes.polygonize.RasterPolygonizeProcessor

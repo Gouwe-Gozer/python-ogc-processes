@@ -8,6 +8,9 @@ base64 and receive information or a reprojected file. Execution is synchronous.
 | --- | --- | --- |
 | `raster-info` | Inspect metadata, georeferencing and exact finite band statistics | JSON |
 | `raster-warp` | Reproject a raster, retaining its width and height | GeoTIFF by value or download reference |
+| `raster-sample-points` | Read one band at WGS84 GeoJSON point locations | GeoJSON by value or download reference |
+| `raster-reclassify` | Map numeric ranges in one band to integer classes | GeoTIFF by value or download reference |
+| `raster-polygonize` | Convert contiguous raster classes into WGS84 polygons | GeoJSON by value or download reference |
 
 ## Run the service
 
@@ -55,6 +58,8 @@ curl --fail-with-body http://localhost:5001/processes/raster-info/execution \
 This requests a document response: HTTP 200 JSON containing `info.value`.
 See [input examples](docs/inputs.md) for HTTPS references and manual local-file
 requests, and [result formats](docs/results.md#http-contract) for all warp modes.
+See [sampling, reclassification and polygonization](docs/raster-operations.md)
+for parameters, executable local-file examples and GeoJSON delivery.
 
 ## Supported scope
 
@@ -66,8 +71,12 @@ requests, and [result formats](docs/results.md#http-contract) for all warp modes
   match the source; resolution and extent controls are not exposed.
   CRS/resampling values also accept controlled HTTPS JSON/text references;
   see [scalar input forms](docs/inputs.md#scalar-input-references).
+- Sampling accepts up to **1,000 Point features** in WGS84 longitude/latitude.
+  Polygonize accepts an integer categorical band of at most **65,536 pixels**,
+  producing at most **4,096 features / 16 MiB GeoJSON**. Reclassify accepts up to
+  **128 non-overlapping ranges**; see [operation limits](docs/raster-operations.md).
 - Omitted `response` means `raw`; omitted transmission means `value`.
-  `raster-info` returns JSON; `raster-warp` returns native TIFF bytes by default.
+  Info returns JSON; warp/reclassify return TIFF; sample/polygonize return GeoJSON.
   Explicit reference transmission provides a downloadable result.
 - Stored results expire after **24 hours** by default. Capacity defaults to
   **64 MiB / 256 files**; busy/full processing returns 503. See [result lifecycle](docs/results.md).
@@ -81,6 +90,7 @@ remaining implementation gaps are documented in [validation](docs/validation.md)
 ## Documentation
 
 - [Raster metadata](docs/raster-info.md) and [JSON exceptions](docs/errors.md).
+- [Sampling, reclassification and polygonization](docs/raster-operations.md).
 - [Development and checks](docs/development.md), [architecture](docs/architecture.md)
   and [adding a process](docs/adding-a-process.md).
 - [Release deployment](docs/release-image.md), [client interoperability](docs/client-interoperability.md)

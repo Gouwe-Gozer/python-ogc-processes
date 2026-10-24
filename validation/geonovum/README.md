@@ -7,12 +7,12 @@ it neither executes rasters nor certifies conformance.
 
 ## Reviewed diagnostics
 
-The baseline retains five error diagnostics about the OpenAPI document:
+The baseline retains eight error diagnostics about the OpenAPI document:
 
 - `/req/core/job-success`: no successful job-status 200 response;
 - `/req/core/job-results-async-document`: no successful job-results 200 response;
 - `/req/core/process-execute-success-async`: no asynchronous 201 response for
-  each of the two synchronous public processes (two diagnostics);
+  each of the five synchronous public processes (five diagnostics);
 - `/req/job-list/job-list-op`: no description of `/jobs`.
 
 These are observed checker findings, not a reason to advertise unimplemented
@@ -29,6 +29,13 @@ The Core audit replaced two missing-path findings (`/req/core/job` and
 other diagnostics and checker metadata were unchanged. This exact change was
 reviewed against the running release before updating `baseline.json`; the runner
 and its normalization/comparison rules were not relaxed.
+
+Adding sample-points, reclassify and polygonize then added exactly three
+`/req/core/process-execute-success-async` findings, one per new synchronous
+execution route. A Node 24/npm 11.6.0 run against the self-contained release
+confirmed all five earlier diagnostics and checker metadata were unchanged,
+with no transient schema-fetch failures. The baseline was extended to eight;
+no asynchronous responses were added to the advertised contract.
 
 ## Compare a running service
 
