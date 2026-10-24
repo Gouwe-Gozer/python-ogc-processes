@@ -10,11 +10,13 @@ from werkzeug.datastructures import Headers
 from geo_processes.discovery import landing_links, list_processes
 from geo_processes.errors import exception_document, install_exception_renderer
 from geo_processes.inputs import MAX_EXECUTION_BYTES
+from geo_processes.logging_filters import install_metadata_locale_filter
 from geo_processes.responses import STATUS_HEADER
 from geo_processes.startup import validate_runtime
 from geo_processes.storage import RESULT_TYPES, ResultNotFoundError, ResultStore, ResultStoreError
 
 runtime_settings = validate_runtime(CONFIG)
+install_metadata_locale_filter(api_.manager.get_processor(identifier).metadata for identifier in api_.manager.processes)
 api_.manager.result_base_url = runtime_settings.url
 install_exception_renderer(api_)
 APP.config["MAX_CONTENT_LENGTH"] = MAX_EXECUTION_BYTES

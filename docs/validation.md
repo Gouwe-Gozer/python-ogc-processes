@@ -92,7 +92,7 @@ modified to hide the overlap; these checks do not establish complete conformance
 
 These are dated observations, not permanently current test counts or guarantees:
 
-- Raster operations, **2026-10-24**: **484 tests passed**, **95.34% coverage**.
+- Raster operations, **2026-10-24**: **493 tests passed**, **95.39% coverage**.
   Sampling, classification and polygonization cover HTTPS/inline inputs, band
   selection, CRS handling, Point/MultiPoint/FeatureCollection sampling, all four
   TIFF/GeoJSON delivery modes, downloads,
@@ -101,6 +101,9 @@ These are dated observations, not permanently current test counts or guarantees:
   stored TIFF and GeoJSON downloads survive restart. The eight-finding Geonovum baseline
   adds only one conditional async expectation per new process. External client
   GeoJSON UI behavior remains untested.
+  Logging regressions retain upstream descriptions/translation and normal
+  diagnostics; release startup/discovery/execution logs contain neither the
+  false metadata locale warnings nor the unused AsyncAPI file warning.
 
 - Core audit, **2026-10-24**: **401 tests passed**, **95.40% coverage**, including
   real TLS scalar/raster references and compatibility with the existing async

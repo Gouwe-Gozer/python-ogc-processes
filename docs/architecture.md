@@ -67,6 +67,12 @@ Regression tests retain the following corrections for pygeoapi 0.24.0:
   retaining upstream metadata generation and HTML templates.
 - The OpenAPI generator corrects discovery schemas, limits, error responses and
   execution choices. Process metadata is copied before upstream can mutate it.
+- `logging_filters.py` filters only Babel unknown-locale warnings from
+  `pygeoapi.l10n.str2locale` whose identifiers match registered schema, example
+  or link keys. Upstream's silent metadata probes still log failures in 0.24.0;
+  there is no separate probe logging setting. Python's logger filter extension
+  keeps the translator, metadata, configured log level and other diagnostics
+  intact. New process data keys are collected automatically at application startup.
 
 These are covered by manager, HTTP, schema and OpenAPI tests. Reassess them on
 an upstream upgrade; no upstream source or entrypoint is patched. Remaining
