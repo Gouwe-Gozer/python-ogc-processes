@@ -47,6 +47,14 @@ corrects wrong discovery schemas and missing limits/404s, and asks each process
 for its execution contract. It rejects untested pygeoapi upgrades. The container
 uses a short owned entrypoint; no upstream source or shell script is edited.
 
+`startup.py` validates the effective canonical URL, operational limits, host
+allowlist and writable, separate input/result directories before Gunicorn starts.
+It prints a concise configuration summary; importing the application validates
+the same settings. `errors.py` owns the [JSON exception catalogue](errors.md).
+The Flask boundary normalizes known upstream JSON errors into that catalogue,
+preserving HTTP statuses and legacy fields. Successful process results retain
+their independent formats and transmission modes.
+
 `storage.py` handles bounded local outputs independently of OGC jobs. It writes
 each raster in a private workspace, atomically publishes a UUID-named file and
 serializes writers with a Linux file lock. The result route only reads regular,
@@ -66,3 +74,6 @@ Input lifetime is independent of output retention; see [inputs](inputs.md).
 Any shared raster-response helper should preserve per-operation contracts and
 the existing response/transmission combinations. See the
 [OGC review guide](validation.md#ogc-review-guide) before changing these contracts.
+The [operation recipe](adding-a-process.md) maps this structure into contribution
+steps. `scripts/process_raster.py` is a user-facing local-file client; the smoke
+scripts remain developer verification tools for all supported output modes.

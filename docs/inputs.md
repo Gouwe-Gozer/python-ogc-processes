@@ -7,6 +7,39 @@ Each execution acquires its own input and discards the staged file afterward.
 There is no reusable input ID or separate upload endpoint. Outputs retain their
 independent [24-hour lifecycle](results.md).
 
+## Process a local file
+
+With the service running, inspect and reproject your own file in one command:
+
+```bash
+uv run python scripts/process_raster.py my-dem.tif --output my-dem-wgs84.tif \
+  --base-url http://localhost:5001 --target-crs EPSG:4326
+```
+
+This user-facing example uses ordinary inline base64 for `raster-info`, then
+`raster-warp` with document/reference output, and downloads that reference.
+It prints source dimensions/band count and the saved filename. Choose one of
+the three supported target CRSs and optionally `--resampling nearest` (default
+`bilinear`). Include any proxy prefix in `--base-url`, matching the service's
+canonical public URL. No extra client package or upload endpoint is needed.
+
+The input must be a self-contained GeoTIFF within the service limits. The
+destination's parent directory must exist; an existing file is never overwritten.
+Incomplete/failed downloads are discarded. API errors are printed with their
+HTTP status and detail, and the command exits nonzero. This small synchronous
+client does not automatically retry busy/full responses.
+
+To try it with the test fixture, submit that file as ordinary raster data:
+
+```bash
+mkdir -p runtime-data
+uv run python scripts/process_raster.py src/geo_processes/data/demo-dem.tif --output runtime-data/demo-wgs84.tif
+```
+
+Use `uv run python scripts/process_raster.py --help` for options. The lower-level
+request examples below expose the same wire contract. `smoke_inputs.py` remains
+the developer check for all response/transmission modes.
+
 ## Submit a local file inline
 
 Create a request from your own `my-dem.tif`:

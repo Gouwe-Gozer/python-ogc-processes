@@ -33,6 +33,41 @@ Use the application generator above to match `/openapi`. The upstream
 `pygeoapi openapi generate` command produces an uncorrected diagnostic document.
 The compatibility tests explicitly compare that output with the runtime contract.
 
+## Startup validation
+
+Inspect and validate the effective configuration before starting a service:
+
+```bash
+uv run python -m geo_processes.startup --config config/pygeoapi.yml
+```
+
+The owned container entrypoint runs this preflight before generating OpenAPI and
+launching Gunicorn. Direct imports of `geo_processes.app:APP` validate the same
+settings. The command prints the canonical public URL, registered process IDs,
+worker settings, input bounds/host policy and result location/retention/quotas.
+It creates missing input/result directories and briefly probes write access;
+it does not execute a process, delete results or run storage cleanup.
+
+Invalid settings stop startup with a named configuration error. Checks cover:
+
+- `server.url` (normally `PYGEOAPI_SERVER_URL`): absolute ASCII HTTP(S), optional
+  proxy prefix and valid port; no credentials, query, fragment or whitespace.
+  Reachability from a real client still needs an HTTP check.
+- `GEO_INPUT_TMPDIR` and `GEO_OUTPUT_DIR`: writable, separate directories with
+  neither inside the other. Defaults are `runtime-data/inputs` and
+  `runtime-data/results`; Compose uses `/tmp/geo-inputs` and `/var/lib/geo/results`.
+- `GEO_INPUT_ALLOWED_HOSTS`: empty or comma-separated exact ASCII hostnames/IPs;
+  no URLs, wildcards or empty entries. Public-address/TLS checks still apply.
+- Existing result bounds: retention 1–604800 seconds, capacity 1–1073741824 bytes,
+  count 1–10000. Defaults remain 86400 seconds, 67108864 bytes and 256 files.
+- `CONTAINER_PORT`: 1–65535 (default 8080); `WSGI_WORKERS` and
+  `WSGI_WORKER_TIMEOUT`: positive integers (defaults 2 and 30 seconds).
+
+Worker/bind overrides apply when supplied to the container environment; Compose's
+external `API_PORT` and `PYGEOAPI_SERVER_URL` remain separate settings. Change
+operational settings by restarting the service. The preflight is a configuration
+check, rather than a storage capacity reservation or a memory/workload guarantee.
+
 ## Extending the service
 
 The [input flow](inputs.md) supports HTTPS references and inline base64 for
@@ -40,6 +75,9 @@ users' GeoTIFFs. Reusable uploads and new operations remain future work in the
 [roadmap](roadmap.md). The completed [Rasterio pivot](rasterio-pivot.md) is the baseline.
 Keep each operation's processor and contract separate, use small Python adapters,
 and reuse the input/result lifecycle where appropriate.
+Use the [operation contribution recipe](adding-a-process.md) for a file map,
+contract checklist and validation steps, and the [exception catalogue](errors.md)
+for controlled failure responses.
 Follow the [OGC review guide](validation.md#ogc-review-guide) for descriptions,
 request validation, representations, OpenAPI and meaningful HTTP/raster tests.
 Update README examples and the handover with the resulting public capabilities;

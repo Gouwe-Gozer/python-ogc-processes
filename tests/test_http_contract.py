@@ -10,6 +10,7 @@ from raster_fixtures import DEMO_SOURCE, FORMATS
 
 from geo_processes import engine
 from geo_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA
+from geo_processes.errors import EXCEPTIONS
 
 EXECUTION_PATH = "/processes/raster-info/execution"
 VALID_INPUTS = {"source": DEMO_SOURCE}
@@ -91,7 +92,8 @@ def test_malformed_or_unsupported_requests_are_controlled_errors(http_client, mo
     assert response.status_code == 400
     assert response.content_type == "application/json"
     exception = response.get_json()
-    assert exception["type"] == "InvalidParameterValue"
+    assert exception["type"] == EXCEPTIONS["InvalidParameterValue"].uri
+    assert exception["code"] == "InvalidParameterValue"
     assert exception["description"]
     assert "/home/" not in response.text
     assert "Traceback" not in response.text
