@@ -1,9 +1,19 @@
 # Development
 
-Use user-installed `uv` and a project-local `.venv`. Python 3.12 remains the
-tested interpreter: the official pygeoapi 0.24.0 image uses 3.12, and the pinned
-application libraries work there. Changing Python is a separate compatibility decision.
-No host system packages or global Python installs are needed.
+Run commands from the repository root with user-installed `uv` and a local
+`.venv`. No host system packages or global Python installs are needed.
+
+| Component | Project constraint |
+| --- | --- |
+| Python | 3.12 (`>=3.12,<3.13` in `pyproject.toml`; `.python-version` selects 3.12) |
+| pygeoapi | 0.24.0 |
+| Rasterio | 1.4.3 |
+| NumPy | 1.26.4 |
+
+`pyproject.toml` and `uv.lock` define local dependencies. The Dockerfile pins the
+official pygeoapi base by digest and uses its `/venv` interpreter. These three
+application library versions match; transitive packages and bundled GDAL/PROJ
+versions may differ. Check both environments when changing processing behavior.
 
 ```bash
 uv sync --locked --all-groups
@@ -58,8 +68,8 @@ Invalid settings stop startup with a named configuration error. Checks cover:
   `runtime-data/results`; Compose uses `/tmp/geo-inputs` and `/var/lib/geo/results`.
 - `GEO_INPUT_ALLOWED_HOSTS`: empty or comma-separated exact ASCII hostnames/IPs;
   no URLs, wildcards or empty entries. Public-address/TLS checks still apply.
-- Existing result bounds: retention 1–604800 seconds, capacity 1–1073741824 bytes,
-  count 1–10000. Defaults remain 86400 seconds, 67108864 bytes and 256 files.
+- Result retention/capacity/count settings: see the authoritative
+  [bounds and defaults](results.md#bounds-and-configuration).
 - `CONTAINER_PORT`: 1–65535 (default 8080); `WSGI_WORKERS` and
   `WSGI_WORKER_TIMEOUT`: positive integers (defaults 2 and 30 seconds).
 
@@ -70,33 +80,32 @@ check, rather than a storage capacity reservation or a memory/workload guarantee
 
 ## Extending the service
 
-The [input flow](inputs.md) supports HTTPS references and inline base64 for
-users' GeoTIFFs. Reusable uploads and new operations remain future work in the
-[roadmap](roadmap.md). The completed [Rasterio pivot](rasterio-pivot.md) is the baseline.
-Keep each operation's processor and contract separate, use small Python adapters,
-and reuse the input/result lifecycle where appropriate.
-Use the [operation contribution recipe](adding-a-process.md) for a file map,
-contract checklist and validation steps, and the [exception catalogue](errors.md)
-for controlled failure responses.
-Follow the [OGC review guide](validation.md#ogc-review-guide) for descriptions,
-request validation, representations, OpenAPI and meaningful HTTP/raster tests.
-Update README examples and the handover with the resulting public capabilities;
-retain an explicit distinction between planned work and implemented behavior.
+Use the [operation contribution recipe](adding-a-process.md) for the file map,
+contract checklist and meaningful raster/HTTP tests. Keep processors/contracts
+independent and reuse the [input](inputs.md), [result](results.md) and
+[exception](errors.md) lifecycles. Architectural boundaries are in
+[architecture](architecture.md); proposed capabilities belong in the [roadmap](roadmap.md).
+Current implementation changes should update maintained documentation, not the
+historical handover.
 
 ## Container and integration checks
+
+For bind-mounted development, use `docker compose up --build --detach`.
+Restart the API after source/configuration changes with `docker compose restart api`.
 
 Start and test the self-contained release:
 
 ```bash
+mkdir -p runtime-data
 docker compose --file compose.release.yml config --quiet
 docker compose --file compose.release.yml up --build --detach
 uv run python scripts/smoke_discovery.py --base-url http://localhost:5001 --wait-seconds 60
-uv run python scripts/smoke_warp.py --base-url http://localhost:5001 --save-reference /tmp/warp-reference.txt
+uv run python scripts/smoke_warp.py --base-url http://localhost:5001 --save-reference runtime-data/warp-reference.txt
 uv run python scripts/smoke_inputs.py --base-url http://localhost:5001
 uv run python scripts/check_release_container.py
 docker compose --file compose.release.yml restart api
 uv run python scripts/smoke_discovery.py --base-url http://localhost:5001 --wait-seconds 60
-uv run python scripts/smoke_warp.py --check-saved-reference /tmp/warp-reference.txt
+uv run python scripts/smoke_warp.py --check-saved-reference runtime-data/warp-reference.txt
 docker compose --file compose.release.yml down --remove-orphans
 ```
 
@@ -121,23 +130,20 @@ See [result storage](results.md) for settings and maintenance commands.
 The inherited CITE echo fixture remains separate from the public service:
 
 ```bash
+mkdir -p runtime-data
 PYTHONPATH=tests/fixtures uv run pygeoapi config validate --config config/pygeoapi.integration.yml
-PYTHONPATH=tests/fixtures uv run pygeoapi openapi generate --format yaml --output-file /tmp/integration-openapi.yml config/pygeoapi.integration.yml
-uv run pygeoapi openapi validate /tmp/integration-openapi.yml
+PYTHONPATH=tests/fixtures uv run pygeoapi openapi generate --format yaml --output-file runtime-data/integration-openapi.yml config/pygeoapi.integration.yml
+uv run pygeoapi openapi validate runtime-data/integration-openapi.yml
 docker compose -f compose.yml -f compose.integration.yml up --build --detach
 ```
 
 That diagnostic configuration uses upstream TinyDB and `async-echo`; it is not
-evidence that the public service implements asynchronous jobs. The public CI
-retains quality checks, coverage, API validation, container execution/isolation
-and pinned Geonovum diagnostics. CI also downloads results from an independent
-client container and verifies persistence across restart. Public process tests use
-bundled or generated rasters and a local TLS fixture, without a live data dependency.
+evidence that the public service implements asynchronous jobs. It replaces the
+public configuration when using the Compose override, so run the stacks separately.
 
-CI runs the Geonovum checker with Node.js 24 and npm 11.6.0. Its checkout,
-Node setup and artifact-upload actions use releases with a native Node 24
-runtime; `setup-uv@v7` also uses Node 24. Action runtimes and the checker runtime
-are configured separately. Node/npm version output is retained in the job log.
-The [checker baseline notes](../validation/geonovum/README.md) record the reproduced
-Node 20/24 source-label difference. Diagnostic mismatch messages include their
-source; inspect that field when findings appear as both added and removed.
+CI runs quality, configuration/OpenAPI and release-container checks on `main`
+pushes, pull requests and manual dispatches. The Geonovum comparison runs only
+on pull requests and manual dispatches, using Node 24 and npm 11.6.0. Diagnostic
+source handling and the reviewed findings are documented in the
+[checker notes](../validation/geonovum/README.md). Runtime checks include independent
+client containers, result downloads and persistence across restart.

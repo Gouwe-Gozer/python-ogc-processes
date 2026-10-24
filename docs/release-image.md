@@ -1,67 +1,68 @@
-# Release image
+# Release deployment
 
-The application builds on the official `geopython/pygeoapi:0.24.0` image,
-pinned by manifest digest in `docker/Dockerfile`. Rasterio 1.4.3 and NumPy 1.26.4
-are explicitly installed using
-`/venv/bin/python3 -m pip` inside the image, with wheel-only installation. The
-same `/venv` interpreter runs Gunicorn and imports the configured processor.
-No host Python packages or OS packages are installed.
+`compose.release.yml` builds a self-contained image with application source,
+canonical configuration and licence notices. Its official pygeoapi 0.24.0 base
+is pinned by manifest digest in `docker/Dockerfile`. Rasterio and NumPy are
+explicitly installed into the same `/venv` used by Gunicorn; application pins
+are listed in [development](development.md). Transitive dependencies and bundled
+GDAL/PROJ resources may differ from the local uv environment.
 
-The adapter uses Rasterio/GDAL. The [pivot](rasterio-pivot.md) removes Terrio
-from the runtime. Matching the base image's Rasterio/NumPy versions avoids
-an unrelated NumPy 2 migration. GDAL versions bundled by the base image and
-local wheels can differ; validate both environments.
-
-The owned entrypoint validates effective runtime settings, prints the public URL,
-process IDs, input policy and result storage/limits, generates corrected OpenAPI
-in `/tmp`, then execs Gunicorn with two synchronous workers and a 30-second worker timeout.
-`WSGI_WORKERS` and `WSGI_WORKER_TIMEOUT` can be overridden. The upstream image's
-base dependencies are fixed by its digest; they are not all identical to the
-local uv lockfile. The pygeoapi, Rasterio and NumPy versions match in both environments.
-
-Bad public URLs, invalid limits/host lists and unwritable or overlapping storage
-directories stop startup before Gunicorn launches. The directory probes do not
-remove stored results. See [startup validation](development.md#startup-validation)
-for checked settings and the standalone preflight command. The printed URL must
-still be reachable by clients; startup does not test external network routing.
-
-The release Compose service has no host bind mounts. It has one writable named
-volume, mounted at `/var/lib/geo/results`, for persistent bounded outputs.
-The image seeds that directory with UID/GID 10001 ownership before dropping
-privileges; no runtime root initialization is required. The service runs as UID/GID 10001,
-with a read-only root, a 64 MB `/tmp` tmpfs, all Linux capabilities dropped and
-`no-new-privileges`. A health check fetches `/conformance`. The smoke script
-also executes the raster process, and the isolation checker inspects Docker's
-actual runtime settings.
-Release Compose also caps memory at 512 MiB, CPU at one core and process count
-at 128. A shared volume lock allows one warp at a time across workers, while
-downloads can proceed. See [result storage](results.md) for application limits.
-
-User inputs use two private workspaces under `/tmp/geo-inputs`, within the same
-64 MiB tmpfs; no additional persistent volume is needed. Requests are capped at
-24 MiB and raster bytes at 16 MiB. `GEO_INPUT_ALLOWED_HOSTS` optionally restricts
-HTTPS input and redirect hosts; public-address and TLS checks always apply.
-The image disables PROJ networking, and source reads disable PAM/sidecars.
-See [input limits and cleanup](inputs.md#limits-validation-and-cleanup), including
-the OS DNS resolver's deadline limitation.
+## Run and inspect
 
 ```bash
 docker compose --file compose.release.yml up --build --detach
-uv run python scripts/smoke_discovery.py --base-url http://localhost:5001
-uv run python scripts/smoke_warp.py --base-url http://localhost:5001
-uv run python scripts/smoke_inputs.py --base-url http://localhost:5001
 uv run python scripts/check_release_container.py
 docker compose --file compose.release.yml exec -T api /venv/bin/python3 -c 'import rasterio, numpy, pygeoapi; print(rasterio.__version__, rasterio.__gdal_version__, numpy.__version__, pygeoapi.__version__)'
 ```
 
-Result URLs are built from `PYGEOAPI_SERVER_URL`, not the requesting Host header.
-Set it to the client-facing address when running behind a proxy or on another
-port. The named volume retains results when the service is restarted or
-recreated. A normal `docker compose down` preserves it; `down --volumes` deletes
-the results. Cleanup removes expired files without evicting unexpired outputs.
-When upgrading the renamed project, retain the previous Compose project name
-to reuse its volume; see the [upgrade instructions](rasterio-pivot.md#upgrade-names-and-preserve-results).
+The isolation checker needs the local [development environment](development.md).
+Run the [container smoke checks](development.md#container-and-integration-checks)
+to verify discovery, actual processing, all result modes and restart persistence.
+A health check alone only fetches `/conformance`.
 
-This remains a local prototype without authentication, TLS termination or
-production deployment automation. Result download URLs are opaque, but are
-accessible to anyone who has them until expiry.
+## Startup and public URL
+
+The owned entrypoint validates runtime settings and prints the effective public
+URL, process IDs, input policy and result limits. It then generates OpenAPI in
+`/tmp` and starts two synchronous Gunicorn workers, with a 30-second timeout,
+on internal port 8080. Directory probes do not delete stored results.
+See [startup validation](development.md#startup-validation) for exact checks.
+
+Compose publishes port 5001 by default. Set `API_PORT` and `PYGEOAPI_SERVER_URL`
+together when changing the external address, as shown in the [README](../README.md).
+Generated links use that canonical URL, including any proxy prefix, rather than
+the requesting Host header. URL validation does not test client reachability.
+
+`WSGI_WORKERS`, `WSGI_WORKER_TIMEOUT` and `CONTAINER_PORT` are container environment
+settings. Supply overrides through an explicit Compose override or another
+container launcher; these variables are not forwarded from the host by the
+supplied Compose files. A bind-port override also needs matching port mapping
+and health-check configuration.
+
+## Isolation and storage
+
+Release Compose sets:
+
+- UID/GID `10001:10001`, read-only root, dropped capabilities and `no-new-privileges`;
+- a 64 MiB `/tmp` tmpfs with `noexec,nosuid`, including private input workspaces;
+- one writable named volume, `results`, mounted at `/var/lib/geo/results`;
+- 512 MiB memory, one CPU and 128 processes.
+
+The image initializes result-directory ownership before dropping privileges.
+No source/configuration bind mounts or runtime root initialization are required.
+These Compose restrictions do not apply automatically to the development stack
+or to an image launched with other options.
+
+The [input policy](inputs.md) covers HTTPS restrictions, decoding and cleanup.
+The [result guide](results.md) owns retention, capacity, locking and maintenance
+settings. Result links are accessible to anyone who knows them until expiry.
+
+A normal `docker compose --file compose.release.yml down` retains the result
+volume; adding `--volumes` deletes it. Keep the same Compose project name when
+renaming a checkout or upgrading an existing installation, so Docker reuses the
+same volume. Historical environment/package renames are recorded in the
+[upgrade notes](rasterio-pivot.md#upgrade-names-and-preserve-results).
+
+Authentication, TLS termination, hosting, monitoring and access/egress policy
+remain deployment responsibilities; this repository supplies a bounded service
+and release artifact rather than managed production operations.

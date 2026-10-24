@@ -56,13 +56,13 @@ Schema validation and usable form rendering are separate checks.
   `demo-dem` string enum with a binary raster branch using `anyOf`. The current
   contract removes that alternative; examples and tests submit the demo file
   as ordinary raster data. See [the input review](inputs.md#ogc-scope-and-deployment).
-- **Status:** Resolved on the service branch: the demo/`anyOf` description was
+- **Status:** Resolved in the service: the demo/`anyOf` description was
   removed and schema tests pass. The remaining plain-text rendering is CI-001.
 
-## Planned client follow-up — original review item 2
+## Planned client workflow follow-up
 
-Implement and test the user-raster workflow in a separate PR in the external
-client's repository, following the service usability PR. CI-001 records the
+Implement and test the user-raster workflow in the external client's repository.
+The service contract is available; CI-001 records the
 observed input-rendering problem; output handling still needs verification.
 
 - Recognize the advertised binary GeoTIFF value schema and provide local-file

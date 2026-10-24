@@ -1,109 +1,53 @@
-# Roadmap: geo-processes and users' own rasters
+# Future work
 
-The goal is an API where **users submit their own rasters**, select a process
-and receive usable results. A service limited to an operator's hosted dataset
-catalogue is not the intended end state. Supporting user-supplied data belongs
-in the first useful-service milestone, before building a large process catalogue.
+The goal is a ready-to-use API for **users' own rasters**, with a growing catalogue
+of useful operations. HTTPS and inline base64 input, information/reprojection,
+downloadable results and the local-file example are already implemented; see
+[README](../README.md), [inputs](inputs.md) and [results](results.md).
+The items below are proposals or unresolved decisions, not advertised capabilities.
 
-This document distinguishes implemented foundations from future milestones.
-The API accepts user GeoTIFFs through HTTPS references or inline base64;
-see [inputs](inputs.md), [README](../README.md) and
-[validation](validation.md) for the contract and evidence boundary.
+## Raster operations and CRS coverage
 
-## Completed foundation: Rasterio pivot
+- Add operations driven by concrete needs: cropping, resampling, band selection
+  and hillshade are candidates. Confirm each algorithm's implementation rather
+  than assuming every GDAL function has a direct Rasterio equivalent.
+- Expand the target EPSG list with representative transformation tests in the
+  local and release environments, including required offline transformation
+  resources. The three current targets are an API policy in `contracts/warp.py`,
+  not separate process implementations.
+- Add target resolution/extent controls only with an output-pixel budget checked
+  before allocation. More file bytes alone are not a sufficient resource budget.
+- Reuse input/result lifecycle code. Extract common GeoTIFF delivery when the
+  next file operation needs it, preserving explicit output IDs and formats.
+  Follow [adding a process](adding-a-process.md); keep registration explicit.
 
-The [Rasterio pivot](rasterio-pivot.md) renames the project to `geo-processes`
-and implements Rasterio-backed `raster-info` and `raster-warp`, preserving the
-tested service infrastructure.
+## Pilot and client workflow
 
-## Implemented user-raster milestone
+- Expand suitably licensed, small DEM/imagery fixtures across data types, bands,
+  nodata and CRSs. Keep CI independent of public raster downloads.
+- Measure runtime, memory and output size before raising existing limits. Current
+  workload observations are in [validation](validation.md#recorded-checks).
+- Complete the external client's file/URL and result-handling workflow, using
+  the [interoperability log](client-interoperability.md) to distinguish observed
+  defects from unverified behavior. Client changes belong in its own repository.
+- Decide whether repeated processing needs reusable input uploads/storage.
+  That extension needs explicit access, privacy, expiry and combined-input budgets.
 
-The user selected HTTPS references and qualified inline base64 for the first
-flow. Both current processes use the same input resolver, validate staged data
-and remove inputs after execution independently of result expiry. Tests cover
-actual local TLS, destination/redirect policy, both source forms and all four
-warp output modes. A separate client can create its own raster and run the
-complete flow; see [input examples and policy](inputs.md).
+## Standards and deployment decisions
 
-The local-file command now offers one inspect/reproject/download flow. Startup
-validation, a JSON exception catalogue and an [operation contribution recipe](adding-a-process.md)
-support the pilot without adding job infrastructure or a generic engine layer.
+The [validation guide](validation.md#conformance-claims-and-gaps) records remaining
+Core work: scalar input references, correct exceptions for the existing job
+routes, OpenAPI descriptions and an audit of applicable requirements. Keep that
+follow-up separate from adding operations. Persistent jobs for synchronous runs
+are optional; asynchronous execution remains a workload-driven choice. Neither
+a larger catalogue nor a passing checker baseline establishes conformance.
 
-## Pilot follow-up
+Before sharing a hosted service, choose users/access control, input/result
+visibility, TLS, logging and storage maintenance. Queuing, asynchronous workers,
+object storage and distributed coordination should follow measured workload
+needs. Current deployment boundaries are in [release deployment](release-image.md).
 
-- Expand representative DEM and imagery cases across users' data types, band
-  counts, nodata and CRSs before broadening formats or increasing limits.
-- Measure memory, runtime and output size against the existing 16 MiB and
-  1,048,576-sample bounds; deployment/result limits are in [results](results.md).
-- Decide whether repeated processing needs reusable uploads or input storage.
-  That would be a documented extension with access, privacy and expiry policies.
-- Establish the intended users and hosting/access policies before opening a
-  shared public service. Keep the current synchronous pilot bounded.
-
-Keep the tiny bundled TIFF for deterministic regression tests. Small, suitably
-licensed representative fixtures should keep CI independent of public data
-servers. An operator-configured catalogue and dataset discovery can remain an
-optional convenience, not a prerequisite or substitute for user submission.
-
-## Useful warp controls and the next operation
-
-Warp currently retains the source width and height. Add deliberate target
-resolution or extent controls when real-data use cases establish the needed
-contract, with an output-pixel budget checked before allocation. Merely raising
-file-size limits is insufficient for compressed inputs or enlarged outputs.
-
-Choose the next process after the user-input milestone from concrete user
-needs. Cropping, resampling, band selection and hillshade are candidates.
-Confirm the required algorithm is available or define its implementation;
-do not assume that Rasterio exposes every GDAL processing algorithm directly.
-Each process should reuse input resolution and the tested result lifecycle
-while owning its parameters, description, validation and output contract.
-
-## Growing the raster and vector process catalogue
-
-Use [Rasterio](https://rasterio.readthedocs.io/en/stable/) for raster work.
-Later operations may use [Shapely](https://shapely.readthedocs.io/en/stable/)
-for geometry, [Pyogrio](https://pyogrio.readthedocs.io/en/stable/) for vector
-file I/O and [GeoPandas](https://geopandas.org/en/stable/) for spatial tables.
-Introduce direct dependency declarations when those libraries are used;
-availability through another dependency is not an application contract.
-Validate supported algorithms and formats against the pinned environments.
-
-| Candidate | Main additional work |
-| --- | --- |
-| Hillshade, cropping, resampling, band selection | Explicit parameters, validation and pixel-level result checks |
-| Geometry operations and vector file I/O | Per-operation schemas, CRS/units, supported formats and feature limits |
-| Mosaics and raster calculations | Multiple inputs, CRS/grid alignment and combined input/output budgets |
-
-Keep one public process implementation and description per operation. A small
-shared helper can remove repeated raster-response formatting when the next
-process makes that duplication concrete. Preserve explicit output identifiers,
-formats and transmission modes; avoid a generic passthrough of library options
-or an engine plugin framework. The [architecture](architecture.md) identifies
-the boundaries, and the [OGC review guide](validation.md#ogc-review-guide) gives
-the contract review points for each addition.
-
-The project accepts Rasterio's GDAL dependency. The
-[pivot decision](rasterio-pivot.md) records the removal of the active Terrio
-integration and the retained historical records.
-
-## From a useful pilot to a hosted service
-
-A first pilot needs real user input, useful processing and independently
-retrievable results, with measured and documented operating limits. Choose
-access control and input/result visibility for the intended users, including
-any upload storage; the present opaque result URLs are accessible to anyone
-who has them. Record hosting, TLS, logging and storage maintenance decisions
-alongside the [release deployment](release-image.md).
-
-Keep execution synchronous while measured workloads fit comfortably inside the
-configured request timeout. Queuing, asynchronous jobs, object storage and
-distributed workers should follow demonstrated workload needs as separate
-milestones. The current store permits one writer at a time and returns 503
-when busy or full; this must be accounted for when assessing pilot capacity.
-
-OGC conformance is a parallel workstream, not something implied by a usable
-pilot or a larger process catalogue. Review the outstanding scalar-input-reference
-and Core job-resource gaps, map evidence to Annex A and run appropriate current
-service checks before strengthening conformance claims. Async execution remains
-a separate workload decision; a static checker baseline is not certification.
+Vector operations may introduce Shapely, Pyogrio or GeoPandas when a concrete
+operation requires them. Declare directly used dependencies explicitly and keep
+contracts application-owned. An operator dataset catalogue remains an optional
+convenience; it is not a prerequisite for processing users' data.

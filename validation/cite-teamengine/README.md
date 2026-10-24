@@ -1,6 +1,6 @@
 # OGC CITE/TEAM Engine evidence
 
-No new TEAM Engine run has been performed for Terrio Processes.
+No TEAM Engine run for the current `geo-processes` raster service is recorded here.
 
 This directory retains the inherited OGC API - Processes 1.0 TEAM Engine
 baseline of the predecessor application. It is historical evidence, not a
@@ -8,7 +8,7 @@ conformance certificate. Known failures are retained for transparency.
 
 The recorded execution tests used the integration-only `async-echo` process,
 because the CITE suite expects its controlled input/output contract. They did
-not exercise `terrio-info`, which did not exist in that service. Current process
+not exercise either current raster process. Current process
 behavior is covered by the tests described in [validation](../../docs/validation.md).
 The retained echo configuration can support a future TEAM Engine run; its
 asynchronous capabilities are separate from the public synchronous API.

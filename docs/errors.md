@@ -2,8 +2,7 @@
 
 JSON errors from process discovery, execution and result downloads use `type`,
 `title`, `status` and `detail`. The existing `code` and `description` remain for
-clients already using them; `description` equals `detail`. HTTP statuses and
-successful response formats are unchanged. Clients should branch on `type` or
+clients already using them; `description` equals `detail`. Clients should branch on `type` or
 `code`, rather than matching human-readable messages.
 
 The [official exception schema](https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/exception.yaml)

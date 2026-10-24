@@ -4,6 +4,11 @@
 NumPy. It does not expose a library's native metadata dictionary. The executable
 schema is [contracts/info.py](../src/geo_processes/contracts/info.py).
 
+The test fixture at `src/geo_processes/data/demo-dem.tif` is a one-band Float32,
+4 by 3 GeoTIFF in EPSG:28992 with 10-metre pixels, origin (155000, 463000), nodata
+-9999 and row-major values 1 through 12. Tests and examples submit its bytes
+through the ordinary user-input contract; its filename is not an API identifier.
+
 | Field | Meaning |
 | --- | --- |
 | `type`, `driver` | `raster` and `GTiff`, the supported input driver |

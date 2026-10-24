@@ -55,8 +55,8 @@ For locally generated files outside Docker, use:
 uv run python -m geo_processes.storage cleanup
 ```
 
-Local Python defaults to `runtime-data/results` under the current repository;
-set `GEO_OUTPUT_DIR` when using another approved working directory. Storage
+Local commands run from the repository root default to `runtime-data/results`;
+set `GEO_OUTPUT_DIR` for another location. Storage
 locking uses Linux `flock`; run locally on Linux or use Docker.
 
 ## Bounds and configuration
@@ -85,15 +85,7 @@ workspaces left by interrupted workers. Readers refuse symlinks, special files
 and invalid IDs; publication is serialized across the two Gunicorn workers
 sharing this local volume. Downloads can proceed during another warp.
 
-Both info and warp inputs are limited to 16 MiB and 1,048,576 samples including bands. Warp
-retains source width and height, bounding the target sample count. Requests are
-limited to 24 MiB for base64 inputs; clients cannot choose resolution, dimensions or extents.
-The release uses two synchronous Gunicorn workers with a 30-second worker
-timeout and container limits of 512 MiB RAM, one CPU and 128 processes. A killed
-worker may leave an unpublished workspace, which the next writer removes.
-
-User inputs arrive through HTTPS references or inline base64. The demo fixture
-is submitted as ordinary data by test clients. Input staging uses separate temporary slots and is
-removed after execution. Reusable uploads, object storage, distributed workers,
-authentication and additional operations remain future work; see
-[inputs](inputs.md) and the [roadmap](roadmap.md).
+Warp retains source width and height, bounding the target sample count; clients
+cannot choose resolution, dimensions or extents. Input budgets and temporary
+cleanup are documented in [inputs](inputs.md#limits-validation-and-cleanup);
+worker/container bounds are in [release deployment](release-image.md).

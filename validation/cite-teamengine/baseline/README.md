@@ -1,4 +1,4 @@
-> Historical predecessor results. These do not validate Terrio Processes;
+> Historical predecessor results. These do not validate `geo-processes`;
 > the inputs, image and commit below identify the original service.
 
 # CITE/TEAM Engine baseline — 2026-08-24
@@ -6,7 +6,7 @@
 This directory records an inherited OGC API - Processes 1.0 CITE run against
 the predecessor's integration configuration. The run used a controlled echo
 process to test the OGC API and temporary job-manager behaviour. The recorded
-results do not establish conformance for the current `terrio-processes` service.
+results do not establish conformance for the current `geo-processes` service.
 
 ## Run metadata
 
@@ -44,7 +44,7 @@ shared pygeoapi routes. The setting to test all processes therefore still tests
 only `async-echo`.
 
 The run did not discover or execute the predecessor's application process and
-predates `terrio-info`. It does not prove asynchronous execution, persistent
+predates the current raster processes. It does not prove asynchronous execution, persistent
 jobs, restart recovery or CITE conformance for the current public service.
 Current process checks are documented in [validation](../../../docs/validation.md).
 

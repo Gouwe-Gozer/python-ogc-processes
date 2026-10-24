@@ -23,7 +23,8 @@ unexpired results. See [result storage](docs/results.md) for lifecycle details.
 
 Two locked, private temporary input slots bound staged files across workers.
 Handled requests remove them; slot reuse removes files left by killed workers.
-They use the bounded tmpfs independently of persistent output retention. The
+Release Compose places them in its bounded tmpfs, separately from persistent
+output retention; development Compose does not set that tmpfs bound. The
 [input policy](docs/inputs.md) describes limits and remaining deployment needs.
 
 The release runs non-root, with a read-only root, bounded temporary filesystem,

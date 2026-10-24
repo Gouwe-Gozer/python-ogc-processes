@@ -82,7 +82,8 @@ them or establish certification.
 - Run the [development checks](development.md), validate configuration/OpenAPI,
   and run container smoke checks if startup, dependencies or delivery change.
   Review checker differences before changing a conformance baseline.
-- Update README/examples, relevant operation documentation, the roadmap and
-  `CODEX_HANDOVER.md` with implemented behavior and evidence. Add direct dependency
+- Update README/examples and relevant operation/validation documentation with
+  implemented behavior and evidence; keep proposals in the roadmap. Do not use
+  `CODEX_HANDOVER.md` as a current status document. Add direct dependency
   declarations and the lockfile together only when the operation actually needs
   a new library. Preserve licences/notices for reused code and data.

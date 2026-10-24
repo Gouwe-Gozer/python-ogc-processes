@@ -1,128 +1,128 @@
-# Validation
+# Validation and standards
 
-The deterministic suite covers the real Rasterio binding and fixture, independent
-adapter, schemas, discovery links, input/output validation, raw/document HTTP
-responses, defaults, unsupported options, sanitized failures and synchronous
-preferences. Loopback HTTP tests also retrieve and inspect generated GeoTIFFs.
-User-input tests submit independent multiband GeoTIFFs through inline base64 and
-a real local HTTPS fixture. They exercise TLS verification, pinned connections,
-destination/redirect policy, streaming bounds, deadlines and temporary cleanup.
-The warp tests cover all supported CRSs, both resampling methods, all four
-response/transmission combinations, defaults, storage bounds, expiry, safe
-paths and concurrent writers. The release smoke scripts repeat execution and
-download checks against Gunicorn. CI uses a separate client container and tests
-that issued result URLs survive a server restart.
+The normative reference is [OGC API – Processes Part 1: Core 1.0.0][processes-core]
+(18-062r2), including [Annex A][abstract-tests]. Use the official
+[schemas][official-schemas] to validate documents; the official
+[ProcessDescription.json][process-example] and [Execute.json][execute-example]
+illustrate representations and are not schemas. The unchanged
+[offline snapshot](../tests/schemas/ogc-processes-1.0/README.md) supports deterministic tests.
 
-The local-file command has an end-to-end HTTP test that inspects a file,
-reprojects it, downloads the result and opens it with Rasterio. Additional tests
-cover existing destinations and discarded incomplete downloads. Startup tests
-cover invalid effective settings, directory probes and preservation of stored
-results. [Exception tests](../tests/test_errors.py) validate JSON errors against
-the official schema and check the specified unknown-process URI, compatible
-legacy fields, HTTP statuses and sanitized failures.
+## Conformance claims and gaps
 
-Official OGC API – Processes 1.0 schemas are stored under `tests/schemas` for
-offline validation. They are schemas, not the example JSON documents linked in
-the handover. The output schema additionally describes the pinned Rasterio result.
+`/conformance` currently advertises Processes Core, JSON, OpenAPI 3.0 and OGC
+Process Description, plus upstream Common/HTML discovery classes. It omits
+Callback, Job List and Dismiss. These declarations are verified by
+[HTTP tests](../tests/test_http_contract.py), but the implementation has known gaps:
 
-The public service advertises the Processes 1.0 Core, JSON, OpenAPI 3.0 and OGC
-Process Description classes, plus upstream Common and HTML discovery classes.
-It does not advertise Callback, Job List or Dismiss. This is a bounded contract
-implementation, not a claim of complete conformance or OGC certification.
-Full input-reference interoperability, multipart outputs and all of Annex A
-have not been implemented or validated.
+- Raster references are supported; scalar CRS/resampling references are not
+  (Core Requirement 18).
+- pygeoapi exposes `/jobs/{jobID}` and `/jobs/{jobID}/results`, but they are absent
+  from generated OpenAPI. For an unknown job, both return 404: the status route
+  uses `InvalidParameterValue`, while the results route uses the bare type
+  `NoSuchJob`. Requirements 37 and 44 specify the `no-such-job` exception URI.
+  The synchronous manager creates no persistent jobs; Permission 7 makes creating
+  jobs for synchronous execution optional.
+- A complete Annex A assessment has not been performed. Multipart delivery is
+  unimplemented but is not required by the current single-output processes.
+- The JSON exception catalogue does not normalize upstream HTML error pages;
+  its tests establish JSON behavior, not all advertised encodings.
 
-In particular, input references are a Core requirement (18). Raster-source
-references are supported, but scalar CRS/resampling references remain unsupported.
-Core also defines job status/results resources (35 and 38), which remain
-conformance gaps even though the current processes advertise only synchronous
-execution. A passing diagnostic baseline does not resolve them.
-[OGC Processes 1.0](https://docs.ogc.org/is/18-062r2/18-062r2.html)
+**Implementation follow-up:** complete the applicable Core requirements while
+retaining synchronous execution: resolve supported scalar inputs by reference,
+correct job exception types, describe the existing routes and audit remaining
+requirements. This is conformance work, not a requirement to introduce async
+workers or persistent synchronous jobs. Documentation cleanup does not establish
+complete conformance; a passing static baseline is not certification.
 
-The pinned Geonovum 1.2.0 checker statically inspects OpenAPI. Its known job/async
-diagnostics are recorded separately; they do not justify inventing unimplemented
-capabilities. See [its baseline](../validation/geonovum/README.md).
-The inherited CITE/TEAM Engine echo fixture and historical reports remain for
-future validation work. Those reports tested the predecessor service and are
-**not Rasterio validation evidence**; no new TEAM Engine run is claimed.
-
-The normative basis is [OGC Processes 1.0, sections 7.10–7.11 and Annex A](https://docs.ogc.org/is/18-062r2/18-062r2.html),
-especially requirements 25–28, 30 and 32 for synchronous mode and result shapes.
-A document JSON object output uses the qualified inline `value` wrapper required
-by `results.yaml`/`inlineOrRefData.yaml`. Raw returns the native output directly.
+The application `/results/<id>/output.tif` route is an output-reference target,
+not `/jobs/{jobID}/results`. A future reusable-upload endpoint would also be an
+extension, not evidence of Core conformance.
 
 ## OGC review guide
 
-Use [OGC API – Processes Part 1: Core 1.0.0][processes-core] as the normative
-reference. These pointers guide review; they are not a completed conformance
-matrix. The [roadmap](roadmap.md) records the user-raster goal and future scope.
-
-| Review area | Standard pointer | Current evidence or remaining work |
+| Review area | Standard pointer | Evidence or limitation |
 | --- | --- | --- |
-| Discovery and claims | Sections 7.4, 7.9–7.10 | [HTTP tests](../tests/test_http_contract.py), [official-schema tests](../tests/test_ogc_schemas.py); claims still need a full audit |
-| Per-operation descriptions | Section 8, requirements 49–51 | [Binary input review](inputs.md#ogc-scope-and-deployment), [official-schema tests](../tests/test_ogc_schemas.py), [contracts](../src/geo_processes/contracts/) and [OpenAPI tests](../tests/test_openapi_patch.py) |
-| Input references and validation | Section 7.11.2, requirements 18, 22 and 24 | [HTTPS/base64 policy](inputs.md), [input tests](../tests/test_inputs.py); scalar references remain unsupported |
-| Execution preferences/defaults | Section 7.11.2, requirements 25–27 | [Info HTTP tests](../tests/test_http_contract.py) and [warp tests](../tests/test_warp.py) |
-| Synchronous results | Section 7.11.4, requirements 28, 30 and 32 | Four single-output warp combinations; [result lifecycle](results.md) |
-| Multiple raw outputs | Section 7.11.4, requirements 29 and 31 | Multipart representations not implemented |
-| Job resources | Sections 7.12–7.13 | Not implemented; see the [checker baseline](../validation/geonovum/README.md) |
-| OpenAPI and exceptions | Section 10; Requirement 15 for unknown processes | [Exception catalogue](errors.md), [generator](../src/geo_processes/openapi.py), schema/HTTP tests and [development checks](development.md) |
-| Conformance assessment | [Annex A][abstract-tests] | Partial local evidence; no current-service certification claim |
+| Discovery and claims | Sections 7.4, 7.9–7.10 | HTTP and official-schema tests; declaration gaps above |
+| Operation descriptions | Section 8, Requirements 49–51 | [Value/wire distinction](inputs.md#ogc-scope-and-deployment), independent contracts and `test_ogc_schemas.py` |
+| Input delivery/validation | Section 7.11.2, Requirements 18, 22, 24 | [Input policy](inputs.md), real local HTTPS/base64 tests; scalar references unsupported |
+| Execution preferences/defaults | Section 7.11.2, Requirements 25–27 | Info/warp HTTP tests; synchronous execution only |
+| Synchronous results | Section 7.11.4, Requirements 28, 30, 32 | [Four warp response modes](results.md#http-contract) and independent downloads |
+| Multiple raw outputs | Section 7.11.4, Requirements 29, 31 | Multipart delivery not implemented |
+| Job resources | Sections 7.12–7.13; Permission 7 | Existing routes need correct unknown-job exceptions and OpenAPI descriptions; no persistent synchronous jobs |
+| OpenAPI/exceptions | Section 10; Requirement 15 for unknown processes | [Catalogue](errors.md), generated definition and actual JSON exception/schema tests |
+| Conformance assessment | Annex A | Partial evidence; no current-service certification |
 
-For each new operation or input route:
+For contract changes, review the relevant clauses and official examples, then
+keep process descriptions, request validation, generated OpenAPI and executable
+examples consistent. Check pixels, CRS, transforms, nodata and allocation limits
+as well as HTTP statuses, headers and representations. Test reference acquisition
+and delivery independently, including policy failures, cleanup and expiry.
+Follow [adding a process](adding-a-process.md) and run the
+[development checks](development.md). Review checker changes before updating a
+baseline; preserve known schema limitations rather than modifying official fixtures.
 
-1. Review the relevant clauses above before choosing its request and response
-   contract. Record unsupported cases and any remaining standards gaps.
-2. Keep the process description, validation, generated OpenAPI and executable
-   examples consistent. Include units, nodata behavior, cardinality, resource
-   limits and supported formats. Retain the actual raw/document defaults.
-3. Validate HTTP documents against the [official schemas][official-schemas]
-   using the unchanged [offline snapshot](../tests/schemas/ogc-processes-1.0/README.md).
-   The [official examples][official-examples] illustrate requests and responses;
-   they are not schemas. Preserve the binary-schema limitation below.
-4. Test the resulting pixels and metadata through the actual raster library,
-   plus actual HTTP status, media type, headers and exception documents. For
-   references, test resolution, policy failures, downloads and expiry from an
-   independent client. Reuse [warp smoke coverage](../scripts/smoke_warp.py)
-   and the [independent user-raster client](../scripts/smoke_inputs.py).
-5. Run the [existing checks](development.md), regenerate OpenAPI and review
-   `/conformance` alongside the runtime behavior. Deliberately review checker
-   changes; do not update baselines just to obtain a passing build. Map evidence
-   and gaps to Annex A before strengthening conformance claims.
+## Published binary-schema limitation
 
-The custom `/results/<id>/output.tif` download is an output reference target;
-it is not an implementation of `/jobs/{jobID}/results`. A future input upload
-endpoint would likewise be a documented extension, not proof of Core conformance.
+The unchanged `inputValueNoObject.yaml` uses `oneOf` with an unrestricted string
+and a byte-formatted string. Valid base64 matches both, so strict validation
+rejects inline binary values even with a base64 format checker. Tests record the
+overlap for requests/results. The official examples use base64 with `encoding`
+and `mediaType`, as our qualified inline representation does.
 
-The [Rasterio pivot](rasterio-pivot.md) records checks for the new backend and
-process names. Historical Terrio results remain separate evidence.
+Discovery, reference requests, exceptions and reference result documents are
+validated against the official snapshot. Inline binary requests/responses use
+application schemas plus actual GeoTIFF decoding. No official schema fixture is
+modified to hide the overlap; these checks do not establish complete conformance.
 
-The service usability branch was checked with 360 passing tests and 95.33%
-application coverage, Ruff and Bandit, and valid public/integration configuration
-and OpenAPI documents. A self-contained release on an isolated local port passed
-startup, the local-file command, independent multiband input/all warp modes and
-container isolation checks. Invalid result-count and input-host settings stopped
-the actual container entrypoint before Gunicorn started. Geonovum 1.2.0 with
-Node 24/npm 11.6.0 retained the reviewed five diagnostics without baseline changes.
+## Test and checker coverage
+
+- Adapter tests inspect actual Rasterio pixels, metadata, masked statistics,
+  dimensions, transforms, nodata and bounds, including all offered warp choices.
+- HTTP/schema tests cover discovery, defaults, four warp modes, typed/sanitized
+  errors, unsupported requests and downloads. Input tests use local TLS to check
+  verified/pinned connections, redirects, limits, deadlines and cleanup.
+- Storage tests cover quota, expiry, locking, atomic delivery and safe paths.
+  Startup tests cover effective settings and preserve existing result data.
+- The local-file client has an end-to-end HTTP test plus checks for preserved
+  destinations and discarded failed downloads. These tests do not validate the
+  external browser client; track it in [the interoperability log](client-interoperability.md).
+- Release smoke checks run processing through Gunicorn, download/open results
+  from independent clients, inspect isolation and verify restart persistence.
+- [Geonovum 1.2.0](../validation/geonovum/README.md) checks OpenAPI statically.
+  Its five reviewed diagnostics are retained explicitly.
+- [CITE/TEAM Engine evidence](../validation/cite-teamengine/README.md) concerns
+  the predecessor's integration-only echo fixture. No current raster-service
+  TEAM Engine run or certification is claimed.
+
+## Recorded checks
+
+These are dated observations, not permanently current test counts or guarantees:
+
+- Documentation audit, **2026-10-24**, code at `e8c5dc3`: **360 tests passed**,
+  **95.15% application coverage**, against the existing 70% floor. The upstream
+  Pydantic class-configuration deprecation warning remains.
+- Service usability checkpoint `8efb5d5`, **2026-10-24**: quality and
+  public/integration configuration/OpenAPI checks passed. The self-contained
+  release passed startup, local-file processing, independent multiband input,
+  all warp modes and isolation. Invalid result-count/host settings stopped the
+  entrypoint before Gunicorn. Node 24/npm 11.6.0 retained the Geonovum baseline.
+- Earlier user-input validation, **2026-10-24**: host and separate-container
+  clients processed an independent two-band UInt16 raster; a public HTTPS check
+  used GDAL's `byte.tif` without redistributing it. Issued results survived service
+  recreation/restart, and input workspaces were removed after handled requests.
+- A recorded 512 by 512 Float32 DEM check produced a 910,778-byte input and
+  910,911-byte output. Local HTTP info/warp took about 0.043/0.063 seconds; the
+  container memory peak rose from about 297 to 304 MiB under its 512 MiB limit.
+  Pixels matched independent reprojection within tolerance. These single-machine
+  observations were not rerun for this documentation audit and are not worst-case
+  bounds or throughput claims.
+
+Use the development commands and CI for fresh results. Older backend checkpoints
+are summarized in [migration](migration.md), [warp](warp-milestone.md) and the
+[backend decision](rasterio-pivot.md); their full records remain in Git history.
 
 [processes-core]: https://docs.ogc.org/is/18-062r2/18-062r2.html
 [abstract-tests]: https://docs.ogc.org/is/18-062r2/18-062r2.html#_abstract_test_suite
 [official-schemas]: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/
-[official-examples]: https://schemas.opengis.net/ogcapi/processes/part1/1.0/examples/json/
-
-## Published binary-schema limitation
-
-The unchanged official `inputValueNoObject.yaml` contains a `oneOf` with both
-an unrestricted string and a byte-formatted string. A valid base64 string
-matches both branches, so strict official-schema validation rejects inline
-binary values even when a base64 format checker is supplied. A focused test
-records the overlap for both execution inputs and result documents. The normative
-binary example uses base64 with `encoding` and `mediaType`, which is what inline
-raster inputs accept and document/value warp responses return.
-
-Process discovery, reference execution requests, exceptions and
-reference result documents are validated against the official offline schemas.
-Inline binary requests and responses are validated against the explicit
-application schemas and decoded into real GeoTIFFs. No upstream schema fixture
-was modified to hide this discrepancy,
-and no claim of complete official-schema or OGC conformance is made.
+[process-example]: https://schemas.opengis.net/ogcapi/processes/part1/1.0/examples/json/ProcessDescription.json
+[execute-example]: https://schemas.opengis.net/ogcapi/processes/part1/1.0/examples/json/Execute.json
