@@ -5,13 +5,19 @@ from pathlib import Path
 
 import pytest
 import yaml
+from pygeoapi.util import yaml_load
 
+from geo_processes.datasets import SAMPLE_DATA_DIR
 from geo_processes.openapi import generate_openapi
 
 
 @pytest.fixture(scope="session")
 def service_config():
-    config = yaml.safe_load(Path("config/pygeoapi.yml").read_text())
+    with pytest.MonkeyPatch.context() as environment:
+        environment.setenv("PYGEOAPI_SERVER_URL", "http://example.test")
+        environment.setenv("GEO_SAMPLE_DATA_DIR", str(SAMPLE_DATA_DIR))
+        with Path("config/pygeoapi.yml").open() as source:
+            config = yaml_load(source)
     config["server"]["url"] = "http://example.test"
     config["server"]["cors"] = False
     config["server"]["ogc_schemas_location"] = "https://schemas.opengis.net"

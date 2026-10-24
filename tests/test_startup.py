@@ -55,7 +55,8 @@ def test_effective_settings_and_probes_preserve_results(service_config, runtime_
     summary = settings.summary()
     assert settings.url == "https://example.test/geo"
     for identifier in service_config["resources"]:
-        assert identifier in summary
+        if service_config["resources"][identifier]["type"] == "process":
+            assert identifier in summary
     assert "assets.example.org, data.example.org" in summary
     assert "retention 3600s" in summary and "3 sync workers" in summary
     assert "16777216 bytes" in summary and "1048576 samples" in summary

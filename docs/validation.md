@@ -92,6 +92,15 @@ modified to hide the overlap; these checks do not establish complete conformance
 
 These are dated observations, not permanently current test counts or guarantees:
 
+- Public samples, **2026-10-25**: **517 tests passed**, **95.71% coverage**.
+  Native Features collection/item/paging responses validate against the official
+  offline schemas. The raster download matches the supplied file's checksum;
+  points sample valid pixels and the polygon contains the points inside the
+  raster footprint. Quality/pre-commit, configuration/OpenAPI and release
+  isolation checks pass. The packaged release serves all three datasets and
+  accepts its point Features response directly for sampling. The reviewed
+  eight-finding Processes checker baseline is unchanged.
+
 - Landing and API documentation, **2026-10-25**: **509 tests passed**, **95.49% coverage**.
   ReDoc renders the live API catalogue in headless Chromium using pinned 2.5.3;
   the moving `latest` bundle reproduces a classic-script syntax error. ReDoc

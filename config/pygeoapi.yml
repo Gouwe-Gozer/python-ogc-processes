@@ -44,6 +44,46 @@ metadata:
     name: Gouwe-Gozer
     role: pointOfContact
 resources:
+  sample-points:
+    type: collection
+    title: Sample points
+    description: Three WGS84 sample points within the supplied AHN4 raster near Alkmaar.
+    keywords: [sample, points, AHN4]
+    extents:
+      spatial:
+        bbox: [4.827911, 52.644807, 4.836065, 52.647618]
+        crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+    links:
+      - rel: related
+        type: image/tiff
+        title: Matching AHN4 sample GeoTIFF
+        href: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}/sample-data/AHN4_R5_117000_517000.TIF
+    providers:
+      - type: feature
+        name: GeoJSON
+        data: ${GEO_SAMPLE_DATA_DIR:-src/geo_processes/data/samples}/points.geojson
+        id_field: id
+        editable: false
+  sample-polygons:
+    type: collection
+    title: Sample polygon
+    description: A small polygon around the sample points, contained within the supplied AHN4 raster footprint.
+    keywords: [sample, polygon, AHN4]
+    extents:
+      spatial:
+        bbox: [4.82728482, 52.64441446, 4.83669559, 52.64798021]
+        crs: http://www.opengis.net/def/crs/OGC/1.3/CRS84
+    links:
+      - rel: related
+        type: image/tiff
+        title: Matching AHN4 sample GeoTIFF
+        href: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}/sample-data/AHN4_R5_117000_517000.TIF
+    providers:
+      - type: feature
+        name: GeoJSON
+        data: ${GEO_SAMPLE_DATA_DIR:-src/geo_processes/data/samples}/polygons.geojson
+        id_field: id
+        editable: false
   raster-info:
     type: process
     processor:

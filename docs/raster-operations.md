@@ -13,7 +13,9 @@ Required inputs: `source` and `points`. The latter accepts a GeoJSON **Point**,
 locations** in total. Coordinates are two-dimensional **[longitude, latitude]**
 in WGS84. Within a FeatureCollection, each feature requires `type`, `geometry`
 and object/null `properties`; an optional string/number `id` is preserved.
-Foreign members, including `crs` and `bbox`, remain unsupported. For inline
+FeatureCollection-level metadata, including OGC Features links/counts/timestamps
+and bbox, is accepted and ignored. A `crs` override remains unsupported; geometry
+and individual Feature members retain their existing restrictions. For inline
 object data, use the OGC qualified-value form:
 
 ```json

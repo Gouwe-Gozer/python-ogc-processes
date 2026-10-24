@@ -87,6 +87,19 @@ def generate_openapi(config):
         operation["responses"]["404"] = exception_response("Unknown job identifier", "NoSuchJob", 404)
         operation["responses"]["400"] = exception_response("Invalid query parameter", "InvalidParameterValue", 400)
     for identifier, resource in config["resources"].items():
+        if resource["type"] == "collection":
+            operation = paths.get(f"/collections/{identifier}/items", {}).get("get", {})
+            # Upstream emits enum: [] for property selection on features with
+            # empty properties. There are no selectable properties to advertise.
+            if "parameters" in operation:
+                operation["parameters"] = [
+                    parameter
+                    for parameter in operation["parameters"]
+                    if not (
+                        parameter.get("name") == "properties"
+                        and parameter.get("schema", {}).get("items", {}).get("enum") == []
+                    )
+                ]
         if resource["type"] != "process":
             continue
         path = f"/processes/{identifier}"
@@ -156,6 +169,19 @@ def generate_openapi(config):
                     },
                     "404": exception_response("Result missing, invalid or expired", "NoSuchResult", 404, html=False),
                     "500": exception_response("Result could not be read", "NoApplicableCode", 500, html=False),
+                },
+            }
+        }
+    if "sample-points" in config["resources"]:
+        paths["/sample-data/AHN4_R5_117000_517000.TIF"] = {
+            "get": {
+                "summary": "Download the matching AHN4 sample GeoTIFF",
+                "operationId": "downloadSampleRaster",
+                "responses": {
+                    "200": {
+                        "description": "Packaged, unchanged AHN4 sample raster.",
+                        "content": {"image/tiff": {"schema": {"type": "string", "format": "binary"}}},
+                    }
                 },
             }
         }

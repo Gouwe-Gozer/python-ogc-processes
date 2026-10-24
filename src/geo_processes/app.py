@@ -2,11 +2,13 @@
 
 from collections.abc import Mapping
 from email.utils import formatdate
+from itertools import chain
 
-from flask import jsonify, make_response, request
+from flask import Blueprint, jsonify, make_response, request
 from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_, execute_from_flask
 from werkzeug.datastructures import Headers
 
+from geo_processes.datasets import SAMPLE_DATA_DIR
 from geo_processes.discovery import landing_links, list_processes
 from geo_processes.documentation import configure_documentation_templates
 from geo_processes.errors import exception_document, install_exception_renderer
@@ -18,13 +20,24 @@ from geo_processes.storage import RESULT_TYPES, ResultNotFoundError, ResultStore
 
 runtime_settings = validate_runtime(CONFIG)
 install_metadata_locale_filter(
-    (api_.manager.get_processor(identifier).metadata for identifier in api_.manager.processes),
-    literal_data=(resource["processor"] for resource in CONFIG["resources"].values() if resource["type"] == "process"),
+    chain(
+        (api_.manager.get_processor(identifier).metadata for identifier in api_.manager.processes),
+        CONFIG["resources"].values(),
+    ),
+    literal_data=(
+        definition
+        for resource in CONFIG["resources"].values()
+        for definition in ([resource["processor"]] if resource["type"] == "process" else resource.get("providers", []))
+    ),
 )
 configure_documentation_templates(api_)
 api_.manager.result_base_url = runtime_settings.url
 install_exception_renderer(api_)
 APP.config["MAX_CONTENT_LENGTH"] = MAX_EXECUTION_BYTES
+APP.register_blueprint(
+    Blueprint("sample_data", __name__, static_folder=str(SAMPLE_DATA_DIR), static_url_path="/sample-data"),
+    url_prefix=(API_RULES.get_url_prefix("flask") or "").rstrip("/"),
+)
 
 EXECUTION_PATHS = {
     f"/processes/{identifier}/execution"
@@ -86,6 +99,14 @@ def apply_process_status(response):
     """pygeoapi 0.24.0 fixes successful executions at 200; honor explicit 204s."""
     # Upstream assigns a plain dict; restore case-insensitive media-type lookups.
     response.headers = Headers(response.headers)
+    # The pinned feature handler uses the generic JSON media type even though
+    # its item(s) payload is GeoJSON. Keep discovery and error JSON unchanged.
+    if (
+        request.endpoint == "pygeoapi.collection_items"
+        and response.status_code == 200
+        and response.mimetype == "application/json"
+    ):
+        response.mimetype = "application/geo+json"
     status = response.headers.pop(STATUS_HEADER, None)
     if status == "204" and response.status_code == 200:
         response.status_code = 204

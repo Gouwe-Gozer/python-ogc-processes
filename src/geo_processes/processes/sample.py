@@ -28,9 +28,17 @@ def validate_points(points):
                 for coordinate in coordinates
             ],
         }
-    if not isinstance(points, dict) or set(points) != {"type", "features"} or points["type"] != "FeatureCollection":
+    # OGC Features responses carry collection links/counts/timeStamp and may
+    # have other GeoJSON foreign members. Only features are sampled; a crs
+    # override remains unsupported because this input is always WGS84.
+    if (
+        not isinstance(points, dict)
+        or points.get("type") != "FeatureCollection"
+        or "features" not in points
+        or "crs" in points
+    ):
         raise RasterInputError(
-            "points must be a GeoJSON Point, MultiPoint or Point FeatureCollection without crs/foreign members"
+            "points must be a GeoJSON Point, MultiPoint or Point FeatureCollection without a crs override"
         )
     features = points["features"]
     if not isinstance(features, list) or not 1 <= len(features) <= 1000:
@@ -57,7 +65,7 @@ def validate_points(points):
             or not -90 <= coordinates[1] <= 90
         ):
             raise RasterInputError("Point coordinates must be [longitude, latitude] within WGS84 bounds")
-    return points
+    return {"type": "FeatureCollection", "features": features}
 
 
 class RasterSamplePointsProcessor(BaseProcessor):

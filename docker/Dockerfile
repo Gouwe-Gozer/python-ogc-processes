@@ -10,6 +10,7 @@ LABEL org.opencontainers.image.title="Geo Processes API" \
 ENV CONTAINER_PORT=8080 \
     PROJ_NETWORK=OFF \
     PYTHONPATH=/pygeoapi \
+    GEO_SAMPLE_DATA_DIR=/pygeoapi/geo_processes/data/samples \
     PYGEOAPI_OPENAPI=/tmp/pygeoapi.openapi.yml \
     PYGEOAPI_CONFIG=/pygeoapi/local.config.yml \
     PYTHONDONTWRITEBYTECODE=1 \

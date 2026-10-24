@@ -13,7 +13,7 @@ def _data_keys(value, *, in_data=False):
         for key, item in value.items():
             if in_data:
                 yield key.replace("-", "_").casefold()
-            yield from _data_keys(item, in_data=in_data or key in {"schema", "example", "links"})
+            yield from _data_keys(item, in_data=in_data or key in {"schema", "example", "links", "extents"})
     elif isinstance(value, list):
         for item in value:
             yield from _data_keys(item, in_data=in_data)

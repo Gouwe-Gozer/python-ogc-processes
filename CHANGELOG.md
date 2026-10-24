@@ -2,6 +2,11 @@
 
 ## 0.1.0 — Unreleased
 
+- Publish the supplied points and a nearby raster-contained polygon through
+  native read-only OGC Features collections, alongside the unchanged AHN4 TIFF.
+- Accept collection-level Features metadata in sampling inputs and validate
+  sample discovery, paging, media types and raster alignment.
+
 - Preserve pygeoapi's JSON-LD landing catalogue instead of treating it as an
   ordinary JSON links document; guard unexpected JSON body shapes.
 

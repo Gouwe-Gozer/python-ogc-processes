@@ -1,9 +1,11 @@
-"""Bundled raster fixture for tests and smoke clients, without an API identifier."""
+"""Packaged raster fixtures and the public sample-data directory."""
 
 import base64
+import os
 from pathlib import Path
 
 DEMO_RASTER = Path(__file__).resolve().parent / "data" / "demo-dem.tif"
+SAMPLE_DATA_DIR = Path(os.environ.get("GEO_SAMPLE_DATA_DIR", str(DEMO_RASTER.parent / "samples"))).resolve()
 
 
 def demo_source():

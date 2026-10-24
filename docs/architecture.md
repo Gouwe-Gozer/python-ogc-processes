@@ -27,7 +27,7 @@ masked statistics; [raster metadata](raster-info.md) is an application-owned con
 | `startup.py` | Runtime settings, directory probes and effective configuration summary |
 | `openapi.py` | Version-checked corrections to upstream OpenAPI generation |
 | `documentation.py`, `templates/openapi/redoc.html` | Supported template override for the pinned ReDoc presentation; other templates fall back to pygeoapi |
-| `datasets.py`, `data/` | Bundled fixture submitted as ordinary raster data by tests/smoke clients |
+| `datasets.py`, `data/` | Internal demo fixture plus public point/polygon/raster samples |
 
 Paths above are relative to `src/geo_processes/` unless otherwise stated.
 
@@ -87,6 +87,13 @@ an upstream upgrade; no upstream source or entrypoint is patched. Remaining
 conformance gaps are tracked in [validation](validation.md).
 
 ## Extension boundaries
+
+Public samples use native GeoJSON feature providers and Flask's static-file
+blueprint. Feature discovery, paging, IDs and bbox queries remain upstream;
+there is no application-owned Features implementation. Small compatibility
+corrections omit empty property-selection enums and set the GeoJSON media type
+for successful feature responses. Native Features schemas validate these routes.
+See [sample data](sample-data.md) for provenance, paths and processing examples.
 
 Give each new operation its own adapter, processor and contract, following the
 [contribution recipe](adding-a-process.md). Warp and the three new operations

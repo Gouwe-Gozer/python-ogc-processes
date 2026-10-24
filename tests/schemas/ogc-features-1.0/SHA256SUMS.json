@@ -1,0 +1,16 @@
+{
+  "collection.yaml": "eb9fee532ea0088b310366e75a5bd72c86eaf4561e99e1a49e0ce26a9130a592",
+  "collections.yaml": "31e97be3be97b23748cc2fc72ae95a85260ddb653d05bc0c0746371b5beda48e",
+  "extent.yaml": "204d66a2fe0dee4fbf07b5bec1511a6b213275ff7a09b5566839bfd295e29c38",
+  "featureCollectionGeoJSON.yaml": "650ae26cce864d72d247164afeea2085eb9aa25e12dfb8e2e9d4254bd2ad01d8",
+  "featureGeoJSON.yaml": "dd6d177598c24b86164118fc1c271af4178c8aafe7fe8bc354156a00bbcffbd4",
+  "geometryGeoJSON.yaml": "f1240ce1f08e7514004e84e1878f474641a9a0b0338d1831dcd08e486aeda2a9",
+  "geometrycollectionGeoJSON.yaml": "1da7c4512295c94056caa7969704735210dcc7a6e0e4382b1c18de47b35842a3",
+  "linestringGeoJSON.yaml": "6db8292a1fb2db3fa98404f70a6f45ccb6d662669f3c7682002a64c46dda3f4b",
+  "link.yaml": "6e4b600aeba7b6f179c5c7e3c9f9700825ffe1c22bd7380aa61161e0f8679d82",
+  "multilinestringGeoJSON.yaml": "99c6cf08a3fcf7ae1800abbe7e0b42083924bfb82542a40fe3f7bd8e4746117b",
+  "multipointGeoJSON.yaml": "794845389fc4c34b772e5df8286e9cf041011767055d4ca0a6ad815a16880b65",
+  "multipolygonGeoJSON.yaml": "4144a31af6a2d61786ba4708d28048eccb81f35e0b6460dd51ea2a87845acf03",
+  "pointGeoJSON.yaml": "f2dab6107fe2cd7c92bb9df08254ed7b037daa7ad2a1dfa1191008324a694ed2",
+  "polygonGeoJSON.yaml": "87fcfca4e33d574c972b85dba5bac99f575749b672ef0eeb3aef9ac7359095ae"
+}

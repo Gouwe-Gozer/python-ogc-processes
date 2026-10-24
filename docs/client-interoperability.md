@@ -18,6 +18,11 @@ in CI-003 and CI-004; successful execution, output rendering and downloads throu
 the external UI remain unverified. Record the client build and actual
 request/response when reproducing issues.
 
+Use the [public sample collections and matching TIFF](sample-data.md) for
+repeatable client checks. Service integration tests cover consuming the native
+point Features response directly as a sampling input; this does not verify the
+external client's file/URL controls or map behavior.
+
 ## CI-001 — GeoTIFF rendered as plain text
 
 - **Issue:** The tester expected file selection and HTTPS URL entry for the

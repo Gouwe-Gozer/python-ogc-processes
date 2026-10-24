@@ -63,6 +63,11 @@ for parameters, executable local-file examples and GeoJSON delivery.
 
 ## Supported scope
 
+Read-only [sample datasets](docs/sample-data.md) are available through
+`/collections/sample-points/items?f=json`, `/collections/sample-polygons/items?f=json`
+and `/sample-data/AHN4_R5_117000_517000.TIF`. The points and polygon are inside
+the matching raster footprint. Feature data follows OGC API – Features conventions.
+
 - GeoTIFF inputs: at most **16 MiB** and **1,048,576 samples**, including bands;
   execution JSON is limited to **24 MiB**. HTTPS inputs require public destinations
   and port 443. See [input policy](docs/inputs.md#limits-validation-and-cleanup).

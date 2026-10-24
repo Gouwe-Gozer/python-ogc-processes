@@ -22,7 +22,8 @@ MULTIPOINT_SCHEMA = {
 FEATURE_COLLECTION_SCHEMA = {
     "type": "object",
     "required": ["type", "features"],
-    "additionalProperties": False,
+    "additionalProperties": True,
+    "not": {"required": ["crs"]},
     "properties": {
         "type": {"type": "string", "enum": ["FeatureCollection"]},
         "features": {
