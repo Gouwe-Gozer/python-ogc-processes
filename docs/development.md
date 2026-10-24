@@ -130,6 +130,20 @@ deadline, capacity and cleanup policies without contacting public services.
 The local storage lock uses Linux `flock`; use Linux or Docker for this service.
 See [result storage](results.md) for settings and maintenance commands.
 
+## Runtime logging
+
+The service retains the configured `logging.level` (INFO by default). A narrow
+filter removes pygeoapi 0.24.0's false unknown-locale warnings for registered
+schema/example/link keys such as `type` and `coordinates`. It leaves upstream
+translation and metadata unchanged; nonmatching locale diagnostics and all other
+warnings/errors remain visible. See [the compatibility boundary](architecture.md#compatibility-corrections).
+
+The image does not set `PYGEOAPI_ASYNCAPI`: no AsyncAPI document or pub/sub
+interface is configured. This avoids requesting a nonexistent optional file
+at each worker startup. Explicitly supplied AsyncAPI paths still use upstream
+loading and diagnostics. AsyncAPI describes event interfaces; it is separate
+from asynchronous OGC process jobs.
+
 The inherited CITE echo fixture remains separate from the public service:
 
 ```bash

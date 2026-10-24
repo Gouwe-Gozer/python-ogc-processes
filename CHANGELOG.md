@@ -2,6 +2,9 @@
 
 ## 0.1.0 — Unreleased
 
+- Filter pygeoapi's false metadata locale warnings and remove the unused
+  AsyncAPI file setting from the image, retaining normal logging and translation.
+
 - Accept GeoJSON Point and MultiPoint sampling inputs alongside point
   FeatureCollections, preserving the same WGS84 contract and point-count limit.
 
