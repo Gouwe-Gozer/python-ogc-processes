@@ -14,3 +14,8 @@ toward Rasterio-backed processing of users' own rasters, with vector processes
 added as needed. Use the [OGC review guide](docs/validation.md#ogc-review-guide)
 when changing process descriptions, input routes, result formats or capability
 claims; document remaining gaps alongside the evidence.
+
+For a new operation, follow the [raster process recipe](docs/adding-a-process.md):
+it maps the contract, adapter, processor and registration files, then lists
+OGC review points and meaningful raster/HTTP checks. Use the existing
+[exception catalogue](docs/errors.md) and input/result lifecycles.

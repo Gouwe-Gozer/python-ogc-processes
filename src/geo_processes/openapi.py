@@ -15,6 +15,7 @@ from pygeoapi.plugin import load_plugin
 from pygeoapi.util import yaml_load
 
 from geo_processes import __version__
+from geo_processes.errors import exception_document
 
 SCHEMA_BASE = "https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas"
 
@@ -24,6 +25,12 @@ def schema_response(description, schema):
         "description": description,
         "content": {"application/json": {"schema": {"$ref": f"{SCHEMA_BASE}/{schema}"}}},
     }
+
+
+def exception_response(description, code, status):
+    response = schema_response(description, "exception.yaml")
+    response["content"]["application/json"]["example"] = exception_document(code, description, status)
+    return response
 
 
 def generate_openapi(config):
@@ -39,6 +46,7 @@ def generate_openapi(config):
     )
     listing = paths["/processes"]["get"]
     listing["responses"]["200"] = schema_response("Available processes", "processList.yaml")
+    listing["responses"]["400"] = exception_response("Invalid limit", "InvalidParameterValue", 400)
     limits = config["server"].get("limits", {})
     listing.setdefault("parameters", []).append(
         {
@@ -57,7 +65,7 @@ def generate_openapi(config):
             continue
         path = f"/processes/{identifier}"
         paths[path]["get"]["responses"]["200"] = schema_response("Process description", "process.yaml")
-        paths[path]["get"]["responses"]["404"] = schema_response("Unknown process", "exception.yaml")
+        paths[path]["get"]["responses"]["404"] = exception_response("Unknown process", "NoSuchProcess", 404)
         processor = load_plugin("process", resource["processor"])
         contract = getattr(processor, "openapi_execution", None)
         if contract is None:
@@ -66,10 +74,13 @@ def generate_openapi(config):
         override = contract()
         execution["requestBody"] = override["requestBody"]
         execution["responses"].update(override["responses"])
-        execution["responses"]["400"] = schema_response("Invalid execution request", "exception.yaml")
-        execution["responses"]["413"] = schema_response(
-            "Request body exceeds 24 MiB or raster exceeds 16 MiB", "exception.yaml"
+        execution["responses"]["400"] = exception_response("Invalid execution request", "InvalidParameterValue", 400)
+        execution["responses"]["404"] = exception_response("Unknown process", "NoSuchProcess", 404)
+        execution["responses"]["413"] = exception_response(
+            "Request body exceeds 24 MiB or raster exceeds 16 MiB", "RequestTooLarge", 413
         )
+        execution["responses"]["500"] = exception_response("Process execution failed", "NoApplicableCode", 500)
+        execution["responses"]["503"] = exception_response("Processing capacity unavailable", "ServerBusy", 503)
         if processor.metadata["jobControlOptions"] == ["sync-execute"]:
             execution["responses"].pop("201", None)
             execution["parameters"] = [
@@ -101,8 +112,8 @@ def generate_openapi(config):
                         "content": {"image/tiff": {"schema": {"type": "string", "format": "binary"}}},
                         "headers": {"Expires": {"schema": {"type": "string"}, "description": "Result expiration time"}},
                     },
-                    "404": schema_response("Result missing, invalid or expired", "exception.yaml"),
-                    "500": schema_response("Result could not be read", "exception.yaml"),
+                    "404": exception_response("Result missing, invalid or expired", "NoSuchResult", 404),
+                    "500": exception_response("Result could not be read", "NoApplicableCode", 500),
                 },
             }
         }

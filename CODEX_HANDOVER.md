@@ -3,9 +3,11 @@
 The approved [Rasterio pivot](docs/rasterio-pivot.md) replaces the previous Terrio
 runtime and names with **geo-processes** (`geo_processes`). GDAL-free deployment
 is no longer a goal. The pivot was merged into `main` at `88a83a2`; its obsolete
-branches were removed after verifying equivalent changes. User-raster work is
-on `feat/user-raster-inputs`, based directly on that merged `main`. The remote
-GitHub repository retains its existing name.
+branches were removed after verifying equivalent changes. The user-raster
+milestone was merged into `main` at `244667a`. Service usability work is on
+`feat/service-usability`, based on that merged `main`; external client changes
+remain a separate follow-up after this service branch is reviewed/merged.
+The remote GitHub repository retains its existing name.
 
 `geo-processes` exposes bounded Rasterio operations through OGC API – Processes
 using the official pygeoapi package. Maintainer: Minnert Wijnands (Gouwe-Gozer).
@@ -57,7 +59,16 @@ and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract wor
   cleanup command. See [result lifecycle](docs/results.md).
 - Unknown inputs/outputs, unsupported formats/transmission, callbacks and
   malformed requests are rejected with JSON client errors. Engine failures
-  return sanitized server errors.
+  return sanitized server errors. The [JSON exception catalogue](docs/errors.md)
+  supplies stable `type` URIs and problem details while retaining legacy
+  `code`/`description` fields; unknown processes use the URI from Requirement 15.
+- `scripts/process_raster.py` provides a user-facing local-file flow: inspect,
+  reproject, request a reference and save the download without overwriting an
+  existing file. Exhaustive smoke scripts remain separate developer checks.
+- Startup validates the canonical URL, numeric limits, host allowlist and
+  separate writable input/result directories before accepting requests. The
+  entrypoint prints effective configuration before launching Gunicorn. See
+  [startup validation](docs/development.md#startup-validation).
 - Docker uses the pinned official pygeoapi image and installs Rasterio in the
   same `/venv` used by Gunicorn. Release Compose retains non-root execution,
   a read-only root, bounded `/tmp`, dropped capabilities and no-new-privileges.
@@ -75,11 +86,17 @@ and the [OGC review guide](docs/validation.md#ogc-review-guide) for contract wor
 | `src/geo_processes/storage.py` | Bounded local output publication, expiry and cleanup |
 | `src/geo_processes/responses.py` | Explicit process HTTP representation |
 | `src/geo_processes/app.py` | Boundary validation for registered execution routes |
+| `src/geo_processes/errors.py` | JSON exception URI catalogue and compatible legacy fields |
+| `src/geo_processes/startup.py` | Effective settings, directory preflight and startup summary |
 | `src/geo_processes/manager.py` | Synchronous execution and typed/sanitized errors |
 | `src/geo_processes/openapi.py` | Version-checked corrections to upstream OpenAPI |
 | `config/pygeoapi.yml` | Public resource and manager registration |
 | `docker/`, `compose*.yml` | Application startup and deployment configurations |
 | `tests/`, `scripts/`, `.github/workflows/ci.yml` | Unit, official-schema, HTTP, quality and container checks |
+
+Follow [adding a process](docs/adding-a-process.md) for the operation file map,
+OGC review points and contribution checklist. No automatic engine registration
+or new dependencies were introduced for the usability work.
 
 Keep the tested compatibility corrections until equivalent HTTP tests establish
 that upstream handles them. The pinned DummyManager's document wrapper and
@@ -93,8 +110,9 @@ diagnostics. Historical CITE results describe the predecessor service, not this
 implementation. See [validation](docs/validation.md) for the evidence boundary
 and [migration report](docs/migration.md) for the initial compatibility inventory.
 
-The current suite has 313 passing tests and 95.80% coverage, including checker
-source-comparison regressions. CI uses Node 24 and native Node 24 actions.
+The current suite has 360 passing tests and 95.33% coverage, including checker
+source comparisons, JSON exception semantics, startup settings and the local-file
+client against real HTTP. CI uses Node 24 and native Node 24 actions.
 It uses the OGC binary value convention without a demo/transport union. Earlier
 milestone evidence includes checked host/container flows and a Float32 workload. See
 [milestone evidence](docs/inputs.md#milestone-validation); retain the limits until

@@ -25,6 +25,10 @@ actual local TLS, destination/redirect policy, both source forms and all four
 warp output modes. A separate client can create its own raster and run the
 complete flow; see [input examples and policy](inputs.md).
 
+The local-file command now offers one inspect/reproject/download flow. Startup
+validation, a JSON exception catalogue and an [operation contribution recipe](adding-a-process.md)
+support the pilot without adding job infrastructure or a generic engine layer.
+
 ## Pilot follow-up
 
 - Expand representative DEM and imagery cases across users' data types, band

@@ -12,11 +12,18 @@ from the runtime. Matching the base image's Rasterio/NumPy versions avoids
 an unrelated NumPy 2 migration. GDAL versions bundled by the base image and
 local wheels can differ; validate both environments.
 
-The owned entrypoint generates the corrected OpenAPI document in `/tmp`, then
-execs Gunicorn with two synchronous workers and a 30-second worker timeout.
+The owned entrypoint validates effective runtime settings, prints the public URL,
+process IDs, input policy and result storage/limits, generates corrected OpenAPI
+in `/tmp`, then execs Gunicorn with two synchronous workers and a 30-second worker timeout.
 `WSGI_WORKERS` and `WSGI_WORKER_TIMEOUT` can be overridden. The upstream image's
 base dependencies are fixed by its digest; they are not all identical to the
 local uv lockfile. The pygeoapi, Rasterio and NumPy versions match in both environments.
+
+Bad public URLs, invalid limits/host lists and unwritable or overlapping storage
+directories stop startup before Gunicorn launches. The directory probes do not
+remove stored results. See [startup validation](development.md#startup-validation)
+for checked settings and the standalone preflight command. The printed URL must
+still be reachable by clients; startup does not test external network routing.
 
 The release Compose service has no host bind mounts. It has one writable named
 volume, mounted at `/var/lib/geo/results`, for persistent bounded outputs.

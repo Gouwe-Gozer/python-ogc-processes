@@ -2,6 +2,14 @@
 
 ## 0.1.0 — Unreleased
 
+- Add a local-file client command to inspect, reproject and download a user's
+  GeoTIFF, preserving existing destination files and discarding failed downloads.
+- Publish a JSON exception URI catalogue and OpenAPI examples, retaining legacy
+  error fields and sanitized failures; use the specified OGC unknown-process URI.
+- Validate operational settings and storage before serving requests, and print
+  the effective public URL, processes, input policy and result limits at startup.
+- Document a practical recipe for adding independent raster operations and
+  checking their OGC contracts, without introducing an engine framework.
 - Move the CI checker and JavaScript actions to Node 24, resolving the reproduced
   diagnostic source-label mismatch without changing the reviewed baseline.
 - Include sources in checker mismatch messages and add comparison regressions.

@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 
+/venv/bin/python3 -m geo_processes.startup --config "$PYGEOAPI_CONFIG"
 /venv/bin/python3 -m geo_processes.openapi --config "$PYGEOAPI_CONFIG" --output "$PYGEOAPI_OPENAPI"
 
 exec /venv/bin/gunicorn \

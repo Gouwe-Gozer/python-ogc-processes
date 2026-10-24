@@ -13,6 +13,14 @@ paths and concurrent writers. The release smoke scripts repeat execution and
 download checks against Gunicorn. CI uses a separate client container and tests
 that issued result URLs survive a server restart.
 
+The local-file command has an end-to-end HTTP test that inspects a file,
+reprojects it, downloads the result and opens it with Rasterio. Additional tests
+cover existing destinations and discarded incomplete downloads. Startup tests
+cover invalid effective settings, directory probes and preservation of stored
+results. [Exception tests](../tests/test_errors.py) validate JSON errors against
+the official schema and check the specified unknown-process URI, compatible
+legacy fields, HTTP statuses and sanitized failures.
+
 Official OGC API – Processes 1.0 schemas are stored under `tests/schemas` for
 offline validation. They are schemas, not the example JSON documents linked in
 the handover. The output schema additionally describes the pinned Rasterio result.
@@ -58,7 +66,7 @@ matrix. The [roadmap](roadmap.md) records the user-raster goal and future scope.
 | Synchronous results | Section 7.11.4, requirements 28, 30 and 32 | Four single-output warp combinations; [result lifecycle](results.md) |
 | Multiple raw outputs | Section 7.11.4, requirements 29 and 31 | Multipart representations not implemented |
 | Job resources | Sections 7.12–7.13 | Not implemented; see the [checker baseline](../validation/geonovum/README.md) |
-| OpenAPI and exceptions | Section 10 | [Generator](../src/geo_processes/openapi.py), schema/HTTP tests and [development checks](development.md) |
+| OpenAPI and exceptions | Section 10; Requirement 15 for unknown processes | [Exception catalogue](errors.md), [generator](../src/geo_processes/openapi.py), schema/HTTP tests and [development checks](development.md) |
 | Conformance assessment | [Annex A][abstract-tests] | Partial local evidence; no current-service certification claim |
 
 For each new operation or input route:
@@ -88,6 +96,14 @@ endpoint would likewise be a documented extension, not proof of Core conformance
 
 The [Rasterio pivot](rasterio-pivot.md) records checks for the new backend and
 process names. Historical Terrio results remain separate evidence.
+
+The service usability branch was checked with 360 passing tests and 95.33%
+application coverage, Ruff and Bandit, and valid public/integration configuration
+and OpenAPI documents. A self-contained release on an isolated local port passed
+startup, the local-file command, independent multiband input/all warp modes and
+container isolation checks. Invalid result-count and input-host settings stopped
+the actual container entrypoint before Gunicorn started. Geonovum 1.2.0 with
+Node 24/npm 11.6.0 retained the reviewed five diagnostics without baseline changes.
 
 [processes-core]: https://docs.ogc.org/is/18-062r2/18-062r2.html
 [abstract-tests]: https://docs.ogc.org/is/18-062r2/18-062r2.html#_abstract_test_suite

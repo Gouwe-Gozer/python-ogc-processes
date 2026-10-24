@@ -5,12 +5,16 @@ from email.utils import formatdate
 
 from flask import jsonify, make_response, request
 from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_
+from werkzeug.datastructures import Headers
 
+from geo_processes.errors import EXCEPTIONS, exception_document
 from geo_processes.inputs import MAX_EXECUTION_BYTES
 from geo_processes.responses import STATUS_HEADER
+from geo_processes.startup import validate_runtime
 from geo_processes.storage import ResultNotFoundError, ResultStore, ResultStoreError
 
-api_.manager.result_base_url = api_.base_url
+runtime_settings = validate_runtime(CONFIG)
+api_.manager.result_base_url = runtime_settings.url
 APP.config["MAX_CONTENT_LENGTH"] = MAX_EXECUTION_BYTES
 
 EXECUTION_PATHS = {
@@ -22,12 +26,12 @@ ALLOWED_EXECUTION_MEMBERS = {"inputs", "outputs", "response"}
 
 
 def _invalid_request(description):
-    return jsonify(type="InvalidParameterValue", code="InvalidParameterValue", description=description), 400
+    return jsonify(exception_document("InvalidParameterValue", description, 400)), 400
 
 
 @APP.errorhandler(413)
 def execution_document_too_large(_error):
-    return jsonify(type="RequestTooLarge", code="RequestTooLarge", description="request body exceeds 24 MiB"), 413
+    return jsonify(exception_document("RequestTooLarge", "request body exceeds 24 MiB", 413)), 413
 
 
 @APP.before_request
@@ -68,16 +72,36 @@ def apply_process_status(response):
     return response
 
 
+@APP.after_request
+def apply_exception_catalogue(response):
+    """Normalize known pygeoapi JSON exceptions without changing HTTP status."""
+    if response.status_code >= 400:
+        # Upstream assigns a plain dict to response.headers. Restore case-
+        # insensitive lookups before Flask checks the response media type.
+        response.headers = Headers(response.headers)
+    if response.status_code >= 400 and response.is_json:
+        document = response.get_json(silent=True)
+        if (
+            isinstance(document, dict)
+            and isinstance(document.get("code"), str)
+            and document["code"] in EXCEPTIONS
+            and isinstance(document.get("description"), str)
+        ):
+            document.update(exception_document(document["code"], document["description"], response.status_code))
+            response.set_data(APP.json.dumps(document))
+    return response
+
+
 @APP.route(f"{(API_RULES.get_url_prefix('flask') or '').rstrip('/')}/results/<result_id>/output.tif")
 def download_result(result_id):
     """Deliver a generated GeoTIFF, enforcing its lifetime on every retrieval."""
     try:
         data, expires_at = ResultStore.from_environment().read(result_id)
     except ResultNotFoundError:
-        return jsonify(type="NoSuchResult", code="NoSuchResult", description="result not found or expired"), 404
+        return jsonify(exception_document("NoSuchResult", "result not found or expired", 404)), 404
     except (ResultStoreError, OSError):
         APP.logger.exception("Result storage read failed")
-        return jsonify(type="NoApplicableCode", code="NoApplicableCode", description="result could not be read"), 500
+        return jsonify(exception_document("NoApplicableCode", "result could not be read", 500)), 500
     response = make_response(data)
     response.headers.update(
         {

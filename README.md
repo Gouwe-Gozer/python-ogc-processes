@@ -26,6 +26,19 @@ If port 5001 is occupied, set both variables when starting Compose:
 API_PORT=5002 PYGEOAPI_SERVER_URL=http://localhost:5002 docker compose up --build --detach
 ```
 
+Process your local GeoTIFF and save a reprojected copy:
+
+```bash
+uv run python scripts/process_raster.py my-dem.tif --output my-dem-wgs84.tif \
+  --target-crs EPSG:4326 --base-url http://localhost:5001
+```
+
+The command prints source dimensions/band count, submits the raster inline,
+requests a download reference and saves the returned GeoTIFF. It preserves
+existing destination files and removes partial downloads. The input must fit
+the [service limits](docs/inputs.md#limits-validation-and-cleanup). See
+[local-file usage](docs/inputs.md#process-a-local-file) for options and a bundled example.
+
 Inspect the small demo file through the same input contract as your own rasters:
 
 ```bash
@@ -44,6 +57,8 @@ The output identifier is `info`. Omitting `outputs` selects it; omitting
 `transmissionMode` selects `value`. `Prefer: respond-async` still returns a
 synchronous 200 with no job URL. Invalid inputs or unsupported options return
 JSON 400 errors; internal processing failures return a sanitized 500.
+JSON errors include a stable `type` URI and retain legacy `code`/`description`;
+see the [exception catalogue](docs/errors.md).
 
 ## Reproject a raster
 
@@ -81,6 +96,8 @@ HTTP 200, `application/json` (the identifier varies):
 
 GET the returned `href` to download the GeoTIFF. Configure `PYGEOAPI_SERVER_URL`
 to the address your clients can reach; generated URLs use that canonical address.
+Startup validates the URL, storage and operating limits before serving requests
+and prints the effective configuration; see [startup validation](docs/development.md#startup-validation).
 
 | Response | Transmission | HTTP result |
 | --- | --- | --- |
@@ -121,6 +138,7 @@ including breaking API/configuration changes and preserving existing volumes.
 The GitHub repository retains its existing name until its owner renames it.
 
 See [development commands](docs/development.md), [architecture](docs/architecture.md),
+[adding a process](docs/adding-a-process.md),
 [OGC review guidance and validation limits](docs/validation.md),
 [client interoperability log](docs/client-interoperability.md),
 [release deployment](docs/release-image.md),

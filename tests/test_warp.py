@@ -192,7 +192,7 @@ def test_invalid_warp_requests_never_start_rasterio(http_client, monkeypatch, do
     response = http_client.post(EXECUTION, json=document)
     assert response.status_code == 400
     assert response.is_json
-    assert response.get_json()["type"] == "InvalidParameterValue"
+    assert response.get_json()["code"] == "InvalidParameterValue"
     assert "Traceback" not in response.text
 
 
@@ -235,7 +235,7 @@ def test_download_rejects_expired_missing_or_invalid_ids(http_client, tmp_path, 
     os.utime(stored, (then, then))
     expired = http_client.get(path)
     assert expired.status_code == 404
-    assert expired.get_json()["type"] == "NoSuchResult"
+    assert expired.get_json()["code"] == "NoSuchResult"
     assert http_client.get("/results/invalid/output.tif").status_code == 404
     assert http_client.get(f"/results/{'a' * 32}/output.tif").status_code == 404
 
@@ -281,7 +281,7 @@ def test_oversized_execute_document_is_a_json_413(http_client):
     response = http_client.post(EXECUTION, json={"inputs": {**INPUTS, "source": "x" * MAX_EXECUTION_BYTES}})
     assert response.status_code == 413
     assert response.is_json
-    assert response.get_json()["type"] == "RequestTooLarge"
+    assert response.get_json()["code"] == "RequestTooLarge"
 
 
 def test_warp_openapi_schemas_validate_actual_documents(http_client):
