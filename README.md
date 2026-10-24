@@ -71,7 +71,8 @@ for parameters, executable local-file examples and GeoJSON delivery.
   match the source; resolution and extent controls are not exposed.
   CRS/resampling values also accept controlled HTTPS JSON/text references;
   see [scalar input forms](docs/inputs.md#scalar-input-references).
-- Sampling accepts up to **1,000 Point features** in WGS84 longitude/latitude.
+- Sampling accepts **Point**, **MultiPoint** or **Point FeatureCollection** inputs,
+  up to **1,000 locations** in WGS84 longitude/latitude.
   Polygonize accepts an integer categorical band of at most **65,536 pixels**,
   producing at most **4,096 features / 16 MiB GeoJSON**. Reclassify accepts up to
   **128 non-overlapping ranges**; see [operation limits](docs/raster-operations.md).

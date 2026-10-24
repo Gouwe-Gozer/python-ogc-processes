@@ -2,6 +2,9 @@
 
 ## 0.1.0 — Unreleased
 
+- Accept GeoJSON Point and MultiPoint sampling inputs alongside point
+  FeatureCollections, preserving the same WGS84 contract and point-count limit.
+
 - Add synchronous point sampling, range reclassification and categorical
   polygonization, with explicit band/CRS/complexity limits and GeoJSON contracts.
 - Reuse TIFF delivery for reclassification and extend shared expiry/quota/download

@@ -75,25 +75,24 @@ def check_operations(base_url, source, data):
             raise RuntimeError("operation smoke checks need at least one finite, valid pixel")
         lower, upper = float(values.min()), float(np.nextafter(float(values.max()), np.inf))
         polygon_supported = raster.width * raster.height <= 65536
+    expected = None if np.ma.is_masked(expected_sample) or not np.isfinite(expected_sample) else expected_sample.item()
+    point = {"type": "Point", "coordinates": [longitude[0], latitude[0]]}
     point_collection = {
         "type": "FeatureCollection",
-        "features": [
-            {
-                "type": "Feature",
-                "properties": {},
-                "geometry": {"type": "Point", "coordinates": [longitude[0], latitude[0]]},
-            }
-        ],
+        "features": [{"type": "Feature", "properties": {}, "geometry": point}],
     }
-    sample_payload = {"inputs": {"source": source, "points": {"value": point_collection}}}
-    status, headers, result = _read(f"{base_url.rstrip('/')}/processes/raster-sample-points/execution", sample_payload)
-    if status != 200 or headers.get_content_type() != "application/geo+json":
-        raise RuntimeError("sampling did not return HTTP 200 GeoJSON")
-    sampled = json.loads(result)["features"][0]["properties"]["value"]
-    expected = None if np.ma.is_masked(expected_sample) or not np.isfinite(expected_sample) else expected_sample.item()
-    if sampled != expected:
-        raise RuntimeError("sampling did not read the supplied point's pixel value")
-    print("PASS sampled point returns the supplied raster's value as GeoJSON")
+    multipoint = {"type": "MultiPoint", "coordinates": [point["coordinates"], point["coordinates"]]}
+    for locations, count in ((point, 1), (multipoint, 2), (point_collection, 1)):
+        sample_payload = {"inputs": {"source": source, "points": {"value": locations}}}
+        status, headers, result = _read(
+            f"{base_url.rstrip('/')}/processes/raster-sample-points/execution", sample_payload
+        )
+        if status != 200 or headers.get_content_type() != "application/geo+json":
+            raise RuntimeError("sampling did not return HTTP 200 GeoJSON")
+        features = json.loads(result)["features"]
+        if len(features) != count or any(feature["properties"]["value"] != expected for feature in features):
+            raise RuntimeError("sampling did not read the supplied points' pixel values")
+        print(f"PASS {locations['type']} input returns the supplied raster's values as GeoJSON")
 
     classes = [{"min": lower, "max": upper, "value": 1}]
     status, headers, classified = _read(
