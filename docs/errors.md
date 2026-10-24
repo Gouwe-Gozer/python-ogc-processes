@@ -1,4 +1,4 @@
-# JSON exception catalogue
+# Exception catalogue
 
 JSON errors from process discovery, execution and result downloads use `type`,
 `title`, `status` and `detail`. The existing `code` and `description` remain for
@@ -6,14 +6,17 @@ clients already using them; `description` equals `detail`. Clients should branch
 `code`, rather than matching human-readable messages.
 
 The [official exception schema](https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/exception.yaml)
-permits these fields and additional properties. [OGC Part 1, Requirement 15](https://docs.ogc.org/is/18-062r2/18-062r2.html)
-specifies the unknown-process URI below. The other URIs are **service-defined**
-policy and failure types, rather than additional OGC exception definitions.
-This catalogue covers JSON responses; upstream HTML error pages are unchanged.
+permits these fields and additional properties. [OGC Part 1](https://docs.ogc.org/is/18-062r2/18-062r2.html)
+specifies `no-such-process` (Requirement 15), `no-such-job` (37/44) and
+`result-not-ready` (45). Other URIs are **service-defined** policy/failure types.
+The API-instance renderer exposes the same type and escaped details in HTML
+process/job errors. Boundary guards and application download errors return JSON.
 
 | Legacy `code` | HTTP | `type` |
 | --- | --- | --- |
 | `NoSuchProcess` | 404 | `http://www.opengis.net/def/exceptions/ogcapi-processes-1/1.0/no-such-process` |
+| `NoSuchJob` | 404 | `http://www.opengis.net/def/exceptions/ogcapi-processes-1/1.0/no-such-job` |
+| `ResultNotReady` | 404 | `http://www.opengis.net/def/exceptions/ogcapi-processes-1/1.0/result-not-ready` |
 | `InvalidParameterValue` | 400 | [Invalid parameter value](#invalid-parameter-value) |
 | `RequestTooLarge` | 413 | [Request too large](#request-too-large) |
 | `ServerBusy` | 503 | [Server busy](#server-busy) |
@@ -47,7 +50,8 @@ Sample/block limits are validation errors (400), distinct from byte limits.
 ## Request too large
 
 The execution document exceeds 24 MiB or the supplied raster exceeds 16 MiB.
-Reduce the input; retries with the same data will not help. See [input limits](inputs.md).
+Referenced scalar values are limited to 4096 bytes. Reduce the input; retries
+with the same data will not help. See [input limits](inputs.md).
 
 ## Server busy
 
@@ -69,5 +73,7 @@ returned to clients. Configuration failures should instead stop startup; see
 
 The OpenAPI document includes the official exception schema and representative
 catalogue examples. HTTP tests validate actual error documents against the
-unchanged official schema. This does not resolve the separate Core job-resource
-and other conformance gaps recorded in [validation](validation.md).
+unchanged official schema. Public execution creates no retained jobs, so job
+identifiers return `NoSuchJob`. `ResultNotReady` is verified with the existing
+integration-only async manager, not advertised as public async support.
+See the [Core audit](core-conformance-audit.md) for applicability and evidence.

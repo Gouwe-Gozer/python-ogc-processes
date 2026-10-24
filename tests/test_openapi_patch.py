@@ -30,7 +30,8 @@ def test_generated_openapi_is_valid_and_preserves_description(service_config):
     document = generate_openapi(service_config)
     assert validate_openapi_document(document)
     assert document["info"]["title"] == "Geo Processes API"
-    assert not any(path.startswith("/jobs") for path in document["paths"])
+    assert {"/jobs/{jobID}", "/jobs/{jobID}/results"} <= document["paths"].keys()
+    assert "/jobs" not in document["paths"]
     assert "bgt-land-cover-summary" not in str(document)
 
 
@@ -63,3 +64,20 @@ def test_corrections_are_version_aware(service_config, monkeypatch):
     monkeypatch.setattr("geo_processes.openapi.version", lambda _: "future")
     with pytest.raises(RuntimeError, match="reassess"):
         generate_openapi(service_config)
+
+
+def test_job_documentation_preserves_the_existing_async_manager_contract():
+    from pathlib import Path
+
+    import yaml
+
+    config = yaml.safe_load(Path("config/pygeoapi.integration.yml").read_text())
+    config["server"]["url"] = "http://example.test"
+    document = generate_openapi(config)
+    assert validate_openapi_document(document)
+    paths = document["paths"]
+    assert "/jobs" in paths
+    for suffix in ("", "/results"):
+        responses = paths[f"/jobs/{{jobId}}{suffix}"]["get"]["responses"]
+        assert "200" in responses and "404" in responses
+        assert responses["404"]["content"]["application/json"]["example"]["type"].endswith("/no-such-job")

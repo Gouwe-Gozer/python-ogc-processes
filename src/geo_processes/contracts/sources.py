@@ -1,6 +1,6 @@
 """Raster value semantics and the separate supported OGC wire representations."""
 
-from geo_processes.inputs import MAX_ENCODED_BYTES, MAX_URL_LENGTH, MEDIA_TYPES
+from geo_processes.inputs import LINK_METADATA, MAX_ENCODED_BYTES, MAX_URL_LENGTH, MEDIA_TYPES, SCALAR_MEDIA_TYPES
 
 SOURCE_VALUE_SCHEMA = {
     "type": "string",
@@ -15,6 +15,7 @@ REFERENCE_SCHEMA = {
     "properties": {
         "href": {"type": "string", "format": "uri", "pattern": "^https://", "maxLength": MAX_URL_LENGTH},
         "type": {"type": "string", "enum": list(MEDIA_TYPES)},
+        **{key: {"type": "string"} for key in sorted(LINK_METADATA)},
     },
     "additionalProperties": False,
 }
@@ -35,3 +36,31 @@ SOURCE_DESCRIPTION = (
     "Inputs are limited to 16 MiB and 1,048,576 samples including bands. "
     "HTTPS uses port 443 and public destinations only; files are discarded after execution."
 )
+
+
+def scalar_execution_schema(value_schema):
+    """Wire forms belong to execution, not the process's scalar value schema."""
+    return {
+        "oneOf": [
+            value_schema,
+            {
+                "type": "object",
+                "required": ["href"],
+                "properties": {
+                    "href": {"type": "string", "format": "uri", "pattern": "^https://", "maxLength": MAX_URL_LENGTH},
+                    "type": {"type": "string", "enum": list(SCALAR_MEDIA_TYPES)},
+                    **{key: {"type": "string"} for key in sorted(LINK_METADATA)},
+                },
+                "additionalProperties": False,
+            },
+            {
+                "type": "object",
+                "required": ["value"],
+                "properties": {
+                    "value": value_schema,
+                    "mediaType": {"type": "string", "enum": list(SCALAR_MEDIA_TYPES)},
+                },
+                "additionalProperties": False,
+            },
+        ]
+    }

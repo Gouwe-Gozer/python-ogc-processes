@@ -64,6 +64,8 @@ requests, and [result formats](docs/results.md#http-contract) for all warp modes
 - Warp targets: **EPSG:28992**, **EPSG:4326**, **EPSG:3857**. Resampling is
   **bilinear** by default, with **nearest** also available. Output dimensions
   match the source; resolution and extent controls are not exposed.
+  CRS/resampling values also accept controlled HTTPS JSON/text references;
+  see [scalar input forms](docs/inputs.md#scalar-input-references).
 - Omitted `response` means `raw`; omitted transmission means `value`.
   `raster-info` returns JSON; `raster-warp` returns native TIFF bytes by default.
   Explicit reference transmission provides a downloadable result.

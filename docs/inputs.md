@@ -94,7 +94,9 @@ Replace the example URL with a downloadable GeoTIFF:
 }
 ```
 
-Reference `type` is optional; qualified inline objects require `mediaType` and `encoding`.
+Reference `type` is optional; ordinary `rel`, `title` and `hreflang` string
+metadata is accepted and does not change fetching. Qualified raster objects
+require `mediaType` and `encoding`.
 An unwrapped base64 string is also accepted; its GeoTIFF media type is supplied
 by the process description. Qualified inline objects retain their explicit
 `mediaType` and `encoding`, as in the local-file example above.
@@ -119,6 +121,37 @@ The first validated address is used; address retry is not implemented.
 hostnames. Empty allows any otherwise permitted public HTTPS host. Redirect
 hosts must also be listed. An allowlist never bypasses public-address checks;
 there is no private-address or TLS-disable switch.
+
+## Scalar input references
+
+`raster-warp` accepts `target_crs` and `resampling` as literal strings, qualified
+values such as `{"value":"EPSG:4326"}`, or controlled HTTPS references:
+
+```json
+{
+  "target_crs": {"href": "https://data.example.org/target.json", "type": "application/json"},
+  "resampling": {"href": "https://data.example.org/resampling.txt", "type": "text/plain"}
+}
+```
+
+These are members of the execution `inputs` object alongside `source`. A JSON
+resource contains the literal string, for example `"EPSG:4326"`; a plain-text
+resource contains `nearest` or `bilinear`. Bodies are UTF-8, limited to **4096
+bytes** per scalar; surrounding plain-text whitespace is removed. `type` is
+optional when the response identifies JSON/text. If supplied, it must match the
+response media type. Qualified inline values may also specify a supported
+`mediaType` (`application/json` or `text/plain`).
+
+Resolution uses the same public-address, TLS, redirect, allowlist, timeout and
+temporary-slot controls as raster input. Each reference has its own fetch
+deadline; the Gunicorn worker timeout remains the outer execution limit. Fetched
+values are checked against the same choices as literals. Nested reference
+objects are not followed. Invalid values/media/JSON return 400; oversized scalar
+bodies return 413. Scalar and raster workspaces are removed after use.
+
+The process description still advertises string enums: wire alternatives belong
+to execution, not the native value schema. These rules are independent of sync
+or async execution.
 
 ## Limits, validation and cleanup
 

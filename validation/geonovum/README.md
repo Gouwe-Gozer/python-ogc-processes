@@ -9,17 +9,26 @@ it neither executes rasters nor certifies conformance.
 
 The baseline retains five error diagnostics about the OpenAPI document:
 
-- `/req/core/job`: no description of `/jobs/{jobID}`;
-- `/req/core/job-results`: no description of `/jobs/{jobID}/results`;
+- `/req/core/job-success`: no successful job-status 200 response;
+- `/req/core/job-results-async-document`: no successful job-results 200 response;
 - `/req/core/process-execute-success-async`: no asynchronous 201 response for
   each of the two synchronous public processes (two diagnostics);
 - `/req/job-list/job-list-op`: no description of `/jobs`.
 
 These are observed checker findings, not a reason to advertise unimplemented
-async or Job List support. They do not establish that Flask has no job routes;
-the existing runtime routes need their own behavior checks. The distinction
-between public declarations, Core gaps and optional capabilities is explained in
+async or Job List support. The public manager retains no jobs, so the existing
+job routes return the tested, prescribed unknown-job 404 for every identifier.
+Permission 7 makes synchronous job creation optional; no successful job retrieval
+can currently occur. OpenAPI describes actual responses instead of inventing
+reachable 200/201 behavior. The applicability analysis is in the
+[Core audit](../../docs/core-conformance-audit.md). The general evidence boundary is in
 [validation](../../docs/validation.md#conformance-claims-and-gaps).
+
+The Core audit replaced two missing-path findings (`/req/core/job` and
+`/req/core/job-results`) with the two successful-response findings above. All
+other diagnostics and checker metadata were unchanged. This exact change was
+reviewed against the running release before updating `baseline.json`; the runner
+and its normalization/comparison rules were not relaxed.
 
 ## Compare a running service
 

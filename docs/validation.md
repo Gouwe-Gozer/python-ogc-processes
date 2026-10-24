@@ -9,30 +9,23 @@ illustrate representations and are not schemas. The unchanged
 
 ## Conformance claims and gaps
 
-`/conformance` currently advertises Processes Core, JSON, OpenAPI 3.0 and OGC
-Process Description, plus upstream Common/HTML discovery classes. It omits
-Callback, Job List and Dismiss. These declarations are verified by
-[HTTP tests](../tests/test_http_contract.py), but the implementation has known gaps:
+`/conformance` advertises Processes Core, JSON, OpenAPI 3.0 and OGC Process
+Description, plus upstream Common/HTML discovery classes. It omits Callback,
+Job List and Dismiss. The [Core audit](core-conformance-audit.md) reviews
+Requirements 1–46 for the public synchronous profile and maps them to tests.
 
-- Raster references are supported; scalar CRS/resampling references are not
-  (Core Requirement 18).
-- pygeoapi exposes `/jobs/{jobID}` and `/jobs/{jobID}/results`, but they are absent
-  from generated OpenAPI. For an unknown job, both return 404: the status route
-  uses `InvalidParameterValue`, while the results route uses the bare type
-  `NoSuchJob`. Requirements 37 and 44 specify the `no-such-job` exception URI.
-  The synchronous manager creates no persistent jobs; Permission 7 makes creating
-  jobs for synchronous execution optional.
-- A complete Annex A assessment has not been performed. Multipart delivery is
-  unimplemented but is not required by the current single-output processes.
-- The JSON exception catalogue does not normalize upstream HTML error pages;
-  its tests establish JSON behavior, not all advertised encodings.
+The confirmed gaps are corrected: raster/scalar references use shared bounded
+HTTPS resolution, job errors expose the prescribed URI in JSON/HTML, existing
+job routes are described, and discovery has required relations and usable paging.
+The public manager retains no jobs, as permitted for synchronous execution.
+Conditional requirements for repeated/object/bbox/mixed inputs, multiple outputs
+and async execution must be reassessed when those capabilities are introduced.
 
-**Implementation follow-up:** complete the applicable Core requirements while
-retaining synchronous execution: resolve supported scalar inputs by reference,
-correct job exception types, describe the existing routes and audit remaining
-requirements. This is conformance work, not a requirement to introduce async
-workers or persistent synchronous jobs. Documentation cleanup does not establish
-complete conformance; a passing static baseline is not certification.
+The audit and regressions establish the recorded behavior, not a certificate or
+a new full TEAM Engine assessment. The published binary-schema overlap below
+remains explicit. The static checker retains reviewed expectations for unreachable
+job-success/async responses and optional Job List support; no fake success
+responses or substitute job system were added to remove those findings.
 
 The application `/results/<id>/output.tif` route is an output-reference target,
 not `/jobs/{jobID}/results`. A future reusable-upload endpoint would also be an
@@ -42,13 +35,13 @@ extension, not evidence of Core conformance.
 
 | Review area | Standard pointer | Evidence or limitation |
 | --- | --- | --- |
-| Discovery and claims | Sections 7.4, 7.9–7.10 | HTTP and official-schema tests; declaration gaps above |
+| Discovery and claims | Sections 7.4, 7.9–7.10 | HTTP and official-schema tests; scoped Core audit above |
 | Operation descriptions | Section 8, Requirements 49–51 | [Value/wire distinction](inputs.md#ogc-scope-and-deployment), independent contracts and `test_ogc_schemas.py` |
-| Input delivery/validation | Section 7.11.2, Requirements 18, 22, 24 | [Input policy](inputs.md), real local HTTPS/base64 tests; scalar references unsupported |
+| Input delivery/validation | Section 7.11.2, Requirements 18, 22, 24 | [Input policy](inputs.md), raster/scalar reference and inline tests |
 | Execution preferences/defaults | Section 7.11.2, Requirements 25–27 | Info/warp HTTP tests; synchronous execution only |
 | Synchronous results | Section 7.11.4, Requirements 28, 30, 32 | [Four warp response modes](results.md#http-contract) and independent downloads |
 | Multiple raw outputs | Section 7.11.4, Requirements 29, 31 | Multipart delivery not implemented |
-| Job resources | Sections 7.12–7.13; Permission 7 | Existing routes need correct unknown-job exceptions and OpenAPI descriptions; no persistent synchronous jobs |
+| Job resources | Sections 7.12–7.13; Permission 7 | Existing routes return the required unknown-job errors and are documented; no retained synchronous jobs |
 | OpenAPI/exceptions | Section 10; Requirement 15 for unknown processes | [Catalogue](errors.md), generated definition and actual JSON exception/schema tests |
 | Conformance assessment | Annex A | Partial evidence; no current-service certification |
 
@@ -97,6 +90,11 @@ modified to hide the overlap; these checks do not establish complete conformance
 ## Recorded checks
 
 These are dated observations, not permanently current test counts or guarantees:
+
+- Core audit, **2026-10-24**: **401 tests passed**, **95.40% coverage**, including
+  real TLS scalar/raster references and compatibility with the existing async
+  manager. Quality, configuration/OpenAPI and release checks pass. The checker
+  baseline's exact two-finding replacement was reviewed; see [the audit](core-conformance-audit.md).
 
 - Documentation audit, **2026-10-24**, code at `e8c5dc3`: **360 tests passed**,
   **95.15% application coverage**, against the existing 70% floor. The upstream
