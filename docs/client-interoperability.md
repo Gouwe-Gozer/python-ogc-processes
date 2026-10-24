@@ -58,3 +58,29 @@ Schema validation and usable form rendering are separate checks.
   as ordinary raster data. See [the input review](inputs.md#ogc-scope-and-deployment).
 - **Status:** Resolved on the service branch: the demo/`anyOf` description was
   removed and schema tests pass. The remaining plain-text rendering is CI-001.
+
+## Planned client follow-up — original review item 2
+
+Implement and test the user-raster workflow in a separate PR in the external
+client's repository, following the service usability PR. CI-001 records the
+observed input-rendering problem; output handling still needs verification.
+
+- Recognize the advertised binary GeoTIFF value schema and provide local-file
+  selection and HTTPS URL entry. Submit local files as qualified inline base64
+  and URLs as `href` references, following the [input contract](inputs.md).
+- Present raster information and handle GeoTIFF results through the supported
+  [response modes](results.md#http-contract): native bytes, inline base64,
+  document references and raw references delivered through HTTP 204 plus `Link`.
+  Let users download and save file results.
+- Show useful [API error details](errors.md), including unavailable/expired
+  results, and add client regression tests using captured service descriptions,
+  requests and responses. Record both client and service versions.
+- **Category:** Interoperability; UX. Widget choices alone are not evidence of
+  an OGC compliance violation.
+- **Responsibility:** Client for this planned implementation and verification.
+  CI-001's underlying cause remains undetermined until reproduced and isolated.
+- **Evidence:** The linked input/result contracts, [local-file example](../scripts/process_raster.py)
+  and [service HTTP tests](../tests/test_warp.py) provide reference exchanges;
+  they do not establish the external client's current output behavior.
+- **Status:** Open — planned client work. Reproduce CI-001 and verify the output
+  modes before classifying further behavior as a confirmed defect.
