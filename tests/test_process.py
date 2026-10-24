@@ -2,6 +2,7 @@
 
 import pytest
 from jsonschema import Draft202012Validator
+from raster_fixtures import DEMO_SOURCE
 
 from geo_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA, PROCESS_METADATA
 from geo_processes.manager import InvalidExecutionRequestError
@@ -24,7 +25,7 @@ def test_metadata_is_independent_of_upstream_mutation():
 
 def test_processor_calls_real_rasterio():
     processor = RasterInfoProcessor(DEFINITION)
-    media_type, output = processor.execute({"source": "demo-dem"})
+    media_type, output = processor.execute({"source": DEMO_SOURCE})
     assert media_type == "application/json"
     Draft202012Validator(INFO_SCHEMA).validate(output)
     assert output["bands"][0]["statistics"]["valid_count"] == 12

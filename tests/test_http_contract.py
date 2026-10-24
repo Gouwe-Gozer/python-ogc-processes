@@ -6,12 +6,13 @@ from urllib.parse import urlsplit
 
 import pytest
 from jsonschema import Draft202012Validator
+from raster_fixtures import DEMO_SOURCE, FORMATS
 
 from geo_processes import engine
 from geo_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA
 
 EXECUTION_PATH = "/processes/raster-info/execution"
-VALID_INPUTS = {"source": "demo-dem"}
+VALID_INPUTS = {"source": DEMO_SOURCE}
 
 
 @pytest.mark.parametrize("response_mode", [None, "raw", "document"])
@@ -51,13 +52,14 @@ def test_execution_defaults_and_explicit_options(http_client, response_mode, out
         {"inputs": []},
         {"inputs": {"source": 1}},
         {"inputs": {"source": True}},
-        {"inputs": {"source": {"href": "https://example.test/dem.tif"}}},
+        {"inputs": {"source": {"href": "file:///etc/passwd"}}},
         {"inputs": {"source": ["demo-dem"]}},
         {"inputs": {"source": "/etc/passwd"}},
         {"inputs": {"source": "../../demo-dem"}},
         {"inputs": {"source": "https://example.test/dem.tif"}},
         {"inputs": {"source": "file:///etc/passwd"}},
         {"inputs": {"source": "missing"}},
+        {"inputs": {"source": "demo-dem"}},
         {"inputs": {**VALID_INPUTS, "extra": 1}},
         {"inputs": VALID_INPUTS, "response": []},
         {"inputs": VALID_INPUTS, "response": "unsupported"},
@@ -84,7 +86,7 @@ def test_malformed_or_unsupported_requests_are_controlled_errors(http_client, mo
         pytest.fail("Rasterio must not run for an invalid execution request")
 
     monkeypatch.setattr(engine, "raster_info", must_not_execute)
-    assert not Draft202012Validator(EXECUTE_SCHEMA).is_valid(document)
+    assert not Draft202012Validator(EXECUTE_SCHEMA, format_checker=FORMATS).is_valid(document)
     response = http_client.post(EXECUTION_PATH, data=json.dumps(document), content_type="application/json")
     assert response.status_code == 400
     assert response.content_type == "application/json"
@@ -104,9 +106,9 @@ def test_invalid_json_is_a_client_error(http_client, data):
 
 def test_engine_failure_is_a_sanitized_server_error(http_client, monkeypatch):
     def fail(*args, **kwargs):
-        raise OSError("/private/server/path/secret.tif")
+        raise engine.RasterInfoError("/private/server/path/secret.tif")
 
-    monkeypatch.setattr(engine.rasterio, "open", fail)
+    monkeypatch.setattr(engine, "raster_info", fail)
     response = http_client.post(EXECUTION_PATH, json={"inputs": VALID_INPUTS})
     assert response.status_code == 500
     assert response.is_json
@@ -138,7 +140,7 @@ def test_discovery_links_descriptions_and_capabilities_agree(http_client):
     assert description["id"] == process["id"]
     assert description["jobControlOptions"] == ["sync-execute"]
     assert description["outputTransmission"] == ["value"]
-    assert description["inputs"]["source"]["schema"] == {"type": "string", "enum": ["demo-dem"]}
+    assert description["inputs"]["source"]["schema"]["contentEncoding"] == "binary"
     assert description["outputs"]["info"]["schema"]["contentMediaType"] == "application/json"
     execution = next(link for link in description["links"] if link["rel"].endswith("/execute"))
     assert urlsplit(execution["href"]).path == EXECUTION_PATH

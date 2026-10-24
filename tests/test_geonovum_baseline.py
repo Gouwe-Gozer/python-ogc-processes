@@ -128,3 +128,28 @@ def test_input_source_normalization_preserves_diagnostics_across_ports():
     assert left["diagnostics"][0] == {**first, "source": "<input>"}
     unchanged = geonovum.normalize_report(report(first), "http://different.test/openapi")
     assert unchanged["diagnostics"][0]["source"] == first["source"]
+
+
+def test_source_only_mismatch_is_visible_and_does_not_pass_comparison():
+    original = diagnostic("rule", ["paths"])
+    changed = {**original, "source": "https://different.test/schema.yaml"}
+    baseline = geonovum.normalize_report(report(original))
+    current = geonovum.normalize_report(report(changed))
+    added, removed, changes, metadata_changes = geonovum.compare_reports(baseline, current)
+    assert added == [changed] and removed == [original]
+    assert not changes and not metadata_changes
+    assert original["source"] in geonovum.describe_diagnostic(removed[0])
+    assert changed["source"] in geonovum.describe_diagnostic(added[0])
+
+
+def test_run_checker_normalizes_its_input_source_before_baseline_comparison(monkeypatch):
+    input_url = "http://127.0.0.1:5001/openapi?f=json"
+    raw = report({**diagnostic("rule", ["paths"]), "source": input_url})
+    expected = geonovum.normalize_report(report({**raw["diagnostics"][0], "source": "<input>"}))
+    monkeypatch.setattr(geonovum.shutil, "which", lambda _command: "/usr/bin/npx")
+    current = geonovum.run_checker(
+        input_url,
+        attempts=1,
+        command_runner=lambda *_args, **_kwargs: subprocess.CompletedProcess([], 0, json.dumps(raw), ""),
+    )
+    assert not any(geonovum.compare_reports(expected, current))

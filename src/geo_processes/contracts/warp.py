@@ -1,7 +1,7 @@
 """The bounded GeoTIFF reprojection contract and its HTTP representations."""
 
 from geo_processes import __version__
-from geo_processes.datasets import DATASETS
+from geo_processes.contracts.sources import SOURCE_DESCRIPTION, SOURCE_EXECUTE_SCHEMA, SOURCE_VALUE_SCHEMA
 
 TARGET_CRSS = ["EPSG:28992", "EPSG:4326", "EPSG:3857"]
 RESAMPLING_METHODS = ["nearest", "bilinear"]
@@ -11,7 +11,7 @@ INPUTS_SCHEMA = {
     "type": "object",
     "required": ["source", "target_crs"],
     "properties": {
-        "source": {"type": "string", "enum": list(DATASETS)},
+        "source": SOURCE_EXECUTE_SCHEMA,
         "target_crs": {"type": "string", "enum": TARGET_CRSS},
         "resampling": {"type": "string", "enum": RESAMPLING_METHODS, "default": "bilinear"},
     },
@@ -72,7 +72,7 @@ PROCESS_METADATA = {
     "version": __version__,
     "title": "Raster reprojection",
     "description": (
-        "Reproject an approved local raster into a GeoTIFF, retaining its grid dimensions. "
+        "Reproject a bounded user-supplied GeoTIFF, retaining its grid dimensions. "
         "Raw/value returns TIFF bytes; document/value returns base64. Explicit reference transmission "
         "returns a download URL (document) or HTTP 204 with a Link header (raw). "
         "Results are retained for 24 hours by default, subject to configured storage limits."
@@ -82,9 +82,9 @@ PROCESS_METADATA = {
     "outputTransmission": ["value", "reference"],
     "inputs": {
         "source": {
-            "title": "Approved dataset identifier",
-            "description": "Inline identifier; paths, URLs and input references are not accepted.",
-            "schema": INPUTS_SCHEMA["properties"]["source"],
+            "title": "Source GeoTIFF",
+            "description": SOURCE_DESCRIPTION,
+            "schema": SOURCE_VALUE_SCHEMA,
             "minOccurs": 1,
             "maxOccurs": 1,
         },
@@ -109,5 +109,10 @@ PROCESS_METADATA = {
             "schema": {"type": "string", "format": "binary", "contentMediaType": TIFF_TYPE},
         }
     },
-    "example": {"inputs": {"source": "demo-dem", "target_crs": "EPSG:4326"}},
+    "example": {
+        "inputs": {
+            "source": {"href": "https://data.example.org/dem.tif", "type": "image/tiff"},
+            "target_crs": "EPSG:4326",
+        }
+    },
 }

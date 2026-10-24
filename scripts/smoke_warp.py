@@ -24,30 +24,34 @@ def _read(url, payload=None):
         return response.status, response.headers, response.read()
 
 
-def _inspect(data):
+def _inspect(data, shape=(3, 4), bands=1):
     with MemoryFile(data) as memory, memory.open() as raster:
-        if raster.crs.to_epsg() != 4326 or raster.shape != (3, 4) or raster.count != 1:
+        if raster.crs.to_epsg() != 4326 or raster.shape != shape or raster.count != bands:
             raise RuntimeError("downloaded GeoTIFF has unexpected CRS or dimensions")
         if raster.read(1, masked=True).count() == 0:
             raise RuntimeError("downloaded GeoTIFF has no valid samples")
 
 
-def check_reference(url):
+def check_reference(url, shape=(3, 4), bands=1):
     status, headers, data = _read(url)
     if status != 200 or headers.get_content_type() != "image/tiff":
         raise RuntimeError("result reference did not return a GeoTIFF")
     if not headers.get("Expires") or headers.get("Cache-Control") != "no-store":
         raise RuntimeError("result download does not describe its lifetime")
-    _inspect(data)
+    _inspect(data, shape, bands)
     print("PASS independent HTTP client downloaded and opened the referenced GeoTIFF")
 
 
-def run(base_url, save_reference=None):
+def run(base_url, save_reference=None, *, source=None, shape=(3, 4), bands=1):
+    if source is None:
+        from geo_processes.datasets import demo_source
+
+        source = demo_source()
     reference = None
     for mode in ("raw", "document"):
         for transmission in ("value", "reference"):
             payload = {
-                "inputs": {"source": "demo-dem", "target_crs": "EPSG:4326"},
+                "inputs": {"source": source, "target_crs": "EPSG:4326"},
                 "response": mode,
                 "outputs": {"result": {"transmissionMode": transmission}},
             }
@@ -58,7 +62,7 @@ def run(base_url, save_reference=None):
                 if status != 204 or data:
                     raise RuntimeError("raw/reference must return 204 with an empty body")
                 reference = headers["Link"].split("<", 1)[1].split(">", 1)[0]
-                check_reference(reference)
+                check_reference(reference, shape, bands)
             else:
                 if status != 200:
                     raise RuntimeError("execution did not return 200")
@@ -70,15 +74,15 @@ def run(base_url, save_reference=None):
                         reference = result["href"]
                         if result["type"] != "image/tiff":
                             raise RuntimeError("reference does not declare image/tiff")
-                        check_reference(reference)
+                        check_reference(reference, shape, bands)
                     else:
                         if result["encoding"] != "base64" or result["mediaType"] != "image/tiff":
                             raise RuntimeError("inline output must describe its binary encoding")
-                        _inspect(base64.b64decode(result["value"], validate=True))
+                        _inspect(base64.b64decode(result["value"], validate=True), shape, bands)
                 else:
                     if headers.get_content_type() != "image/tiff":
                         raise RuntimeError("raw/value must be image/tiff")
-                    _inspect(data)
+                    _inspect(data, shape, bands)
             print(f"PASS {mode}/{transmission} has the expected HTTP representation")
     if save_reference is not None:
         save_reference.write_text(reference + "\n")

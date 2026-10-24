@@ -11,6 +11,16 @@ from rasterio.warp import calculate_default_transform, reproject, transform_boun
 
 MAX_INPUT_BYTES = 16 * 1024 * 1024
 MAX_SAMPLES = 1024 * 1024
+MAX_BLOCK_BYTES = 16 * 1024 * 1024
+GDAL_OPTIONS = {
+    "GDAL_PAM_ENABLED": "NO",
+    "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
+    "GDAL_CACHEMAX": 16 * 1024 * 1024,
+}
+
+
+class RasterValidationError(ValueError):
+    """A user-supplied raster cannot be processed within the supported contract."""
 
 
 class RasterInfoError(RuntimeError):
@@ -28,6 +38,26 @@ def _check_bounds(source: Path, raster) -> None:
         raise ValueError("source exceeds the sample limit")
     if any(np.issubdtype(np.dtype(dtype), np.complexfloating) for dtype in raster.dtypes):
         raise ValueError("complex rasters are not supported")
+    if any(
+        rows * cols * np.dtype(dtype).itemsize > MAX_BLOCK_BYTES
+        for (rows, cols), dtype in zip(raster.block_shapes, raster.dtypes, strict=True)
+    ):
+        raise ValueError("raster blocks exceed the decode limit")
+    if raster.subdatasets:
+        raise ValueError("subdatasets are not supported")
+
+
+def validate_raster(source: Path, *, require_crs=False):
+    """Validate metadata and decode every band before treating client data as input."""
+    try:
+        with rasterio.Env(**GDAL_OPTIONS), rasterio.open(source, driver="GTiff", GEOREF_SOURCES="INTERNAL") as raster:
+            _check_bounds(source, raster)
+            if require_crs and raster.crs is None:
+                raise ValueError("raster requires a CRS for reprojection")
+            for index in raster.indexes:
+                raster.read(index)
+    except (rasterio.errors.RasterioError, ValueError) as error:
+        raise RasterValidationError("source must be a readable, bounded GeoTIFF; warp requires a CRS") from error
 
 
 def _nodata(value):
@@ -43,7 +73,7 @@ def raster_info(source: Path) -> dict:
     try:
         if source.stat().st_size > MAX_INPUT_BYTES:
             raise ValueError("source exceeds the byte limit")
-        with rasterio.open(source) as raster:
+        with rasterio.Env(**GDAL_OPTIONS), rasterio.open(source, driver="GTiff", GEOREF_SOURCES="INTERNAL") as raster:
             _check_bounds(source, raster)
             crs = raster.crs
             bands = []
@@ -87,7 +117,7 @@ def warp_raster(source: Path, destination: Path, target_crs: str, resampling: st
     try:
         if source.stat().st_size > MAX_INPUT_BYTES:
             raise ValueError("source exceeds the byte limit")
-        with rasterio.open(source) as raster:
+        with rasterio.Env(**GDAL_OPTIONS), rasterio.open(source, driver="GTiff", GEOREF_SOURCES="INTERNAL") as raster:
             _check_bounds(source, raster)
             if raster.crs is None:
                 raise ValueError("source CRS is required for reprojection")

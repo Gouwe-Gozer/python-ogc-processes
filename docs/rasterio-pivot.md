@@ -5,9 +5,12 @@ service for processing **users' own geospatial data**, starting with rasters.
 Rasterio replaces Terrio as the raster implementation. Shapely, Pyogrio and
 GeoPandas can support later vector processes when those processes need them.
 
-This decision was committed before implementation in `99383c1`. The migration
+This decision was committed before implementation (now `db6135e` on `main`). The migration
 implements the scope below and updates the runtime documentation. The
 [roadmap](roadmap.md) describes subsequent service work.
+
+This report records the pivot checkpoint. The later [user-raster milestone](inputs.md)
+adds HTTPS and inline base64 inputs; use that guide for the current input contract.
 
 ## Why change direction
 
@@ -81,9 +84,10 @@ file checksum across the upgrade; it did not touch an existing user's volume.
 
 ## Boundaries and follow-up
 
-The pivot does not implement input references or uploads. Processing users' own
-rasters remains the first useful-service milestone **after this migration**.
-An operator catalogue remains optional. See the [input plan](roadmap.md#user-supplied-rasters).
+The pivot checkpoint did not implement input references or uploads. The next
+milestone implemented [HTTPS and inline base64 inputs](inputs.md); reusable
+upload storage remains future work. An operator catalogue remains optional.
+See the [roadmap](roadmap.md#implemented-user-raster-milestone).
 
 Add vector libraries when an implemented operation needs them. Keep independent
 process contracts and small Python adapters; do not introduce an engine plugin
@@ -141,4 +145,6 @@ Additional verification:
 
 The inherited upstream Pydantic deprecation warning remains. No remote CI run,
 new TEAM Engine/CITE run or OGC certification is claimed. Input references and
-uploads remain unimplemented. See the [OGC evidence boundary](validation.md).
+uploads were unimplemented at this checkpoint; see the later
+[user-input evidence](inputs.md#milestone-validation) and current
+[OGC evidence boundary](validation.md).

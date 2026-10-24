@@ -10,14 +10,15 @@ from urllib.parse import urlsplit
 import pytest
 import rasterio
 from jsonschema import Draft202012Validator
+from raster_fixtures import DEMO_SOURCE, FORMATS
 
 from geo_processes import engine
 from geo_processes.contracts.warp import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, RESAMPLING_METHODS, TARGET_CRSS
-from geo_processes.datasets import DATASETS
+from geo_processes.datasets import DEMO_RASTER
 from geo_processes.storage import ResultStore
 
 EXECUTION = "/processes/raster-warp/execution"
-INPUTS = {"source": "demo-dem", "target_crs": "EPSG:4326"}
+INPUTS = {"source": DEMO_SOURCE, "target_crs": "EPSG:4326"}
 
 
 def inspect_bytes(data, tmp_path):
@@ -49,7 +50,7 @@ def assert_raster(data, tmp_path, epsg=4326):
 @pytest.mark.parametrize("method", RESAMPLING_METHODS)
 def test_engine_warp_preserves_bounded_grid_and_reprojects(tmp_path, crs, method):
     output = tmp_path / "warped.tif"
-    engine.warp_raster(DATASETS["demo-dem"], output, crs, method)
+    engine.warp_raster(DEMO_RASTER, output, crs, method)
     info = assert_raster(output.read_bytes(), tmp_path, int(crs.split(":")[1]))
     if crs == "EPSG:28992":
         assert info["geo_transform"] == [155000, 10, 0, 463000, 0, -10]
@@ -62,7 +63,7 @@ def test_resampling_choice_changes_reprojected_samples(tmp_path):
     pixels = []
     for method in RESAMPLING_METHODS:
         output = tmp_path / f"{method}.tif"
-        engine.warp_raster(DATASETS["demo-dem"], output, "EPSG:4326", method)
+        engine.warp_raster(DEMO_RASTER, output, "EPSG:4326", method)
         with rasterio.open(output) as raster:
             pixels.append(raster.read(1))
     assert not (pixels[0] == pixels[1]).all()
@@ -87,7 +88,7 @@ def test_engine_limits_are_checked_before_warp(tmp_path, monkeypatch):
 
     monkeypatch.setattr(engine.rasterio, "open", lambda *args, **kwargs: OversizedRaster())
     with pytest.raises(engine.RasterWarpError):
-        engine.warp_raster(DATASETS["demo-dem"], tmp_path / "output.tif", "EPSG:4326", "bilinear")
+        engine.warp_raster(DEMO_RASTER, tmp_path / "output.tif", "EPSG:4326", "bilinear")
 
 
 @pytest.mark.parametrize("mode", ["raw", "document"])
@@ -169,7 +170,7 @@ def test_async_preference_is_still_synchronous(http_client):
         {"inputs": {**INPUTS, "resolution": 1}},
         {"inputs": {**INPUTS, "source": "../../secret.tif"}},
         {"inputs": {**INPUTS, "source": "https://example.test/raster.tif"}},
-        {"inputs": {**INPUTS, "source": {"href": "https://example.test/raster.tif"}}},
+        {"inputs": {**INPUTS, "source": {"href": "file:///etc/passwd"}}},
         {"inputs": INPUTS, "outputs": {}},
         {"inputs": INPUTS, "outputs": {"unknown": {}}},
         {"inputs": INPUTS, "outputs": {"result": []}},
@@ -187,7 +188,7 @@ def test_invalid_warp_requests_never_start_rasterio(http_client, monkeypatch, do
         pytest.fail("invalid input must not reach Rasterio")
 
     monkeypatch.setattr(engine, "warp_raster", forbidden)
-    assert not Draft202012Validator(EXECUTE_SCHEMA).is_valid(document)
+    assert not Draft202012Validator(EXECUTE_SCHEMA, format_checker=FORMATS).is_valid(document)
     response = http_client.post(EXECUTION, json=document)
     assert response.status_code == 400
     assert response.is_json
@@ -275,7 +276,9 @@ def test_reference_result_is_downloadable_over_real_http(http_server, tmp_path, 
 
 
 def test_oversized_execute_document_is_a_json_413(http_client):
-    response = http_client.post(EXECUTION, json={"inputs": {**INPUTS, "source": "x" * (16 * 1024)}})
+    from geo_processes.inputs import MAX_EXECUTION_BYTES
+
+    response = http_client.post(EXECUTION, json={"inputs": {**INPUTS, "source": "x" * MAX_EXECUTION_BYTES}})
     assert response.status_code == 413
     assert response.is_json
     assert response.get_json()["type"] == "RequestTooLarge"

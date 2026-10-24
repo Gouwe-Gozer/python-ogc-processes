@@ -4,6 +4,9 @@ The deterministic suite covers the real Rasterio binding and fixture, independen
 adapter, schemas, discovery links, input/output validation, raw/document HTTP
 responses, defaults, unsupported options, sanitized failures and synchronous
 preferences. Loopback HTTP tests also retrieve and inspect generated GeoTIFFs.
+User-input tests submit independent multiband GeoTIFFs through inline base64 and
+a real local HTTPS fixture. They exercise TLS verification, pinned connections,
+destination/redirect policy, streaming bounds, deadlines and temporary cleanup.
 The warp tests cover all supported CRSs, both resampling methods, all four
 response/transmission combinations, defaults, storage bounds, expiry, safe
 paths and concurrent writers. The release smoke scripts repeat execution and
@@ -21,10 +24,12 @@ implementation, not a claim of complete conformance or OGC certification.
 Full input-reference interoperability, multipart outputs and all of Annex A
 have not been implemented or validated.
 
-In particular, input references are a Core requirement (18), and Core also
-defines job status/results resources (35 and 38). These remain conformance gaps
-even though the current processes advertise only synchronous execution. A
-passing diagnostic baseline does not resolve them. [OGC Processes 1.0](https://docs.ogc.org/is/18-062r2/18-062r2.html)
+In particular, input references are a Core requirement (18). Raster-source
+references are supported, but scalar CRS/resampling references remain unsupported.
+Core also defines job status/results resources (35 and 38), which remain
+conformance gaps even though the current processes advertise only synchronous
+execution. A passing diagnostic baseline does not resolve them.
+[OGC Processes 1.0](https://docs.ogc.org/is/18-062r2/18-062r2.html)
 
 The pinned Geonovum 1.2.0 checker statically inspects OpenAPI. Its known job/async
 diagnostics are recorded separately; they do not justify inventing unimplemented
@@ -47,8 +52,8 @@ matrix. The [roadmap](roadmap.md) records the user-raster goal and future scope.
 | Review area | Standard pointer | Current evidence or remaining work |
 | --- | --- | --- |
 | Discovery and claims | Sections 7.4, 7.9–7.10 | [HTTP tests](../tests/test_http_contract.py), [official-schema tests](../tests/test_ogc_schemas.py); claims still need a full audit |
-| Per-operation descriptions | Section 8 | [Contracts](../src/geo_processes/contracts/) and [OpenAPI tests](../tests/test_openapi_patch.py) |
-| Input references and validation | Section 7.11.2, requirements 18 and 24 | Inline dataset IDs only; reference resolution is future work |
+| Per-operation descriptions | Section 8, requirements 49–51 | [Binary input review](inputs.md#ogc-scope-and-deployment), [official-schema tests](../tests/test_ogc_schemas.py), [contracts](../src/geo_processes/contracts/) and [OpenAPI tests](../tests/test_openapi_patch.py) |
+| Input references and validation | Section 7.11.2, requirements 18, 22 and 24 | [HTTPS/base64 policy](inputs.md), [input tests](../tests/test_inputs.py); scalar references remain unsupported |
 | Execution preferences/defaults | Section 7.11.2, requirements 25–27 | [Info HTTP tests](../tests/test_http_contract.py) and [warp tests](../tests/test_warp.py) |
 | Synchronous results | Section 7.11.4, requirements 28, 30 and 32 | Four single-output warp combinations; [result lifecycle](results.md) |
 | Multiple raw outputs | Section 7.11.4, requirements 29 and 31 | Multipart representations not implemented |
@@ -70,7 +75,8 @@ For each new operation or input route:
 4. Test the resulting pixels and metadata through the actual raster library,
    plus actual HTTP status, media type, headers and exception documents. For
    references, test resolution, policy failures, downloads and expiry from an
-   independent client. Reuse [warp smoke coverage](../scripts/smoke_warp.py).
+   independent client. Reuse [warp smoke coverage](../scripts/smoke_warp.py)
+   and the [independent user-raster client](../scripts/smoke_inputs.py).
 5. Run the [existing checks](development.md), regenerate OpenAPI and review
    `/conformance` alongside the runtime behavior. Deliberately review checker
    changes; do not update baselines just to obtain a passing build. Map evidence
@@ -94,11 +100,13 @@ The unchanged official `inputValueNoObject.yaml` contains a `oneOf` with both
 an unrestricted string and a byte-formatted string. A valid base64 string
 matches both branches, so strict official-schema validation rejects inline
 binary values even when a base64 format checker is supplied. A focused test
-records the overlap. The normative binary example uses base64 with `encoding`
-and `mediaType`, which is what document/value warp responses return.
+records the overlap for both execution inputs and result documents. The normative
+binary example uses base64 with `encoding` and `mediaType`, which is what inline
+raster inputs accept and document/value warp responses return.
 
-Process discovery, execution requests, exceptions and reference documents are
-validated against the official offline schemas. Inline binary documents are
-validated against the explicit application schema and decoded into real
-GeoTIFFs. No upstream schema fixture was modified to hide this discrepancy,
+Process discovery, reference execution requests, exceptions and
+reference result documents are validated against the official offline schemas.
+Inline binary requests and responses are validated against the explicit
+application schemas and decoded into real GeoTIFFs. No upstream schema fixture
+was modified to hide this discrepancy,
 and no claim of complete official-schema or OGC conformance is made.

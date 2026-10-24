@@ -29,6 +29,7 @@ def app(service_config, tmp_path_factory):
         environment.setenv("PYGEOAPI_CONFIG", str(config_path))
         environment.setenv("PYGEOAPI_OPENAPI", str(openapi_path))
         environment.setenv("GEO_OUTPUT_DIR", str(temporary_directory / "results"))
+        environment.setenv("GEO_INPUT_TMPDIR", str(temporary_directory / "inputs"))
         from geo_processes.app import APP
 
         APP.config["TESTING"] = True

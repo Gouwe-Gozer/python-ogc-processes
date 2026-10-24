@@ -24,6 +24,20 @@ class InvalidExecutionRequestError(ProcessorExecuteError):
         super().__init__(user_msg=message)
 
 
+class InputTooLargeError(ProcessorExecuteError):
+    """A supplied raster exceeds the supported byte limit."""
+
+    http_status_code = 413
+    ogc_exception_code = "RequestTooLarge"
+
+
+class InputBusyError(ProcessorExecuteError):
+    """All temporary input workspaces are currently in use."""
+
+    http_status_code = 503
+    ogc_exception_code = "ServerBusy"
+
+
 class OgcSynchronousManager(DummyManager):
     """Execute inline; let each operation own its result representation.
 

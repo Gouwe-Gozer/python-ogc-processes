@@ -10,11 +10,12 @@ import rasterio
 from jsonschema import Draft202012Validator
 
 from geo_processes import engine
-from geo_processes.contracts.info import DATASETS, INFO_SCHEMA
+from geo_processes.contracts.info import INFO_SCHEMA
+from geo_processes.datasets import DEMO_RASTER
 
 
 def test_raster_info_reports_exact_fixture_values():
-    info = engine.raster_info(DATASETS["demo-dem"])
+    info = engine.raster_info(DEMO_RASTER)
     assert info["size"] == [4, 3]
     assert info["band_count"] == 1
     assert info["extent"] == [155000, 462970, 155040, 463000]

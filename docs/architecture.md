@@ -11,16 +11,19 @@ or secondary backend is involved. NumPy supplies masked statistics.
 The [metadata contract](raster-info.md) belongs to this application.
 
 `contracts/info.py` and `contracts/warp.py` describe the independent operations.
-`datasets.py` is their shared operator-owned input registry. The
-GeoTIFF ships inside the Python package. `demo-dem` resolves through a fixed
-operator-owned registry; a client never controls a filesystem path or URL.
-The raster is Float32, one band, four columns by three rows, EPSG:28992,
+User data comes from `inputs.py` as a private local path. Raw URL strings and
+driver strings never reach GDAL. `datasets.py` supplies a bundled GeoTIFF fixture
+to tests and smoke clients, which submit its bytes through the ordinary input
+contract; there is no public dataset identifier. The fixture is Float32, one
+band, four columns by three rows, EPSG:28992,
 10-metre pixels, nodata -9999, with values 1 through 12 in row-major order.
 Its origin is (155000, 463000). Tests verify its actual Rasterio output.
 Info handles absent CRS/nodata and empty bands explicitly and excludes masked
 or non-finite samples from statistics. Both operations enforce input byte/sample
-bounds and reject complex rasters. Warp requires a source CRS and reprojects
-each band with its nodata value, retaining the source dimensions.
+bounds and reject complex rasters. Only GTiff reads staged inputs, with
+PAM/sidecars disabled, internal georeferencing, block bounds and full-band
+validation. Application startup disables PROJ network access. Warp requires a
+source CRS and reprojects each band with its nodata value, retaining the source dimensions.
 
 `OgcSynchronousManager` retains pygeoapi's registration and synchronous manager
 interface. Each processor owns its optional `format_result` method, so shared
@@ -52,16 +55,14 @@ the configured canonical API base URL. Storage and lifecycle details are in
 [results.md](results.md).
 
 Warp output dimensions are pinned to the source grid to bound allocation;
-resolution follows the reprojected extent. Clients select only an approved
-dataset, one of three target CRSs and nearest/bilinear resampling. Enlarging the
-input catalogue requires operator review and tests. External input `href`
-support needs a separate safe fetch/validation design.
+resolution follows the reprojected extent. Clients supply a supported source,
+one of three target CRSs and nearest/bilinear resampling.
 
-The target service processes users' own rasters. The fixed registry is the
-prototype input boundary; a larger hosted catalogue is optional. The
-[roadmap](roadmap.md) puts a user-submission flow before a large process
-catalogue. Its proposed input resolver should be separate from OGC processors
-and the Rasterio adapter, with input cleanup independent of output retention.
+The service processes users' rasters through HTTPS references and direct or
+qualified base64 values. `contracts/sources.py` separates the binary raster value schema from
+supported wire representations. `inputs.py` owns DNS/TLS policy, bounded
+downloads and two locked temporary slots with cleanup and crash recovery.
+Input lifetime is independent of output retention; see [inputs](inputs.md).
 Any shared raster-response helper should preserve per-operation contracts and
 the existing response/transmission combinations. See the
 [OGC review guide](validation.md#ogc-review-guide) before changing these contracts.

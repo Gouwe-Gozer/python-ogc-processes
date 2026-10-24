@@ -67,7 +67,9 @@ def generate_openapi(config):
         execution["requestBody"] = override["requestBody"]
         execution["responses"].update(override["responses"])
         execution["responses"]["400"] = schema_response("Invalid execution request", "exception.yaml")
-        execution["responses"]["413"] = schema_response("Request body exceeds 16 KiB", "exception.yaml")
+        execution["responses"]["413"] = schema_response(
+            "Request body exceeds 24 MiB or raster exceeds 16 MiB", "exception.yaml"
+        )
         if processor.metadata["jobControlOptions"] == ["sync-execute"]:
             execution["responses"].pop("201", None)
             execution["parameters"] = [
