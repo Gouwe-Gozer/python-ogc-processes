@@ -1,0 +1,20 @@
+{
+  "inputs": {
+    "source": {
+      "href": "https://data.example.org/raster.tif",
+      "type": "image/tiff"
+    },
+    "points": {
+      "mediaType": "application/geo+json",
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [4.836065, 52.647618],
+          [4.827911, 52.645173],
+          [4.834395, 52.644807]
+        ]
+      }
+    }
+  },
+  "response": "raw"
+}

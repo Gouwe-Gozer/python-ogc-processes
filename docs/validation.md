@@ -92,9 +92,10 @@ modified to hide the overlap; these checks do not establish complete conformance
 
 These are dated observations, not permanently current test counts or guarantees:
 
-- Raster operations, **2026-10-24**: **458 tests passed**, **95.18% coverage**.
+- Raster operations, **2026-10-24**: **484 tests passed**, **95.34% coverage**.
   Sampling, classification and polygonization cover HTTPS/inline inputs, band
-  selection, CRS handling, all four TIFF/GeoJSON delivery modes, downloads,
+  selection, CRS handling, Point/MultiPoint/FeatureCollection sampling, all four
+  TIFF/GeoJSON delivery modes, downloads,
   limits and errors. Quality/pre-commit, configuration/OpenAPI and release
   isolation checks pass. Host and separate client-container smoke checks pass;
   stored TIFF and GeoJSON downloads survive restart. The eight-finding Geonovum baseline

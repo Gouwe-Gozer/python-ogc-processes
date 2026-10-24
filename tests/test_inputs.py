@@ -66,6 +66,11 @@ def tls_origin(raster_payload):
                 seen["paths"].append(self.path)
                 seen["hosts"].append(self.headers.get("Host"))
                 scalars = {
+                    "/point.geojson": ("application/geo+json", b'{"type":"Point","coordinates":[5.39,52.15]}'),
+                    "/multipoint.geojson": (
+                        "application/geo+json",
+                        b'{"type":"MultiPoint","coordinates":[[5.39,52.15],[5.38,52.14]]}',
+                    ),
                     "/band.json": ("application/json", b"2"),
                     "/classes.json": ("application/json", b'[{"min":0,"max":7000,"value":1}]'),
                     "/points.geojson": (
@@ -719,4 +724,25 @@ def test_structured_json_references_share_limits_and_errors(
     )
     assert response.status_code == status
     assert response.is_json
+    assert not list(input_directory.glob("slot-*"))
+
+
+@pytest.mark.parametrize("path,count", [("/point.geojson", 1), ("/multipoint.geojson", 2)])
+def test_sampling_geometry_https_references(http_client, https_origin, raster_payload, input_directory, path, count):
+    origin, _seen = https_origin
+    response = http_client.post(
+        "/processes/raster-sample-points/execution",
+        json={
+            "inputs": {
+                "source": inline(raster_payload),
+                "points": {"href": origin + path, "type": "application/geo+json"},
+            }
+        },
+    )
+    assert response.status_code == 200 and response.mimetype == "application/geo+json"
+    document = json.loads(response.data)
+    assert document["type"] == "FeatureCollection" and len(document["features"]) == count
+    assert all(
+        feature["geometry"]["type"] == "Point" and "value" in feature["properties"] for feature in document["features"]
+    )
     assert not list(input_directory.glob("slot-*"))

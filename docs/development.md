@@ -121,10 +121,10 @@ demo, submits it inline, checks info and all four warp modes, then downloads
 results. `--input-raster my-dem.tif` uses your file; `--source-href https://...`
 instead submits a hosted copy of that file for independent comparison. CI runs
 the inline check from both the host and a separate client container. It also
-samples a point, reclassifies a band and downloads polygonized GeoJSON from the
-classified result. Polygonization is skipped for custom rasters above its pixel
-limit. The pytest
-suite exercises HTTPS through a local TLS origin and tests destination, redirect,
+samples Point, MultiPoint and Point FeatureCollection inputs, reclassifies a band
+and downloads polygonized GeoJSON from the classified result. Polygonization is
+skipped for custom rasters above its pixel limit. The pytest suite exercises
+HTTPS through a local TLS origin and tests destination, redirect,
 deadline, capacity and cleanup policies without contacting public services.
 
 The local storage lock uses Linux `flock`; use Linux or Docker for this service.

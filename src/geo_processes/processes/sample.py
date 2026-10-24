@@ -13,8 +13,25 @@ from geo_processes.storage import ResultStore
 
 
 def validate_points(points):
+    if isinstance(points, dict) and points.get("type") in ("Point", "MultiPoint"):
+        if set(points) != {"type", "coordinates"}:
+            raise RasterInputError(
+                "point geometries require only type and coordinates; crs/foreign members are unsupported"
+            )
+        coordinates = [points["coordinates"]] if points["type"] == "Point" else points["coordinates"]
+        if not isinstance(coordinates, list) or not 1 <= len(coordinates) <= 1000:
+            raise RasterInputError("points requires 1–1,000 point locations")
+        points = {
+            "type": "FeatureCollection",
+            "features": [
+                {"type": "Feature", "properties": {}, "geometry": {"type": "Point", "coordinates": coordinate}}
+                for coordinate in coordinates
+            ],
+        }
     if not isinstance(points, dict) or set(points) != {"type", "features"} or points["type"] != "FeatureCollection":
-        raise RasterInputError("points must be a GeoJSON FeatureCollection without crs or foreign members")
+        raise RasterInputError(
+            "points must be a GeoJSON Point, MultiPoint or Point FeatureCollection without crs/foreign members"
+        )
     features = points["features"]
     if not isinstance(features, list) or not 1 <= len(features) <= 1000:
         raise RasterInputError("points requires 1–1,000 Point features")

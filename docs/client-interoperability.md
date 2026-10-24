@@ -8,8 +8,9 @@ Schema validation and usable form rendering are separate checks.
 
 ## Pending GeoJSON acceptance checks
 
-The service now exposes `raster-sample-points` (Point FeatureCollection input
-and output) and `raster-polygonize` (polygon FeatureCollection output), advertised
+The service now exposes `raster-sample-points` (Point/MultiPoint/point
+FeatureCollection inputs and a Point FeatureCollection output) and
+`raster-polygonize` (polygon FeatureCollection output), advertised
 as `application/geo+json`. Test client file/HTTPS entry, qualified object
 submission, native GeoJSON rendering and reference downloads using the
 [requests and contracts](raster-operations.md). Initial input testing is recorded
@@ -74,7 +75,7 @@ request/response when reproducing issues.
 
 - **Issue:** The tester supplied three map locations as a GeoJSON `MultiPoint`,
   expecting raster sampling. The service returned HTTP 400 because the operation
-  currently accepts only a FeatureCollection containing individual Point features.
+  originally accepted only a FeatureCollection containing individual Point features.
 - **Category:** Interoperability; UX. This is a supported-input restriction,
   not an established OGC compliance defect.
 - **Responsibility:** Service for the narrow input contract.
@@ -85,12 +86,13 @@ request/response when reproducing issues.
   ```
 
   Returned detail: `points must be a GeoJSON FeatureCollection without crs or foreign members`.
-  The [description](../src/geo_processes/contracts/sample.py) and
-  [validator](../src/geo_processes/processes/sample.py) explicitly require that
-  collection shape. A valid GeoJSON geometry need not satisfy a process-specific schema.
-- **Status:** Open — usability improvement proposed: accept Point/MultiPoint
-  as well as point FeatureCollections. Current workaround: submit individual
-  Point features inside a FeatureCollection. No contract change has been made.
+  At checkpoint `b01746e`, the description and validator required that collection
+  shape. The [current contract](../src/geo_processes/contracts/sample.py) also
+  accepts Point and MultiPoint values, normalizing them to individual point
+  features before sampling; see the [example](../examples/sample-multipoint-request.json).
+- **Status:** Resolved in the service — qualified inline and HTTPS Point/MultiPoint
+  inputs have regression coverage, alongside the existing FeatureCollection path.
+  External UI verification remains pending; CI-004 is a separate editing issue.
 
 ## CI-004 — Map drawing interfered with pasted JSON
 

@@ -42,7 +42,7 @@ must be reassessed when adding new input/output types or execution capabilities.
 | 16–17: execution operation/document | HTTP/input tests exercise actual POST routes, valid wire schemas and controlled malformed requests; binary snapshot caveat below |
 | 18: inline/reference inputs | Real local TLS tests exercise raster, scalar and structured JSON references, literals, base64 and qualified values, including ordinary link metadata |
 | 19: repeated inputs | Not triggered: all inputs have `maxOccurs: 1`; `classes` is one array-valued input, not repeated occurrences |
-| 20: object-valued inputs | Sampling accepts a qualified GeoJSON FeatureCollection object and rejects bare object values; actual execute/results documents validate against the official schemas |
+| 20: object-valued inputs | Sampling accepts qualified GeoJSON Point, MultiPoint and Point FeatureCollection objects and rejects bare object values; actual execute/results documents validate against the official schemas |
 | 21: mixed-media inputs | Not triggered: each input has one value format; GeoJSON/JSON and TIFF media-type aliases do not introduce distinct value schemas |
 | 22: inline binary | Input/schema tests decode direct and qualified base64 into actual GeoTIFFs |
 | 23: bounding boxes | No bbox-valued input is offered; no extra operation is added to make this condition exercisable |

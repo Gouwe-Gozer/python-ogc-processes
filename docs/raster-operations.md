@@ -8,12 +8,13 @@ limits return 413, unavailable capacity 503 and internal failures sanitized 500.
 
 ## Sample points — `raster-sample-points`
 
-Required inputs: `source` and `points`. The latter is a GeoJSON FeatureCollection
-of **1–1,000 Point features**, with two-dimensional **[longitude, latitude]**
-coordinates in WGS84. Each feature requires `type`, `geometry` and object/null
-`properties`; an optional string/number `id` is preserved. Foreign members,
-including `crs` and `bbox`, are currently unsupported. For inline object data,
-use the OGC qualified-value form:
+Required inputs: `source` and `points`. The latter accepts a GeoJSON **Point**,
+**MultiPoint**, or **FeatureCollection of Point features**, with **1–1,000 point
+locations** in total. Coordinates are two-dimensional **[longitude, latitude]**
+in WGS84. Within a FeatureCollection, each feature requires `type`, `geometry`
+and object/null `properties`; an optional string/number `id` is preserved.
+Foreign members, including `crs` and `bbox`, remain unsupported. For inline
+object data, use the OGC qualified-value form:
 
 ```json
 {
@@ -32,10 +33,25 @@ use the OGC qualified-value form:
 ```
 
 Rasterio transforms the points to the raster CRS and samples the containing
-pixel, without interpolation. The source must have a CRS. Output preserves
-point order, IDs, geometry and properties, adding/replacing `properties.value`
-with the selected band's value. Masked, nodata, nonfinite and outside-raster
-samples are **null**. Output coordinates remain WGS84.
+pixel, without interpolation. The source must have a CRS. Output is always a
+FeatureCollection containing one Point feature per location in input order.
+Point/MultiPoint inputs receive new empty properties objects, populated with
+`value`, and no generated IDs. FeatureCollection inputs preserve IDs, geometry
+and properties, adding/replacing `properties.value` with the selected band's
+value. Masked, nodata, nonfinite and outside-raster samples are **null**.
+Output coordinates remain WGS84.
+
+For example, the GeoJSON value may also be:
+
+```json
+{"type":"MultiPoint","coordinates":[[4.836065,52.647618],[4.827911,52.645173],[4.834395,52.644807]]}
+```
+
+See the complete [MultiPoint request](../examples/sample-multipoint-request.json).
+All three forms use the same sampler and output delivery; no geometry library
+is required. The input schema's `oneOf` distinguishes actual GeoJSON value
+shapes, not inline/reference transport. Single Feature objects and
+FeatureCollections containing MultiPoint features are not currently accepted.
 
 ## Reclassify — `raster-reclassify`
 

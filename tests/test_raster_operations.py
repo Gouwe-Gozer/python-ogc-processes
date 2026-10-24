@@ -5,6 +5,7 @@ import json
 import os
 import time
 from copy import deepcopy
+from pathlib import Path
 from urllib.parse import urlsplit
 
 import numpy as np
@@ -16,7 +17,7 @@ from test_ogc_schemas import validate_official
 
 from geo_processes.contracts.polygonize import openapi_execution as polygon_contract
 from geo_processes.contracts.reclassify import openapi_execution as reclassify_contract
-from geo_processes.contracts.sample import GEOJSON_TYPE
+from geo_processes.contracts.sample import GEOJSON_TYPE, POINTS_SCHEMA
 from geo_processes.contracts.sample import openapi_execution as sample_contract
 from geo_processes.openapi import generate_openapi
 from geo_processes.storage import ResultStore, ResultStoreFullError
@@ -150,17 +151,145 @@ def test_output_modes_metadata_and_downloads(http_client, process, response_mode
             assert all(item["geometry"]["type"] == "Polygon" for item in features)
 
 
-def test_sample_reprojects_points_and_selects_band(http_client):
+@pytest.mark.parametrize("form", ["Point", "MultiPoint", "FeatureCollection"])
+def test_sample_reprojects_points_and_selects_band(http_client, form):
     source = raster_source(
         np.array([[[1, 2]], [[7, 8]]], dtype="uint8"), crs="EPSG:3857", transform=from_origin(0, 100000, 100000, 100000)
     )
+    coordinates = [[0.5, 0.5], [1.5, 0.5]]
+    locations = points(coordinates)
+    if form == "Point":
+        locations = {"type": "Point", "coordinates": coordinates[0]}
+    elif form == "MultiPoint":
+        locations = {"type": "MultiPoint", "coordinates": coordinates}
     response = execute(
         http_client,
         "raster-sample-points",
-        {"source": source, "points": {"value": points([[0.5, 0.5], [1.5, 0.5]])}, "band": {"value": 2}},
+        {"source": source, "points": {"value": locations}, "band": {"value": 2}},
     )
     assert response.status_code == 200
-    assert [f["properties"]["value"] for f in json.loads(response.data)["features"]] == [7, 8]
+    assert [f["properties"]["value"] for f in json.loads(response.data)["features"]] == (
+        [7] if form == "Point" else [7, 8]
+    )
+
+
+@pytest.mark.parametrize(
+    "geometry",
+    [
+        {"type": "Point", "coordinates": [4.5, 53.5]},
+        {"type": "MultiPoint", "coordinates": [[6.5, 53.5], [4.5, 53.5], [5.5, 52.5], [20, 20]]},
+    ],
+)
+@pytest.mark.parametrize(
+    "response_mode,transmission",
+    [
+        ("raw", "value"),
+        ("document", "value"),
+        ("raw", "reference"),
+        ("document", "reference"),
+    ],
+)
+def test_point_geometries_use_existing_sampling_and_delivery(http_client, geometry, response_mode, transmission):
+    before = deepcopy(geometry)
+    Draft4Validator(POINTS_SCHEMA).validate(geometry)
+    payload = {
+        "inputs": {"source": raster_source(), "points": {"value": geometry, "mediaType": GEOJSON_TYPE}},
+        "response": response_mode,
+        "outputs": {"result": {"transmissionMode": transmission}},
+    }
+    operation = sample_contract()
+    Draft4Validator(operation["requestBody"]["content"]["application/json"]["schema"]).validate(payload)
+    # Official execute-schema validation uses a reference source to avoid its
+    # independently documented overlapping binary-string branches.
+    validate_official(
+        {"inputs": {**payload["inputs"], "source": {"href": "https://example.test/raster.tif"}}}, "execute.yaml"
+    )
+    response = http_client.post("/processes/raster-sample-points/execution", json=payload)
+    if transmission == "reference":
+        assert response.status_code == (204 if response_mode == "raw" else 200)
+        href = (
+            response.headers["Link"].split(">", 1)[0][1:]
+            if response_mode == "raw"
+            else response.get_json()["result"]["href"]
+        )
+        response = http_client.get(urlsplit(href).path)
+        collection = json.loads(response.data)
+    elif response_mode == "document":
+        validate_official(response.get_json(), "results.yaml")
+        collection = response.get_json()["result"]["value"]
+    else:
+        assert response.mimetype == GEOJSON_TYPE
+        collection = json.loads(response.data)
+    assert response.status_code == 200
+    expected_coordinates = [geometry["coordinates"]] if geometry["type"] == "Point" else geometry["coordinates"]
+    assert collection["type"] == "FeatureCollection"
+    assert [feature["geometry"]["coordinates"] for feature in collection["features"]] == expected_coordinates
+    assert [feature["properties"]["value"] for feature in collection["features"]] == (
+        [1] if geometry["type"] == "Point" else [2, 1, None, None]
+    )
+    assert all("id" not in feature for feature in collection["features"])
+    assert geometry == before
+
+
+@pytest.mark.parametrize(
+    "geometry",
+    [
+        {"type": "Point", "coordinates": [4.5, 53.5]},
+        {"type": "MultiPoint", "coordinates": [[4.5, 53.5]]},
+    ],
+)
+def test_geometry_objects_still_require_qualified_input(http_client, geometry):
+    payload = {"inputs": {"source": raster_source(), "points": geometry}}
+    schema = sample_contract()["requestBody"]["content"]["application/json"]["schema"]
+    assert not Draft4Validator(schema).is_valid(payload)
+    response = http_client.post("/processes/raster-sample-points/execution", json=payload)
+    assert response.status_code == 400
+    validate_official(response.get_json(), "exception.yaml")
+
+
+def test_reported_multipoint_example_matches_description_and_samples(http_client):
+    payload = json.loads(Path("examples/sample-multipoint-request.json").read_text())
+    validate_official(payload, "execute.yaml")
+    description = http_client.get("/processes/raster-sample-points?f=json").get_json()
+    Draft4Validator(description["inputs"]["points"]["schema"]).validate(payload["inputs"]["points"]["value"])
+    payload["inputs"]["source"] = raster_source()
+    response = http_client.post("/processes/raster-sample-points/execution", json=payload)
+    assert response.status_code == 200
+    features = json.loads(response.data)["features"]
+    assert [feature["geometry"]["coordinates"] for feature in features] == payload["inputs"]["points"]["value"][
+        "coordinates"
+    ]
+    assert [feature["properties"]["value"] for feature in features] == [1, 1, 1]
+
+
+@pytest.mark.parametrize(
+    "geometry",
+    [
+        {"type": "Point", "coordinates": [True, 52]},
+        {"type": "Point", "coordinates": [4, 91]},
+        {"type": "Point", "coordinates": [4, 52, 10]},
+        {"type": "Point", "coordinates": [4, 52], "crs": "EPSG:28992"},
+        {"type": "MultiPoint", "coordinates": []},
+        {"type": "MultiPoint", "coordinates": [[4, 52]] * 1001},
+        {"type": "MultiPoint", "coordinates": [4, 52]},
+        {"type": "MultiPoint", "coordinates": [[4, 52], [4, 91]]},
+        {"type": "MultiPoint", "coordinates": None},
+        {"type": []},
+        {"type": "LineString", "coordinates": [[4, 52], [5, 53]]},
+    ],
+)
+def test_invalid_geometry_is_rejected_before_raster_acquisition(http_client, geometry, monkeypatch):
+    def fail(*args, **kwargs):
+        pytest.fail("invalid points must fail before the raster download")
+
+    monkeypatch.setattr("geo_processes.inputs._download", fail)
+    response = execute(
+        http_client,
+        "raster-sample-points",
+        {"source": {"href": "https://example.test/raster.tif"}, "points": {"value": geometry}},
+    )
+    assert response.status_code == 400
+    validate_official(response.get_json(), "exception.yaml")
 
 
 def test_polygonize_reprojects_to_wgs84_and_excludes_masked_pixels(http_client):
