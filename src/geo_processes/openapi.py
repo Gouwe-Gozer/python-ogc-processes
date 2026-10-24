@@ -27,9 +27,11 @@ def schema_response(description, schema):
     }
 
 
-def exception_response(description, code, status):
+def exception_response(description, code, status, *, html=True):
     response = schema_response(description, "exception.yaml")
     response["content"]["application/json"]["example"] = exception_document(code, description, status)
+    if html:
+        response["content"]["text/html"] = {"schema": {"type": "string"}}
     return response
 
 
@@ -52,6 +54,9 @@ def generate_openapi(config):
         {
             "name": "limit",
             "in": "query",
+            "required": False,
+            "style": "form",
+            "explode": False,
             "schema": {
                 "type": "integer",
                 "minimum": 1,
@@ -60,6 +65,27 @@ def generate_openapi(config):
             },
         }
     )
+    listing["parameters"].append(
+        {"name": "offset", "in": "query", "schema": {"type": "integer", "minimum": 0, "default": 0}}
+    )
+    for suffix, title in (("", "Job status"), ("/results", "Job results")):
+        # Preserve upstream's complete operations if a future async manager is
+        # configured. The current manager stores no jobs: every ID is unknown.
+        upstream_path = f"/jobs/{{jobId}}{suffix}"
+        path = upstream_path if upstream_path in paths else f"/jobs/{{jobID}}{suffix}"
+        parameter = "jobId" if path == upstream_path else "jobID"
+        operation = paths.setdefault(path, {}).setdefault(
+            "get",
+            {
+                "summary": title,
+                "description": "The synchronous manager stores no jobs; every identifier returns 404.",
+                "operationId": "getCoreJobStatus" if not suffix else "getCoreJobResults",
+                "parameters": [{"name": parameter, "in": "path", "required": True, "schema": {"type": "string"}}],
+                "responses": {},
+            },
+        )
+        operation["responses"]["404"] = exception_response("Unknown job identifier", "NoSuchJob", 404)
+        operation["responses"]["400"] = exception_response("Invalid query parameter", "InvalidParameterValue", 400)
     for identifier, resource in config["resources"].items():
         if resource["type"] != "process":
             continue
@@ -112,8 +138,8 @@ def generate_openapi(config):
                         "content": {"image/tiff": {"schema": {"type": "string", "format": "binary"}}},
                         "headers": {"Expires": {"schema": {"type": "string"}, "description": "Result expiration time"}},
                     },
-                    "404": exception_response("Result missing, invalid or expired", "NoSuchResult", 404),
-                    "500": exception_response("Result could not be read", "NoApplicableCode", 500),
+                    "404": exception_response("Result missing, invalid or expired", "NoSuchResult", 404, html=False),
+                    "500": exception_response("Result could not be read", "NoApplicableCode", 500, html=False),
                 },
             }
         }

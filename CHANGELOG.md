@@ -2,6 +2,10 @@
 
 ## 0.1.0 — Unreleased
 
+- Audit Core Requirements 1–46; fix scalar references, job exception URIs and
+  descriptions, required landing links and traversable process pagination.
+- Reuse shared reference/error handling with async managers and record the
+  conditional checker findings instead of advertising unsupported responses.
 - Expose synchronous `raster-info` and `raster-warp` through pygeoapi 0.24.0,
   with Rasterio 1.4.3, NumPy 1.26.4 and application-owned metadata contracts.
 - Accept users' GeoTIFFs through controlled HTTPS references or inline base64;

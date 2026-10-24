@@ -17,23 +17,29 @@
   "diagnostics": [
     {
       "severity": "error",
-      "code": "/req/core/job",
-      "message": "The server SHALL support the HTTP GET operation at the path `/jobs/{jobID}`.",
+      "code": "/req/core/job-results-async-document",
+      "message": "For `response=document`, the job results SHALL be a JSON document based on the `results.yaml` schema. \"responses[200]\" property must be truthy",
       "path": [
-        "paths"
+        "paths",
+        "/jobs/{jobID}/results",
+        "get",
+        "responses"
       ],
       "source": "<input>",
-      "documentationUrl": "https://docs.ogc.org/is/18-062r2/18-062r2.html#req_core_job"
+      "documentationUrl": "https://docs.ogc.org/is/18-062r2/18-062r2.html#req_core_job-results-async-document"
     },
     {
       "severity": "error",
-      "code": "/req/core/job-results",
-      "message": "The server SHALL support the HTTP GET operation at the path `/jobs/{jobID}/results`.",
+      "code": "/req/core/job-success",
+      "message": "A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`. \"responses[200]\" property must be truthy",
       "path": [
-        "paths"
+        "paths",
+        "/jobs/{jobID}",
+        "get",
+        "responses"
       ],
       "source": "<input>",
-      "documentationUrl": "https://docs.ogc.org/is/18-062r2/18-062r2.html#req_core_job-results"
+      "documentationUrl": "https://docs.ogc.org/is/18-062r2/18-062r2.html#req_core_job-success"
     },
     {
       "severity": "error",

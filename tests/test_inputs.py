@@ -7,12 +7,14 @@ import ssl
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlsplit
 
 import numpy as np
 import pytest
 import rasterio
 from jsonschema import Draft202012Validator
 from rasterio.io import MemoryFile
+from rasterio.warp import Resampling, reproject
 
 from geo_processes import engine, inputs
 from geo_processes.contracts.info import INFO_SCHEMA
@@ -62,10 +64,29 @@ def tls_origin(raster_payload):
             try:
                 seen["paths"].append(self.path)
                 seen["hosts"].append(self.headers.get("Host"))
-                if self.path in {"/redirect", "/loop", "/private", "/other-host"}:
+                scalars = {
+                    "/crs.json": ("application/json", b'"EPSG:4326"'),
+                    "/method.txt": ("text/plain; charset=utf-8", b"nearest\n"),
+                    "/bad-crs.json": ("application/json", b'"EPSG:9999"'),
+                    "/number.json": ("application/json", b"4326"),
+                    "/nested.json": ("application/json", b'{"href":"https://unlisted.test/a"}'),
+                    "/broken.json": ("application/json", b"not JSON"),
+                    "/large-scalar.json": ("application/json", b"x" * (inputs.MAX_SCALAR_BYTES + 1)),
+                    "/wrong-type.json": ("application/octet-stream", b'"EPSG:4326"'),
+                }
+                if self.path in scalars:
+                    media_type, data = scalars[self.path]
+                    self.send_response(200)
+                    self.send_header("Content-Type", media_type)
+                    self.send_header("Content-Length", str(len(data)))
+                    self.end_headers()
+                    self.wfile.write(data)
+                    return
+                if self.path in {"/redirect", "/scalar-redirect", "/loop", "/private", "/other-host"}:
                     self.send_response(302)
                     location = {
                         "/redirect": "/dem.tif",
+                        "/scalar-redirect": "/crs.json",
                         "/loop": "/loop",
                         "/private": "https://127.0.0.1/dem.tif",
                         "/other-host": "https://unlisted.test/dem.tif",
@@ -534,3 +555,105 @@ def test_missing_crs_is_a_client_error_for_user_warp(http_client):
         "/processes/raster-warp/execution", json={"inputs": {"source": source, "target_crs": "EPSG:4326"}}
     )
     assert warp.status_code == 400 and "CRS" in warp.get_json()["description"]
+
+
+@pytest.mark.parametrize("form", ["reference", "qualified"])
+@pytest.mark.parametrize("mode", ["raw", "document"])
+@pytest.mark.parametrize("transmission", ["value", "reference"])
+def test_scalar_wire_forms_preserve_actual_warp_results(
+    http_client, https_origin, raster_payload, input_directory, form, mode, transmission
+):
+    from geo_processes.contracts.warp import EXECUTE_SCHEMA
+
+    origin, seen = https_origin
+    if form == "reference":
+        target = {"href": origin + "/scalar-redirect", "type": "application/json", "title": "Target CRS", "rel": "data"}
+        resampling = {"href": origin + "/method.txt"}
+    else:
+        target = {"value": "EPSG:4326"}
+        resampling = {"value": "nearest", "mediaType": "text/plain"}
+    payload = {
+        "inputs": {"source": inline(raster_payload), "target_crs": target, "resampling": resampling},
+        "response": mode,
+        "outputs": {"result": {"transmissionMode": transmission}},
+    }
+    Draft202012Validator(EXECUTE_SCHEMA).validate(payload)
+    response = http_client.post("/processes/raster-warp/execution", json=payload)
+    assert response.status_code == (204 if mode == "raw" and transmission == "reference" else 200)
+    if transmission == "reference":
+        href = (
+            response.get_json()["result"]["href"] if mode == "document" else response.headers["Link"].split(">")[0][1:]
+        )
+        download = http_client.get(urlsplit(href).path)
+        assert download.status_code == 200
+        data = download.data
+    elif mode == "document":
+        data = base64.b64decode(response.get_json()["result"]["value"], validate=True)
+    else:
+        data = response.data
+    with MemoryFile(data) as memory, memory.open() as raster:
+        assert raster.crs.to_epsg() == 4326
+        assert raster.shape == (48, 64) and raster.count == 2
+        assert np.isfinite(raster.read()).all()
+        # Verify that the referenced/qualified resampling choice is honored.
+        expected = np.empty(raster.shape, dtype=raster.dtypes[0])
+        with MemoryFile(raster_payload) as original_memory, original_memory.open() as original:
+            reproject(
+                source=rasterio.band(original, 1),
+                destination=expected,
+                dst_transform=raster.transform,
+                dst_crs=raster.crs,
+                resampling=Resampling.nearest,
+            )
+        np.testing.assert_array_equal(raster.read(1), expected)
+    assert not list(input_directory.glob("slot-*"))
+    if form == "reference":
+        assert {"/scalar-redirect", "/crs.json", "/method.txt"} <= set(seen["paths"])
+
+
+@pytest.mark.parametrize(
+    "path,status",
+    [
+        ("/bad-crs.json", 400),
+        ("/number.json", 400),
+        ("/nested.json", 400),
+        ("/broken.json", 400),
+        ("/wrong-type.json", 400),
+        ("/large-scalar.json", 413),
+        ("/private", 400),
+        ("/loop", 400),
+        ("/missing", 400),
+    ],
+)
+def test_scalar_references_are_bounded_validated_and_cleaned(
+    http_client, https_origin, raster_payload, input_directory, path, status
+):
+    origin, _seen = https_origin
+    payload = {"inputs": {"source": inline(raster_payload), "target_crs": {"href": origin + path}}}
+    response = http_client.post("/processes/raster-warp/execution", json=payload)
+    assert response.status_code == status
+    assert response.is_json and response.get_json()["description"]
+    assert "Traceback" not in response.text
+    assert not list(input_directory.glob("slot-*"))
+
+
+def test_scalar_reference_obeys_allowlist_and_media_type(http_client, https_origin, raster_payload, monkeypatch):
+    origin, _seen = https_origin
+    payload = {
+        "inputs": {"source": inline(raster_payload), "target_crs": {"href": origin + "/crs.json", "type": "text/plain"}}
+    }
+    mismatch = http_client.post("/processes/raster-warp/execution", json=payload)
+    assert mismatch.status_code == 400
+    payload["inputs"]["target_crs"].pop("type")
+    monkeypatch.setenv("GEO_INPUT_ALLOWED_HOSTS", "other.example")
+    rejected = http_client.post("/processes/raster-warp/execution", json=payload)
+    assert rejected.status_code == 400 and "not allowed" in rejected.get_json()["description"]
+
+
+def test_standard_reference_metadata_does_not_change_raster_resolution(https_origin, input_directory):
+    origin, _seen = https_origin
+    source = {"href": origin + "/dem.tif", "type": "image/tiff", "title": "Raster", "rel": "data", "hreflang": "en"}
+    Draft202012Validator(SOURCE_EXECUTE_SCHEMA).validate(source)
+    with inputs.resolve_source(source) as path:
+        assert path.exists()
+    assert not list(input_directory.glob("slot-*"))

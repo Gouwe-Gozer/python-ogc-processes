@@ -5,6 +5,7 @@ import binascii
 import errno
 import fcntl
 import ipaddress
+import json
 import os
 import re
 import shutil
@@ -23,6 +24,9 @@ from geo_processes import engine
 MAX_ENCODED_BYTES = 4 * ((engine.MAX_INPUT_BYTES + 2) // 3)
 MAX_EXECUTION_BYTES = 24 * 1024 * 1024
 MAX_URL_LENGTH = 4096
+MAX_SCALAR_BYTES = 4096
+SCALAR_MEDIA_TYPES = ("application/json", "text/plain")
+LINK_METADATA = {"rel", "title", "hreflang"}
 FETCH_SECONDS = 10
 IO_TIMEOUT = 3
 MAX_REDIRECTS = 3
@@ -80,9 +84,7 @@ def validate_source(source):
     if not isinstance(source, Mapping):
         raise RasterInputError("source must be an HTTPS reference or an inline base64 GeoTIFF")
     if "href" in source:
-        if set(source) - {"href", "type"} or source.get("type", "image/tiff") not in MEDIA_TYPES:
-            raise RasterInputError("source reference supports only href and a GeoTIFF type")
-        _url_parts(source["href"])
+        _validate_reference(source, MEDIA_TYPES, "image/tiff")
     elif set(source) == {"value", "mediaType", "encoding"}:
         if source["mediaType"] not in MEDIA_TYPES or source["encoding"] != "base64":
             raise RasterInputError("inline source requires a GeoTIFF mediaType and base64 encoding")
@@ -92,6 +94,16 @@ def validate_source(source):
             raise RasterInputTooLargeError("source exceeds the 16 MiB input limit")
     else:
         raise RasterInputError("source must contain href or value/mediaType/encoding")
+
+
+def _validate_reference(value, media_types, default_type):
+    if (
+        set(value) - {"href", "type"} - LINK_METADATA
+        or value.get("type", default_type) not in media_types
+        or any(not isinstance(item, str) for item in value.values())
+    ):
+        raise RasterInputError("reference requires href, a supported type and optional string link metadata")
+    _url_parts(value["href"])
 
 
 def _public_addresses(host):
@@ -147,7 +159,10 @@ def _abort(connection):
     connection.close()
 
 
-def _fetch(url, destination):
+def _fetch(url, destination, *, max_bytes=None, media_types=MEDIA_TYPES):
+    """Shared HTTPS transport for raster and scalar references."""
+    limit = engine.MAX_INPUT_BYTES if max_bytes is None else max_bytes
+    too_large = "source exceeds the 16 MiB input limit" if max_bytes is None else "scalar reference exceeds 4096 bytes"
     deadline = time.monotonic() + FETCH_SECONDS
     for redirect in range(MAX_REDIRECTS + 1):
         parts = _url_parts(url)
@@ -168,7 +183,7 @@ def _fetch(url, destination):
             path = parts.path or "/"
             if parts.query:
                 path += "?" + parts.query
-            connection.request("GET", path, headers={"Accept": ", ".join(MEDIA_TYPES), "Accept-Encoding": "identity"})
+            connection.request("GET", path, headers={"Accept": ", ".join(media_types), "Accept-Encoding": "identity"})
             response = connection.getresponse()
             if response.status in {301, 302, 303, 307, 308}:
                 location = response.getheader("Location")
@@ -182,8 +197,8 @@ def _fetch(url, destination):
             expected = int(length) if length is not None else None
             if expected is not None and expected < 0:
                 raise RasterInputError("source returned an invalid content length")
-            if expected is not None and expected > engine.MAX_INPUT_BYTES:
-                raise RasterInputTooLargeError("source exceeds the 16 MiB input limit")
+            if expected is not None and expected > limit:
+                raise RasterInputTooLargeError(too_large)
             count = 0
             with destination.open("wb") as output:
                 while True:
@@ -194,16 +209,63 @@ def _fetch(url, destination):
                     if not chunk:
                         break
                     count += len(chunk)
-                    if count > engine.MAX_INPUT_BYTES:
-                        raise RasterInputTooLargeError("source exceeds the 16 MiB input limit")
+                    if count > limit:
+                        raise RasterInputTooLargeError(too_large)
                     output.write(chunk)
             _remaining(deadline)
             if expected is not None and count != expected:
                 raise RasterInputError("source download was incomplete")
-            return
+            return response.getheader("Content-Type")
         finally:
             timer.cancel()
             connection.close()
+
+
+def _download(url, destination, **options):
+    """Keep transport failures separate from local storage failures."""
+    try:
+        return _fetch(url, destination, **options)
+    except (HTTPException, OSError, ValueError) as error:
+        if isinstance(error, RasterInputError):
+            raise
+        if isinstance(error, OSError) and error.errno in {
+            errno.ENOSPC,
+            errno.EDQUOT,
+            errno.EIO,
+            errno.EACCES,
+            errno.EROFS,
+            errno.ENOENT,
+            errno.ENOTDIR,
+            errno.EISDIR,
+        }:
+            raise RasterInputStorageError("temporary input storage failed") from error
+        raise RasterInputError("input HTTPS download failed") from error
+
+
+def resolve_scalar(value, *, name, choices):
+    """Resolve one string input, then validate its value (Core req. 18/24)."""
+    if isinstance(value, Mapping):
+        if "href" in value:
+            _validate_reference(value, SCALAR_MEDIA_TYPES, "application/json")
+            with _workspace() as destination:
+                content_type = _download(
+                    value["href"], destination, max_bytes=MAX_SCALAR_BYTES, media_types=SCALAR_MEDIA_TYPES
+                )
+                media_type = (content_type or value.get("type", "application/json")).split(";", 1)[0].strip().lower()
+                if media_type not in SCALAR_MEDIA_TYPES or value.get("type", media_type) != media_type:
+                    raise RasterInputError(f"{name} reference must return its supported JSON or plain-text type")
+                try:
+                    text = destination.read_bytes().decode("utf-8")
+                    value = json.loads(text) if media_type == "application/json" else text.strip()
+                except (UnicodeError, ValueError) as error:
+                    raise RasterInputError(f"{name} reference is not valid UTF-8 JSON/text") from error
+        elif "value" in value and not set(value) - {"value", "mediaType"}:
+            if value.get("mediaType", "application/json") not in SCALAR_MEDIA_TYPES:
+                raise RasterInputError(f"{name} qualified value has an unsupported media type")
+            value = value["value"]
+    if not isinstance(value, str) or value not in choices:
+        raise RasterInputError(f"{name} must be one of: {', '.join(choices)}")
+    return value
 
 
 @contextmanager
@@ -235,23 +297,7 @@ def resolve_source(source, *, require_crs=False):
     validate_source(source)
     with _workspace() as destination:
         if isinstance(source, Mapping) and "href" in source:
-            try:
-                _fetch(source["href"], destination)
-            except (HTTPException, OSError, ValueError) as error:
-                if isinstance(error, RasterInputError):
-                    raise
-                if isinstance(error, OSError) and error.errno in {
-                    errno.ENOSPC,
-                    errno.EDQUOT,
-                    errno.EIO,
-                    errno.EACCES,
-                    errno.EROFS,
-                    errno.ENOENT,
-                    errno.ENOTDIR,
-                    errno.EISDIR,
-                }:
-                    raise RasterInputStorageError("temporary raster storage failed") from error
-                raise RasterInputError("source HTTPS download failed") from error
+            _download(source["href"], destination)
         else:
             try:
                 data = base64.b64decode(source if isinstance(source, str) else source["value"], validate=True)

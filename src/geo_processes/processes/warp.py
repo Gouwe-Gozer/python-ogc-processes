@@ -21,6 +21,7 @@ from geo_processes.inputs import (
     RasterInputBusyError,
     RasterInputError,
     RasterInputTooLargeError,
+    resolve_scalar,
     resolve_source,
     validate_source,
 )
@@ -59,15 +60,13 @@ class RasterWarpProcessor(BaseProcessor):
         if not isinstance(data, Mapping) or set(data) - {"source", "target_crs", "resampling"}:
             raise InvalidExecutionRequestError("inputs must contain only source, target_crs and resampling")
         source, target, resampling = data.get("source"), data.get("target_crs"), data.get("resampling", "bilinear")
-        if not isinstance(target, str) or target not in TARGET_CRSS:
-            raise InvalidExecutionRequestError("target_crs must be EPSG:28992, EPSG:4326 or EPSG:3857")
-        if not isinstance(resampling, str) or resampling not in RESAMPLING_METHODS:
-            raise InvalidExecutionRequestError("resampling must be nearest or bilinear")
         transmission = self._transmission(outputs)
         if transmission == "reference":
             self._base_url()
         try:
             validate_source(source)
+            target = resolve_scalar(target, name="target_crs", choices=TARGET_CRSS)
+            resampling = resolve_scalar(resampling, name="resampling", choices=RESAMPLING_METHODS)
             store = ResultStore.from_environment()
             with resolve_source(source, require_crs=True) as path:
                 result = store.publish(lambda output: engine.warp_raster(path, output, target, resampling))

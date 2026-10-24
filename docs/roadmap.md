@@ -35,12 +35,16 @@ The items below are proposals or unresolved decisions, not advertised capabiliti
 
 ## Standards and deployment decisions
 
-The [validation guide](validation.md#conformance-claims-and-gaps) records remaining
-Core work: scalar input references, correct exceptions for the existing job
-routes, OpenAPI descriptions and an audit of applicable requirements. Keep that
-follow-up separate from adding operations. Persistent jobs for synchronous runs
-are optional; asynchronous execution remains a workload-driven choice. Neither
-a larger catalogue nor a passing checker baseline establishes conformance.
+The [Core audit](core-conformance-audit.md) records corrected input-reference,
+job-error, OpenAPI and discovery behavior, with applicability for Requirements
+1–46. Revisit conditional rows when adding input/output types or execution modes.
+An external conformance assessment remains separate from these regression tests.
+
+Async execution is a later workload decision. The audit documents why the
+existing TinyDB diagnostic is not a configuration-only replacement for raster
+execution, and which fixes already work with either manager. Persistent jobs
+for synchronous runs remain optional; do not add artificial job state or success
+responses solely to silence conditional checker findings.
 
 Before sharing a hosted service, choose users/access control, input/result
 visibility, TLS, logging and storage maintenance. Queuing, asynchronous workers,

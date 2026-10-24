@@ -4,10 +4,11 @@ from collections.abc import Mapping
 from email.utils import formatdate
 
 from flask import jsonify, make_response, request
-from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_
+from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_, execute_from_flask
 from werkzeug.datastructures import Headers
 
-from geo_processes.errors import EXCEPTIONS, exception_document
+from geo_processes.discovery import landing_links, list_processes
+from geo_processes.errors import exception_document, install_exception_renderer
 from geo_processes.inputs import MAX_EXECUTION_BYTES
 from geo_processes.responses import STATUS_HEADER
 from geo_processes.startup import validate_runtime
@@ -15,6 +16,7 @@ from geo_processes.storage import ResultNotFoundError, ResultStore, ResultStoreE
 
 runtime_settings = validate_runtime(CONFIG)
 api_.manager.result_base_url = runtime_settings.url
+install_exception_renderer(api_)
 APP.config["MAX_CONTENT_LENGTH"] = MAX_EXECUTION_BYTES
 
 EXECUTION_PATHS = {
@@ -23,6 +25,17 @@ EXECUTION_PATHS = {
     if resource["type"] == "process"
 }
 ALLOWED_EXECUTION_MEMBERS = {"inputs", "outputs", "response"}
+
+_upstream_get_processes = APP.view_functions["pygeoapi.get_processes"]
+
+
+def get_processes(process_id=None):
+    if process_id is not None:
+        return _upstream_get_processes(process_id)
+    return execute_from_flask(list_processes, request)
+
+
+APP.view_functions["pygeoapi.get_processes"] = get_processes
 
 
 def _invalid_request(description):
@@ -64,31 +77,15 @@ def validate_execution_document():
 @APP.after_request
 def apply_process_status(response):
     """pygeoapi 0.24.0 fixes successful executions at 200; honor explicit 204s."""
+    # Upstream assigns a plain dict; restore case-insensitive media-type lookups.
+    response.headers = Headers(response.headers)
     status = response.headers.pop(STATUS_HEADER, None)
     if status == "204" and response.status_code == 200:
         response.status_code = 204
         response.set_data(b"")
         response.headers.pop("Content-Type", None)
-    return response
-
-
-@APP.after_request
-def apply_exception_catalogue(response):
-    """Normalize known pygeoapi JSON exceptions without changing HTTP status."""
-    if response.status_code >= 400:
-        # Upstream assigns a plain dict to response.headers. Restore case-
-        # insensitive lookups before Flask checks the response media type.
-        response.headers = Headers(response.headers)
-    if response.status_code >= 400 and response.is_json:
-        document = response.get_json(silent=True)
-        if (
-            isinstance(document, dict)
-            and isinstance(document.get("code"), str)
-            and document["code"] in EXCEPTIONS
-            and isinstance(document.get("description"), str)
-        ):
-            document.update(exception_document(document["code"], document["description"], response.status_code))
-            response.set_data(APP.json.dumps(document))
+    if request.endpoint == "pygeoapi.landing_page" and response.status_code == 200:
+        return landing_links(response, api_)
     return response
 
 

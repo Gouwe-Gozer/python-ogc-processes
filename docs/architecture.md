@@ -19,7 +19,8 @@ masked statistics; [raster metadata](raster-info.md) is an application-owned con
 | `manager.py` | Synchronous execution, typed exceptions and delegated representations |
 | `responses.py` | Explicit response body, media type, status and headers |
 | `app.py` | Flask request guard, JSON exception normalization and result downloads |
-| `errors.py` | JSON exception URI catalogue and compatible legacy fields |
+| `errors.py` | Exception catalogue and API-instance JSON/HTML renderer, including job errors |
+| `discovery.py` | Required landing links and traversable process lists, independent of the manager |
 | `startup.py` | Runtime settings, directory probes and effective configuration summary |
 | `openapi.py` | Version-checked corrections to upstream OpenAPI generation |
 | `datasets.py`, `data/` | Bundled fixture submitted as ordinary raster data by tests/smoke clients |
@@ -57,7 +58,10 @@ Regression tests retain the following corrections for pygeoapi 0.24.0:
 - The manager corrects document wrapping, preserves typed failures, sanitizes
   unexpected exceptions and removes the unsupported Callback claim.
 - A private manager-to-Flask marker selects HTTP 204 for raw/reference results;
-  it is removed before delivery. Known JSON exceptions use the [catalogue](errors.md).
+  it is removed before delivery. A renderer on the configured API instance uses
+  the [catalogue](errors.md) for JSON/HTML errors with either job manager.
+- Discovery adds the required OGC landing relation and working pagination while
+  retaining upstream metadata generation and HTML templates.
 - The OpenAPI generator corrects discovery schemas, limits, error responses and
   execution choices. Process metadata is copied before upstream can mutate it.
 

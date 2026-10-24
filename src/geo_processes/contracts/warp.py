@@ -1,19 +1,26 @@
 """The bounded GeoTIFF reprojection contract and its HTTP representations."""
 
 from geo_processes import __version__
-from geo_processes.contracts.sources import SOURCE_DESCRIPTION, SOURCE_EXECUTE_SCHEMA, SOURCE_VALUE_SCHEMA
+from geo_processes.contracts.sources import (
+    SOURCE_DESCRIPTION,
+    SOURCE_EXECUTE_SCHEMA,
+    SOURCE_VALUE_SCHEMA,
+    scalar_execution_schema,
+)
 
 TARGET_CRSS = ["EPSG:28992", "EPSG:4326", "EPSG:3857"]
 RESAMPLING_METHODS = ["nearest", "bilinear"]
 TIFF_TYPE = "image/tiff"
+TARGET_CRS_SCHEMA = {"type": "string", "enum": TARGET_CRSS}
+RESAMPLING_SCHEMA = {"type": "string", "enum": RESAMPLING_METHODS, "default": "bilinear"}
 
 INPUTS_SCHEMA = {
     "type": "object",
     "required": ["source", "target_crs"],
     "properties": {
         "source": SOURCE_EXECUTE_SCHEMA,
-        "target_crs": {"type": "string", "enum": TARGET_CRSS},
-        "resampling": {"type": "string", "enum": RESAMPLING_METHODS, "default": "bilinear"},
+        "target_crs": scalar_execution_schema(TARGET_CRS_SCHEMA),
+        "resampling": scalar_execution_schema(RESAMPLING_SCHEMA),
     },
     "additionalProperties": False,
 }
@@ -91,13 +98,13 @@ PROCESS_METADATA = {
         "target_crs": {
             "title": "Target CRS",
             "description": "Target EPSG identifier. Resolution follows the transformed extent and retained grid size.",
-            "schema": INPUTS_SCHEMA["properties"]["target_crs"],
+            "schema": TARGET_CRS_SCHEMA,
             "minOccurs": 1,
             "maxOccurs": 1,
         },
         "resampling": {
             "title": "Resampling method",
-            "schema": INPUTS_SCHEMA["properties"]["resampling"],
+            "schema": RESAMPLING_SCHEMA,
             "minOccurs": 0,
             "maxOccurs": 1,
         },
