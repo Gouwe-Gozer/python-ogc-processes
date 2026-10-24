@@ -2,6 +2,12 @@
 
 ## 0.1.0 — Unreleased
 
+- Preserve pygeoapi's JSON-LD landing catalogue instead of treating it as an
+  ordinary JSON links document; guard unexpected JSON body shapes.
+
+- Restore the ReDoc documentation page with a pinned compatible bundle through
+  pygeoapi's template override, and cover HTML processor-name locale warnings.
+
 - Filter pygeoapi's false metadata locale warnings and remove the unused
   AsyncAPI file setting from the image, retaining normal logging and translation.
 

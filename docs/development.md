@@ -134,7 +134,8 @@ See [result storage](results.md) for settings and maintenance commands.
 
 The service retains the configured `logging.level` (INFO by default). A narrow
 filter removes pygeoapi 0.24.0's false unknown-locale warnings for registered
-schema/example/link keys such as `type` and `coordinates`. It leaves upstream
+schema/example/link and literal processor configuration keys, such as `type`,
+`coordinates` and `name`. It leaves upstream
 translation and metadata unchanged; nonmatching locale diagnostics and all other
 warnings/errors remain visible. See [the compatibility boundary](architecture.md#compatibility-corrections).
 
@@ -143,6 +144,20 @@ interface is configured. This avoids requesting a nonexistent optional file
 at each worker startup. Explicitly supplied AsyncAPI paths still use upstream
 loading and diagnostics. AsyncAPI describes event interfaces; it is separate
 from asynchronous OGC process jobs.
+
+## API documentation UI
+
+`/openapi?f=html` uses upstream Swagger UI. `/openapi?f=html&ui=redoc` uses a
+small packaged template override with ReDoc **2.5.3** pinned on jsDelivr. The
+stock pygeoapi template uses an unversioned classic script; ReDoc 3 changed that
+bundle to an ES module, causing a blank page. See
+[Redocly's migration notice](https://redocly.com/blog/redoc-3-release).
+
+The override uses pygeoapi's supported template path and the configured API URL,
+including path prefixes. Other templates fall back to upstream defaults; an
+explicit operator template path takes precedence over this default. ReDoc
+requires browser access to the external CDN. The page also links directly to
+the OpenAPI JSON, which remains usable without the renderer.
 
 The inherited CITE echo fixture remains separate from the public service:
 

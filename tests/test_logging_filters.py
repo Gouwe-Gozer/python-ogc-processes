@@ -28,6 +28,17 @@ def test_process_discovery_does_not_log_schema_keys_as_locales(http_client, capl
     assert not [record for record in caplog.records if record.name == "pygeoapi.l10n"]
 
 
+@pytest.mark.parametrize("ui", ["redoc", "swagger"])
+def test_html_documentation_does_not_log_processor_names_as_locales(http_client, caplog, monkeypatch, ui):
+    # Template configuration is cached per locale. Reproduce its first render,
+    # rather than passing only because an earlier test already filled the cache.
+    monkeypatch.setattr(l10n, "_cfg_cache", {})
+    with caplog.at_level(logging.WARNING, logger="pygeoapi.l10n"):
+        response = http_client.get(f"/openapi?f=html&ui={ui}")
+    assert response.status_code == 200 and response.mimetype == "text/html"
+    assert not [record for record in caplog.records if record.name == "pygeoapi.l10n"]
+
+
 def test_filter_leaves_actual_descriptions_unchanged(http_client, monkeypatch, caplog):
     logger = logging.getLogger("pygeoapi.l10n")
     filtered = http_client.get("/processes/raster-sample-points?f=json").get_json()
@@ -68,11 +79,12 @@ def test_filter_uses_registered_data_keys_and_keeps_translation_mistakes(monkeyp
         },
         "example": {"inputs": {"customMeasurement": 4}},
     }
-    install_metadata_locale_filter([metadata])
-    install_metadata_locale_filter([metadata])
+    install_metadata_locale_filter([metadata], literal_data=[{"name": "processor.plugin"}])
+    install_metadata_locale_filter([metadata], literal_data=[{"name": "processor.plugin"}])
     assert len(logger.filters) == 1 and isinstance(logger.filters[0], MetadataLocaleFilter)
     with caplog.at_level(logging.WARNING, logger="pygeoapi.l10n"):
         assert l10n.str2locale("customMeasurement", True) is None
+        assert l10n.str2locale("name", True) is None
         assert l10n.str2locale("zz-ZZ", True) is None
         assert l10n.translate({"en": "Title", "nl": "Titel"}, "nl") == "Titel"
     assert len(caplog.records) == 1 and "zz_ZZ" in caplog.records[0].getMessage()

@@ -20,9 +20,11 @@ def _data_keys(value, *, in_data=False):
 
 
 class MetadataLocaleFilter(logging.Filter):
-    def __init__(self, metadata):
+    def __init__(self, metadata, *, literal_data=()):
         super().__init__()
-        self.keys = frozenset(key for item in metadata for key in _data_keys(item))
+        keys = {key for item in metadata for key in _data_keys(item)}
+        keys.update(key for item in literal_data for key in _data_keys(item, in_data=True))
+        self.keys = frozenset(keys)
 
     def filter(self, record):
         # Babel's UnknownLocaleError carries the attempted locale identifier.
@@ -37,9 +39,9 @@ class MetadataLocaleFilter(logging.Filter):
         )
 
 
-def install_metadata_locale_filter(metadata):
+def install_metadata_locale_filter(metadata, *, literal_data=()):
     logger = logging.getLogger("pygeoapi.l10n")
     for installed in tuple(logger.filters):
         if isinstance(installed, MetadataLocaleFilter):
             logger.removeFilter(installed)
-    logger.addFilter(MetadataLocaleFilter(metadata))
+    logger.addFilter(MetadataLocaleFilter(metadata, literal_data=literal_data))

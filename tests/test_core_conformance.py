@@ -47,6 +47,66 @@ def test_landing_page_contains_required_core_relations_and_live_definitions(http
     assert CONFORMANCE_REL in {link.get("rel") for link in parser.links}
 
 
+@pytest.mark.parametrize(
+    "path,headers",
+    [
+        ("/?f=jsonld", {}),
+        ("/", {"Accept": "application/ld+json"}),
+    ],
+)
+def test_jsonld_landing_preserves_upstream_catalog_and_adds_http_links(app, http_client, monkeypatch, path, headers):
+    from geo_processes.app import apply_process_status
+
+    with monkeypatch.context() as context:
+        context.setitem(
+            app.after_request_funcs,
+            None,
+            [callback for callback in app.after_request_funcs[None] if callback is not apply_process_status],
+        )
+        upstream = http_client.get(path, headers=headers)
+    response = http_client.get(path, headers=headers)
+    assert response.status_code == upstream.status_code == 200
+    assert response.mimetype == "application/ld+json"
+    assert response.data == upstream.data
+    document = response.get_json()
+    assert document["@type"] == "DataCatalog" and document["name"] == "Geo Processes API"
+    assert "links" not in document
+    link_headers = ", ".join(response.headers.getlist("Link"))
+    assert f'rel="{CONFORMANCE_REL}"' in link_headers
+    assert 'rel="service-desc"' in link_headers
+
+
+@pytest.mark.parametrize(
+    "format_,accept,media_type",
+    [
+        ("json", "application/ld+json", "application/json"),
+        ("html", "application/ld+json", "text/html"),
+        ("jsonld", "text/html", "application/ld+json"),
+    ],
+)
+def test_landing_query_format_overrides_accept(http_client, format_, accept, media_type):
+    response = http_client.get(f"/?f={format_}", headers={"Accept": accept})
+    assert response.status_code == 200 and response.mimetype == media_type
+    if format_ == "json":
+        validate_official(response.get_json(), "landingPage.yaml")
+        assert any(link["rel"] == CONFORMANCE_REL for link in response.get_json()["links"])
+    assert CONFORMANCE_REL in ", ".join(response.headers.getlist("Link"))
+
+
+@pytest.mark.parametrize("document", [{"title": "Other response"}, [], None, {"links": None}])
+def test_landing_link_hook_preserves_other_json_shapes(app, document):
+    from flask import jsonify
+    from pygeoapi.flask_app import api_
+
+    from geo_processes.discovery import landing_links
+
+    with app.app_context():
+        response = jsonify(document)
+        original_body = response.data
+        assert landing_links(response, api_) is response
+        assert response.data == original_body
+
+
 def test_limited_process_list_can_be_traversed_without_losing_filters(http_client):
     response = http_client.get("/processes?limit=1&f=json")
     assert response.status_code == 200

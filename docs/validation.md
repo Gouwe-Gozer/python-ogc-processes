@@ -92,6 +92,15 @@ modified to hide the overlap; these checks do not establish complete conformance
 
 These are dated observations, not permanently current test counts or guarantees:
 
+- Landing and API documentation, **2026-10-25**: **509 tests passed**, **95.49% coverage**.
+  ReDoc renders the live API catalogue in headless Chromium using pinned 2.5.3;
+  the moving `latest` bundle reproduces a classic-script syntax error. ReDoc
+  and Swagger HTML requests emit no false locale warnings, including on a cold
+  template cache. JSON-LD landing requests selected by query or Accept preserve
+  upstream response bytes and expose HTTP links without a server exception.
+  Quality, configuration/OpenAPI, release execution and
+  isolation checks pass. External CDN access remains required for the renderer.
+
 - Raster operations, **2026-10-24**: **493 tests passed**, **95.39% coverage**.
   Sampling, classification and polygonization cover HTTPS/inline inputs, band
   selection, CRS handling, Point/MultiPoint/FeatureCollection sampling, all four

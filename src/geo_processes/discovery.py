@@ -91,11 +91,15 @@ def landing_links(response, api):
             "type": "application/json",
         },
     ]
-    if response.is_json:
+    # JSON-LD is also JSON, but upstream returns a DataCatalog with no links
+    # array. Preserve that representation and supply the HTTP links below.
+    if response.mimetype == "application/json":
         document = response.get_json()
-        if not any(item["rel"] == CONFORMANCE_REL for item in document["links"]):
-            document["links"].append(links[1])
-        response.set_data(json.dumps(document, indent=2 if api.pretty_print else None))
+        body_links = document.get("links") if isinstance(document, dict) else None
+        if isinstance(body_links, list):
+            if not any(isinstance(item, dict) and item.get("rel") == CONFORMANCE_REL for item in body_links):
+                body_links.append(links[1])
+            response.set_data(json.dumps(document, indent=2 if api.pretty_print else None))
     elif response.mimetype == "text/html":
         response.set_data(response.get_data(as_text=True).replace("</body>", _navigation(links) + "</body>"))
     for item in links:

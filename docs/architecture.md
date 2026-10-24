@@ -26,6 +26,7 @@ masked statistics; [raster metadata](raster-info.md) is an application-owned con
 | `discovery.py` | Required landing links and traversable process lists, independent of the manager |
 | `startup.py` | Runtime settings, directory probes and effective configuration summary |
 | `openapi.py` | Version-checked corrections to upstream OpenAPI generation |
+| `documentation.py`, `templates/openapi/redoc.html` | Supported template override for the pinned ReDoc presentation; other templates fall back to pygeoapi |
 | `datasets.py`, `data/` | Bundled fixture submitted as ordinary raster data by tests/smoke clients |
 
 Paths above are relative to `src/geo_processes/` unless otherwise stated.
@@ -65,14 +66,21 @@ Regression tests retain the following corrections for pygeoapi 0.24.0:
   the [catalogue](errors.md) for JSON/HTML errors with either job manager.
 - Discovery adds the required OGC landing relation and working pagination while
   retaining upstream metadata generation and HTML templates.
+  JSON-LD keeps pygeoapi's native DataCatalog body and receives HTTP Link
+  headers; only ordinary JSON landing documents receive a body link.
 - The OpenAPI generator corrects discovery schemas, limits, error responses and
   execution choices. Process metadata is copied before upstream can mutate it.
 - `logging_filters.py` filters only Babel unknown-locale warnings from
   `pygeoapi.l10n.str2locale` whose identifiers match registered schema, example
-  or link keys. Upstream's silent metadata probes still log failures in 0.24.0;
+  or link keys, or literal processor configuration keys used by HTML templates.
+  Upstream's silent metadata probes still log failures in 0.24.0;
   there is no separate probe logging setting. Python's logger filter extension
   keeps the translator, metadata, configured log level and other diagnostics
   intact. New process data keys are collected automatically at application startup.
+- The default ReDoc template is overridden through pygeoapi's existing template
+  path setting. ReDoc 2.5.3 is pinned because the upstream classic script tag is
+  incompatible with the ES-module bundle now served by `redoc@latest`. Explicit
+  operator template paths are preserved; other templates use upstream fallback.
 
 These are covered by manager, HTTP, schema and OpenAPI tests. Reassess them on
 an upstream upgrade; no upstream source or entrypoint is patched. Remaining

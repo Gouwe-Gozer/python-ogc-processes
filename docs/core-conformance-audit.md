@@ -32,7 +32,7 @@ must be reassessed when adding new input/output types or execution capabilities.
 
 | Requirement | Applicability and evidence |
 | --- | --- |
-| 1–2: landing page | Core tests: HTTP 200, unchanged official landing schema, required relation URIs in JSON/HTML |
+| 1–2: landing page | Core tests: HTTP 200, unchanged official ordinary-JSON landing schema, required JSON/HTML relations and HTTP links; JSON-LD preserves the upstream DataCatalog body for query/Accept negotiation |
 | 3–4: API definition | Core tests follow definition/documentation links; OpenAPI is structurally valid |
 | 5–6: conformance | Official-schema and HTTP tests verify the endpoint, schema and current classes |
 | 7: HTTP | Unsupported execution methods return 405/Allow; release HTTP/1.1 verified against Gunicorn. Service TLS is a deployment responsibility if enabled |
