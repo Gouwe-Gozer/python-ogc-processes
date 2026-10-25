@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 from pygeoapi.process.base import ProcessorExecuteError
 
-from geo_processes.manager import InvalidExecutionRequestError
+from geo_processes.errors import InvalidExecutionRequestError
 from geo_processes.responses import ProcessResponse
 from geo_processes.storage import RESULT_TYPES, ResultStore, StoredResult
 

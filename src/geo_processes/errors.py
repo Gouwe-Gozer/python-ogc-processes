@@ -1,9 +1,35 @@
-"""OGC exception catalogue and JSON/HTML rendering with compatible legacy codes."""
+"""Shared execution exceptions, OGC catalogue and JSON/HTML error rendering."""
 
 from dataclasses import dataclass
 
+from pygeoapi.process.base import ProcessorExecuteError
+
 OGC_EXCEPTIONS = "http://www.opengis.net/def/exceptions/ogcapi-processes-1/1.0"
 SERVICE_EXCEPTIONS = "https://github.com/Gouwe-Gozer/raster-processes/blob/main/docs/errors.md"
+
+
+class InvalidExecutionRequestError(ProcessorExecuteError):
+    """An unsupported or malformed execution request."""
+
+    http_status_code = 400
+    ogc_exception_code = "InvalidParameterValue"
+
+    def __init__(self, message):
+        super().__init__(user_msg=message)
+
+
+class InputTooLargeError(ProcessorExecuteError):
+    """A supplied raster exceeds the supported byte limit."""
+
+    http_status_code = 413
+    ogc_exception_code = "RequestTooLarge"
+
+
+class InputBusyError(ProcessorExecuteError):
+    """All temporary input workspaces are currently in use."""
+
+    http_status_code = 503
+    ogc_exception_code = "ServerBusy"
 
 
 @dataclass(frozen=True)

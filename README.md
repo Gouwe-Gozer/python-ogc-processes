@@ -1,6 +1,6 @@
 # Raster Processes API
 
-An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL.
+An OGC API – Processes service for raster operations, powered by pygeoapi and Rasterio/GDAL.
 
 Designed around OGC API – Processes Part 1: Core, it exposes operations through
 standardized, discoverable endpoints, enabling clients to submit spatial data

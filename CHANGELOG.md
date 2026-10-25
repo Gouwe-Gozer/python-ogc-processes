@@ -2,6 +2,11 @@
 
 ## 0.1.0 — Unreleased
 
+- Scope Callback conformance to each manager's subscriber capability instead of
+  mutating pygeoapi's global declarations during manager construction.
+- Move shared input/execution exceptions into `errors.py`, preserving their
+  HTTP/OGC contracts and keeping processors independent of the manager module.
+
 - Preserve pygeoapi's native route prefix in result references and distinguish
   upstream HTTP status failures from unsupported content encoding.
 - Cover JSON Accept headers, sync preferences, public-reference chaining and

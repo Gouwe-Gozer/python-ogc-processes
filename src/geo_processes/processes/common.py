@@ -8,8 +8,8 @@ from pygeoapi.process.base import ProcessorExecuteError
 
 from geo_processes import engine
 from geo_processes.delivery import ResultCapacityError
+from geo_processes.errors import InputBusyError, InputTooLargeError, InvalidExecutionRequestError
 from geo_processes.inputs import RasterInputBusyError, RasterInputError, RasterInputTooLargeError, resolve_json
-from geo_processes.manager import InputBusyError, InputTooLargeError, InvalidExecutionRequestError
 from geo_processes.storage import ResultStoreBusyError, ResultStoreError, ResultStoreFullError
 
 

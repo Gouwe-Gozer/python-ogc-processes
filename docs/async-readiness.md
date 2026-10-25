@@ -28,10 +28,13 @@ restart and expiry. Current [`test_core_conformance.py`](../tests/test_core_conf
 uses TinyDB to check job errors, and [`test_openapi_patch.py`](../tests/test_openapi_patch.py)
 preserves its generated success responses. Neither establishes raster async readiness.
 
-Revisit process capabilities and all job-related claims together. Callback removal
-currently happens in `OgcSynchronousManager`, while the request guard rejects
-subscribers. Switching managers must not accidentally advertise unsupported
-callbacks or dismissal. The stock manager also retains synchronous jobs; decide
+Revisit process capabilities and all job-related claims together. Discovery now
+uses the API instance manager's native `supports_subscribing` flag for Callback,
+independently of async support; manager construction no longer changes global
+declarations. The public request guard still rejects subscribers. A future
+manager change must reconcile that guard with the advertised capabilities;
+changing the manager alone does not enable public callbacks or dismissal.
+The stock manager also retains synchronous jobs; decide
 whether to retain that behavior and provide monitor links when applicable.
 
 The [Core standard](https://docs.ogc.org/is/18-062r2/18-062r2.html), Requirements
@@ -58,10 +61,9 @@ These are source-review findings; no PostgreSQL raster execution was run.
   instructions remain consistent with current behavior. Correct the input guide's
   two-process wording and validation's suggestion that object inputs are future
   work. Record the chosen next milestone in [the roadmap](roadmap.md).
-- **Small follow-up during integration:** processor exception types live in
-  `manager.py` and are imported by processors/delivery. Move those reusable types
-  to a neutral module if replacing the manager makes that separation useful;
-  avoid a general processor base class or engine abstraction.
+- **Completed boundary cleanup:** shared processor input/execution exceptions
+  live in `errors.py`, independent of the manager. This removes the import
+  coupling; the result-format and job-lifecycle integration above still remains.
 - **Deployment:** preserve the explicit worker/time/memory budgets in
   [`entrypoint.sh`](../docker/entrypoint.sh) and [release Compose](../compose.release.yml).
   The current 30-second Gunicorn request timeout is not an async job timeout.
