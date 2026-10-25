@@ -7,6 +7,7 @@ from pygeoapi.process.base import BaseProcessor, ProcessorExecuteError
 
 from geo_processes import engine
 from geo_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA, PROCESS_METADATA
+from geo_processes.errors import InputBusyError, InputTooLargeError, InvalidExecutionRequestError
 from geo_processes.inputs import (
     RasterInputBusyError,
     RasterInputError,
@@ -14,7 +15,6 @@ from geo_processes.inputs import (
     resolve_source,
     validate_source,
 )
-from geo_processes.manager import InputBusyError, InputTooLargeError, InvalidExecutionRequestError
 
 
 class RasterInfoProcessor(BaseProcessor):

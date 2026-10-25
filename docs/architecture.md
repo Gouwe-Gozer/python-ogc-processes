@@ -19,10 +19,10 @@ masked statistics; [raster metadata](raster-info.md) is an application-owned con
 | `operations/` | Point sampling, range classification, polygonization and bounded GeoJSON serialization |
 | `inputs.py` | Controlled HTTPS/base64 acquisition, private staging and cleanup |
 | `storage.py`, `delivery.py` | TIFF/GeoJSON publication, shared expiry/quotas and OGC file-result formatting |
-| `manager.py` | Synchronous execution, typed exceptions and delegated representations |
+| `manager.py` | Synchronous execution and delegated representations |
 | `responses.py` | Explicit response body, media type, status and headers |
 | `app.py` | Flask request guard, JSON exception normalization and result downloads |
-| `errors.py` | Exception catalogue and API-instance JSON/HTML renderer, including job errors |
+| `errors.py` | Shared execution exceptions, catalogue and API-instance JSON/HTML renderer |
 | `discovery.py` | Required landing links, process-list paging and configuration-scoped capability corrections |
 | `startup.py` | Runtime settings, directory probes and effective configuration summary |
 | `openapi.py` | Version-checked corrections to upstream OpenAPI generation |
@@ -65,7 +65,8 @@ Regression tests retain the following corrections for pygeoapi 0.24.0:
 
 - A boundary guard rejects malformed execute shapes before upstream dereferences them.
 - The manager corrects document wrapping, preserves typed failures, sanitizes
-  unexpected exceptions and removes the unsupported Callback claim.
+  unexpected exceptions and rejects unsupported subscribers. Shared request/input
+  exceptions live in `errors.py`, so processors and delivery do not import the manager.
 - A private manager-to-Flask marker selects HTTP 204 for raw/reference results;
   it is removed before delivery. A renderer on the configured API instance uses
   the [catalogue](errors.md) for JSON/HTML errors with either job manager.
@@ -73,6 +74,9 @@ Regression tests retain the following corrections for pygeoapi 0.24.0:
   retaining upstream metadata generation and HTML templates.
   JSON-LD keeps pygeoapi's native DataCatalog body and receives HTTP Link
   headers; only ordinary JSON landing documents receive a body link.
+  Callback declarations follow the API instance manager's native
+  `supports_subscribing` capability, independently of `is_async`. Constructing
+  our manager does not modify pygeoapi's global conformance declarations.
 - The OpenAPI generator corrects discovery schemas, limits, error responses and
   execution choices. Process metadata is copied before upstream can mutate it.
 - Read-only feature providers do not inherit the unsupported Features CRUD claim.

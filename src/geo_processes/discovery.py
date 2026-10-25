@@ -13,6 +13,7 @@ from pygeoapi.util import render_j2_template
 
 FORMATS = {"json": "application/json", "html": "text/html", "jsonld": "application/ld+json"}
 CONFORMANCE_REL = "http://www.opengis.net/def/rel/ogc/1.0/conformance"
+CALLBACK_CONFORMANCE_URI = "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/callback"
 FEATURES_CRUD = "http://www.opengis.net/spec/ogcapi-features-4/1.0/conf/create-replace-delete"
 CQL_CLASSES = {
     "http://www.opengis.net/spec/cql2/1.0/conf/basic-cql2",
@@ -35,14 +36,16 @@ def readonly_geojson_collections(config):
 def conformance(api, request):
     """Correct inherited claims while retaining native discovery and templates.
 
-    pygeoapi 0.24.0 appends static Features/CQL2 classes without checking
-    editable flags or GeoJSONProvider's lack of filterq evaluation.
+    pygeoapi 0.24.0 appends static Callback/Features/CQL2 classes without
+    checking subscriber support, editability or filterq evaluation.
     """
     providers = [
         provider for resource in api.config["resources"].values() for provider in resource.get("providers", [])
     ]
     features = [provider for provider in providers if provider.get("type") == "feature"]
     excluded = set()
+    if not api.manager.supports_subscribing:
+        excluded.add(CALLBACK_CONFORMANCE_URI)
     if features and not any(provider.get("editable", False) for provider in features):
         excluded.add(FEATURES_CRUD)
     if providers and all(

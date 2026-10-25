@@ -5,7 +5,7 @@ from jsonschema import Draft202012Validator
 from raster_fixtures import DEMO_SOURCE
 
 from geo_processes.contracts.info import DOCUMENT_SCHEMA, EXECUTE_SCHEMA, INFO_SCHEMA, PROCESS_METADATA
-from geo_processes.manager import InvalidExecutionRequestError
+from geo_processes.errors import InvalidExecutionRequestError
 from geo_processes.processes.info import RasterInfoProcessor
 
 DEFINITION = {"name": "geo_processes.processes.info.RasterInfoProcessor"}

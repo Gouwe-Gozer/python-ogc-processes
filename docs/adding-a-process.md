@@ -43,7 +43,7 @@ appropriate. Shared code must preserve explicit output identifiers, supported
 media types and transmission modes; it must not assume one JSON output.
 Extract a helper only when a second real implementation makes duplication clear.
 
-Use the typed request/input exceptions in `manager.py` for controlled client
+Use the typed request/input exceptions in `errors.py` for controlled client
 errors, and sanitized `ProcessorExecuteError(user_msg=...)` for internal failures.
 Map additional cases deliberately into the [exception catalogue](errors.md).
 Do not return internal exception strings or turn storage failures into 400s.

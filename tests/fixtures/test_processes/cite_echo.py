@@ -7,8 +7,8 @@ from pygeoapi.process.base import BaseProcessor
 
 from geo_processes.contracts.files import json_execution_schema
 from geo_processes.delivery import output_transmission
+from geo_processes.errors import InvalidExecutionRequestError
 from geo_processes.inputs import resolve_json
-from geo_processes.manager import InvalidExecutionRequestError
 from geo_processes.processes.common import processing_errors, validate_inputs
 from geo_processes.responses import ProcessResponse
 

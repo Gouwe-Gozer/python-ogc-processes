@@ -9,7 +9,7 @@ from pygeoapi.api import conformance as upstream_conformance
 from pygeoapi.openapi import validate_openapi_document
 from test_ogc_schemas import validate_official
 
-from geo_processes.discovery import CQL_CLASSES, FEATURES_CRUD
+from geo_processes.discovery import CALLBACK_CONFORMANCE_URI, CQL_CLASSES, FEATURES_CRUD
 
 
 def test_json_and_html_conformance_omit_only_confirmed_unsupported_claims(http_client):
@@ -24,11 +24,12 @@ def test_json_and_html_conformance_omit_only_confirmed_unsupported_claims(http_c
     assert response.status_code == 200
     document = response.get_json()
     validate_official(document, "confClasses.yaml")
-    assert set(document["conformsTo"]) == set(original) - {FEATURES_CRUD, *CQL_CLASSES}
+    excluded = {CALLBACK_CONFORMANCE_URI, FEATURES_CRUD, *CQL_CLASSES}
+    assert set(document["conformsTo"]) == set(original) - excluded
     html = http_client.get("/conformance?f=html")
     assert html.status_code == 200 and html.mimetype == "text/html"
     assert all(uri in html.text for uri in document["conformsTo"])
-    assert not any(uri in html.text for uri in {FEATURES_CRUD, *CQL_CLASSES})
+    assert not any(uri in html.text for uri in excluded)
 
 
 def test_editable_configuration_preserves_upstream_claims(http_client, monkeypatch):

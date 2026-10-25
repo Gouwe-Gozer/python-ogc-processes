@@ -5,7 +5,8 @@ import json
 import pytest
 import yaml
 
-from geo_processes.manager import InvalidExecutionRequestError, OgcSynchronousManager
+from geo_processes.errors import InvalidExecutionRequestError
+from geo_processes.manager import OgcSynchronousManager
 from scripts import validate_cite as cite
 
 

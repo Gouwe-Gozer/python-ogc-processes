@@ -3,39 +3,14 @@
 import logging
 from uuid import uuid4
 
-from pygeoapi.api import processes as processes_api
 from pygeoapi.process.base import ProcessorExecuteError
 from pygeoapi.process.manager.dummy import DummyManager
 from pygeoapi.util import JobStatus, RequestedProcessExecutionMode
 
+from geo_processes.errors import InvalidExecutionRequestError
 from geo_processes.responses import STATUS_HEADER, ProcessResponse
 
 LOGGER = logging.getLogger(__name__)
-CALLBACK_CONFORMANCE_URI = "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/callback"
-
-
-class InvalidExecutionRequestError(ProcessorExecuteError):
-    """An unsupported or malformed execution request."""
-
-    http_status_code = 400
-    ogc_exception_code = "InvalidParameterValue"
-
-    def __init__(self, message):
-        super().__init__(user_msg=message)
-
-
-class InputTooLargeError(ProcessorExecuteError):
-    """A supplied raster exceeds the supported byte limit."""
-
-    http_status_code = 413
-    ogc_exception_code = "RequestTooLarge"
-
-
-class InputBusyError(ProcessorExecuteError):
-    """All temporary input workspaces are currently in use."""
-
-    http_status_code = 503
-    ogc_exception_code = "ServerBusy"
 
 
 class OgcSynchronousManager(DummyManager):
@@ -50,8 +25,6 @@ class OgcSynchronousManager(DummyManager):
         super().__init__(manager_def)
         # The Flask application supplies its canonical configured URL at startup.
         self.result_base_url = ""
-        if CALLBACK_CONFORMANCE_URI in processes_api.CONFORMANCE_CLASSES:
-            processes_api.CONFORMANCE_CLASSES.remove(CALLBACK_CONFORMANCE_URI)
 
     def execute_process(
         self,

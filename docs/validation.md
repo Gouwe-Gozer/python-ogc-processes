@@ -14,6 +14,12 @@ Description, plus inherited Common and read-only Features classes. It omits Call
 Job List and Dismiss. The [Core audit](core-conformance-audit.md) reviews
 Requirements 1–46 for the public synchronous profile and maps them to tests.
 
+Callback filtering is local to the API instance and follows its manager's native
+`supports_subscribing` capability, not `is_async`. Tests cover independent API
+instances and both capability values with sync/async managers in JSON and HTML.
+Manager construction leaves the upstream conformance list unchanged; the public
+manager's Callback claim remains absent.
+
 The pre-stabilization declarations are captured in the dated CITE proposal's
 [`discovery.json`](../validation/cite-teamengine/current/discovery.json).
 The Processes suite does not validate inherited Features/CQL2 classes.
@@ -156,6 +162,16 @@ modified to hide the overlap; these checks do not establish complete conformance
 ## Recorded checks
 
 These are dated observations, not permanently current test counts or guarantees:
+
+- pygeoapi boundary cleanup, **2026-10-25**: **562 tests passed**; final
+  `make validate` coverage **95.97%** (`make test`: **96.07%**, with the existing
+  HTTPS deadline-timer branch varying by timing). Both commands pass. Geonovum
+  still matches eight reviewed findings; CITE remains **36 passed / 5 failed /
+  13 skipped**, with every case status unchanged. Its discovery, conformance and
+  OpenAPI capture exactly matches the pre-refactor run. Release smoke checks
+  cover all five operations and result downloads. New regressions verify native
+  subscriber-capability handling, global-state/API-instance isolation and
+  preserved typed exception contracts; reviewed baselines are unchanged.
 
 - Independent execution review, **2026-10-25**: **548 tests passed**, **96.07%
   coverage**. `make validate` (including `make test`) passes; Geonovum matches
