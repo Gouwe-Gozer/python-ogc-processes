@@ -1,10 +1,12 @@
 # Development instructions
 
-This repository implements `geo-processes`, a Rasterio/GDAL-backed OGC API –
+This repository implements Raster Processes API, a Rasterio/GDAL-backed OGC API –
 Processes service built on pygeoapi. Code, configuration and tests define current
 behavior. Use [development](docs/development.md), [architecture](docs/architecture.md)
 and [validation](docs/validation.md) for maintained guidance.
 `CODEX_HANDOVER.md` is historical planning material, not an active task plan.
+The Python package remains `geo_processes` (distribution `geo-processes`);
+the public project/repository name is `raster-processes`.
 
 ## Environment and workflow
 

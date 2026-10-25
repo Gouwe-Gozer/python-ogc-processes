@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 OGC_EXCEPTIONS = "http://www.opengis.net/def/exceptions/ogcapi-processes-1/1.0"
-SERVICE_EXCEPTIONS = "https://github.com/Gouwe-Gozer/terrio-processes/blob/main/docs/errors.md"
+SERVICE_EXCEPTIONS = "https://github.com/Gouwe-Gozer/raster-processes/blob/main/docs/errors.md"
 
 
 @dataclass(frozen=True)

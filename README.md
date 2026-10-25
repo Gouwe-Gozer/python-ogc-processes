@@ -1,7 +1,8 @@
-# geo-processes
+# Raster Processes API
 
-A lightweight geospatial processing API built on pygeoapi, designed around
-OGC API – Processes Part 1: Core. It exposes geospatial operations through
+An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL.
+
+Designed around OGC API – Processes Part 1: Core, it exposes operations through
 standardized, discoverable endpoints, enabling clients to submit spatial data
 and retrieve processing results. The project currently supports synchronous
 execution, with asynchronous job management planned.
@@ -106,6 +107,7 @@ remaining implementation gaps are documented in [validation](docs/validation.md)
   and [adding a process](docs/adding-a-process.md).
 - [Release deployment](docs/release-image.md), [client interoperability](docs/client-interoperability.md)
   and [future work](docs/roadmap.md).
+- [Project identity and repository/local rename steps](docs/renaming.md).
 
 ## License and origins
 

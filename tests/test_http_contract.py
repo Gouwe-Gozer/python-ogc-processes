@@ -130,7 +130,7 @@ def test_preferences_remain_synchronous(http_client, preference):
 def test_discovery_links_descriptions_and_capabilities_agree(http_client):
     landing = http_client.get("/?f=json")
     assert landing.status_code == 200
-    assert landing.get_json()["title"] == "Geo Processes API"
+    assert landing.get_json()["title"] == "Raster Processes API"
     listing = http_client.get("/processes?f=json").get_json()
     assert {process["id"] for process in listing["processes"]} == {
         "raster-info",

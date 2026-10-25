@@ -3,6 +3,11 @@
 Run commands from the repository root with user-installed `uv` and a local
 `.venv`. No host system packages or global Python installs are needed.
 
+The service is **Raster Processes API**, with repository name `raster-processes`.
+Its existing Python package `geo_processes` and distribution `geo-processes`
+remain unchanged. See [renaming an existing checkout](renaming.md) for paths,
+virtual-environment recreation and Docker volume preservation.
+
 | Component | Project constraint |
 | --- | --- |
 | Python | 3.12 (`>=3.12,<3.13` in `pyproject.toml`; `.python-version` selects 3.12) |

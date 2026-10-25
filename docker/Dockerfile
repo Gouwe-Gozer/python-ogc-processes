@@ -1,7 +1,7 @@
 FROM geopython/pygeoapi:0.24.0@sha256:a62895f2585ef1fcd1fc97ec35bf13177becc1334a622172a2c5c4d2145b8f0a
 
-LABEL org.opencontainers.image.title="Geo Processes API" \
-      org.opencontainers.image.description="Bounded synchronous Rasterio operations built on pygeoapi" \
+LABEL org.opencontainers.image.title="Raster Processes API" \
+      org.opencontainers.image.description="An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL." \
       org.opencontainers.image.version="0.1.0" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="Gouwe-Gozer" \
@@ -18,7 +18,7 @@ ENV CONTAINER_PORT=8080 \
 
 COPY config/pygeoapi.yml /pygeoapi/local.config.yml
 COPY src/geo_processes /pygeoapi/geo_processes
-COPY LICENSE THIRD_PARTY_NOTICES.md /licenses/geo-processes/
+COPY LICENSE THIRD_PARTY_NOTICES.md /licenses/raster-processes/
 
 COPY docker/entrypoint.sh /geo-entrypoint.sh
 

@@ -2,6 +2,10 @@
 
 ## 0.1.0 — Unreleased
 
+- Adopt Raster Processes API / `raster-processes` branding and subtitle in service
+  metadata, documentation and Docker images; update exception-document links and
+  document the GitHub/local rename steps. Python imports and process IDs remain unchanged.
+
 - Remove unused OpenAPI tag declarations while preserving endpoints/groupings,
   explain intended OGC alignment, and record PostgreSQL async readiness findings.
 

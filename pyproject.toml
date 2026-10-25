@@ -1,7 +1,7 @@
 [project]
 name = "geo-processes"
 version = "0.1.0"
-description = "Bounded Rasterio operations exposed through OGC API Processes"
+description = "An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL."
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Minnert Wijnands (Gouwe-Gozer)" }]

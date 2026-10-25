@@ -73,8 +73,11 @@ def test_upstream_still_needs_targeted_corrections(service_config):
 def test_generated_openapi_is_valid_and_preserves_description(service_config):
     document = generate_openapi(service_config)
     assert validate_openapi_document(document)
-    assert document["info"]["title"] == "Geo Processes API"
+    assert document["info"]["title"] == "Raster Processes API"
     assert document["info"]["description"] == service_config["metadata"]["identification"]["description"]
+    assert document["info"]["description"].startswith(
+        "An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL."
+    )
     assert "OGC API – Processes Part 1: Core" in document["info"]["description"]
     assert "synchronous execution, with asynchronous job management planned" in document["info"]["description"]
     assert {"/jobs/{jobID}", "/jobs/{jobID}/results"} <= document["paths"].keys()

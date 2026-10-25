@@ -1,7 +1,7 @@
 # Client interoperability log
 
-Observations from testing `geo-processes` with the external OGC API – Processes
-client. Client name/build and the exact `geo-processes` responses consumed by it
+Observations from testing Raster Processes API with the external OGC API – Processes
+client. Client name/build and the exact service responses consumed by it
 have not been recorded. ZOO behavior is reported by the tester, not independently reproduced.
 Append issues with stable IDs; record client/service versions when available.
 Schema validation and usable form rendering are separate checks.

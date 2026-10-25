@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    image: geo-processes-dev:0.1.0
+    image: raster-processes-dev:0.1.0
     pull_policy: build
     ports:
       - "${API_PORT:-5001}:8080"

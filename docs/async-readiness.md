@@ -84,24 +84,12 @@ These are source-review findings; no PostgreSQL raster execution was run.
 
 ## Project identity and rename checklist
 
-**Geo Processes / `geo-processes`** is the smallest, library-neutral choice;
-the package already uses it. **Geo Operations / `geo-operations`** is broader
-product wording. **Raster Processes / `raster-processes`** is clearer if the
-project deliberately stays raster-only. Name availability has not been checked.
+The selected public name is **Raster Processes API**, with repository/local
+directory name **`raster-processes`**. The subtitle is:
 
-After selecting a name:
+> An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL.
 
-- Rename the GitHub repository, then update the origin URL, badges/links and
-  [`errors.py`](../src/geo_processes/errors.py)'s service exception-document URI.
-  Treat changing those public error identifiers as an API compatibility decision.
-  Preserve historical origins and MIT notices.
-- Rename the local checkout and update IDE/workspace/terminal paths. Preserve the
-  existing Compose project name explicitly so the result volume is reused; see
-  [release deployment](release-image.md#isolation-and-storage). Recreate the local
-  `.venv` if its installed scripts retain the old absolute path.
-- Update the API title, README and image labels/names if the display name changes.
-  Keeping the Python package `geo_processes`, environment names and process IDs
-  avoids unrelated import and API migrations. A repository/folder rename does
-  not require those changes.
-
-No repository, package, directory, volume or remote was renamed in this review.
+API metadata, documentation and Docker image names use that identity. Keep the
+Python package/distribution, environment names and process IDs stable. Service
+exception links use the new repository name. The [rename guide](renaming.md)
+covers the remaining GitHub/local actions and Docker project names.

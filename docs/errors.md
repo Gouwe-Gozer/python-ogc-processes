@@ -24,15 +24,13 @@ process/job errors. Boundary guards and application download errors return JSON.
 | `NoApplicableCode` | 500 | [Processing failed](#processing-failed) |
 
 Each service-defined URI is the full URL of its section in this document, under
-`https://github.com/Gouwe-Gozer/terrio-processes/blob/main/docs/errors.md`.
-The repository still has its original name. Treat published type URIs as stable
-identifiers if the repository is renamed later.
+`https://github.com/Gouwe-Gozer/raster-processes/blob/main/docs/errors.md`.
 
 For example, a malformed execution request returns HTTP 400, `application/json`:
 
 ```json
 {
-  "type": "https://github.com/Gouwe-Gozer/terrio-processes/blob/main/docs/errors.md#invalid-parameter-value",
+  "type": "https://github.com/Gouwe-Gozer/raster-processes/blob/main/docs/errors.md#invalid-parameter-value",
   "title": "Invalid request",
   "status": 400,
   "detail": "inputs must be an object",

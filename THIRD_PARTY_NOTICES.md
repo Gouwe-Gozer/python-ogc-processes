@@ -1,6 +1,6 @@
 # Third-party notices
 
-`geo-processes` is maintained by Minnert Wijnands (Gouwe-Gozer) and is
+Raster Processes API is maintained by Minnert Wijnands (Gouwe-Gozer) and is
 MIT-licensed. The following notices identify reused application code and
 dependencies, whose licences also apply to their respective software.
 
@@ -16,7 +16,7 @@ Copyright (c) 2026 Breinstein Informatiemanagement B.V.
 ```
 
 The original MIT permission and warranty terms remain unchanged. The additional
-copyright for changes in `geo-processes` names Minnert Wijnands (Gouwe-Gozer).
+copyright for changes in this project names Minnert Wijnands (Gouwe-Gozer).
 The origin acknowledgement does not imply involvement in this project's
 maintenance.
 

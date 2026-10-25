@@ -62,6 +62,8 @@ volume; adding `--volumes` deletes it. Keep the same Compose project name when
 renaming a checkout or upgrading an existing installation, so Docker reuses the
 same volume. Historical environment/package renames are recorded in the
 [upgrade notes](rasterio-pivot.md#upgrade-names-and-preserve-results).
+The [repository rename guide](renaming.md) covers switching Docker project names
+and optionally retaining the old installation's test results.
 
 Authentication, TLS termination, hosting, monitoring and access/egress policy
 remain deployment responsibilities; this repository supplies a bounded service

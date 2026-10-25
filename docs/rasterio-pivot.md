@@ -33,9 +33,10 @@ These mappings are retained only for installations upgrading from the old names:
 | Backend-native information dictionary | [Application-owned metadata](raster-info.md) |
 
 There are no compatibility aliases for the old process/package/environment names.
-The GitHub repository still uses `Gouwe-Gozer/terrio-processes`; its name also
-appears in published exception type URLs. Renaming the application did not rename
-that repository or those identifiers.
+At this backend pivot, the GitHub repository and published exception type URLs
+retained the `Gouwe-Gozer/terrio-processes` name. That application rename did not
+rename the repository or those identifiers. Current identity and operator steps
+are documented separately in the [rename guide](renaming.md).
 
 The logical Compose volume remains `results`. Preserve an installation's existing
 Compose project name when changing checkout names or upgrading images. The internal
