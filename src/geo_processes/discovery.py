@@ -6,12 +6,65 @@ from copy import copy
 from urllib.parse import urlencode
 
 from flask import render_template_string
+from pygeoapi.api import conformance as upstream_conformance
 from pygeoapi.api import evaluate_limit
 from pygeoapi.api.processes import describe_processes
 from pygeoapi.util import render_j2_template
 
 FORMATS = {"json": "application/json", "html": "text/html", "jsonld": "application/ld+json"}
 CONFORMANCE_REL = "http://www.opengis.net/def/rel/ogc/1.0/conformance"
+FEATURES_CRUD = "http://www.opengis.net/spec/ogcapi-features-4/1.0/conf/create-replace-delete"
+CQL_CLASSES = {
+    "http://www.opengis.net/spec/cql2/1.0/conf/basic-cql2",
+    "http://www.opengis.net/spec/cql2/1.0/conf/cql2-text",
+}
+
+
+def readonly_geojson_collections(config):
+    """Scope corrections to the known, single-provider read-only GeoJSON case."""
+    return {
+        identifier
+        for identifier, resource in config["resources"].items()
+        if len(providers := resource.get("providers", [])) == 1
+        and providers[0].get("type") == "feature"
+        and providers[0].get("name") == "GeoJSON"
+        and not providers[0].get("editable", False)
+    }
+
+
+def conformance(api, request):
+    """Correct inherited claims while retaining native discovery and templates.
+
+    pygeoapi 0.24.0 appends static Features/CQL2 classes without checking
+    editable flags or GeoJSONProvider's lack of filterq evaluation.
+    """
+    providers = [
+        provider for resource in api.config["resources"].values() for provider in resource.get("providers", [])
+    ]
+    features = [provider for provider in providers if provider.get("type") == "feature"]
+    excluded = set()
+    if features and not any(provider.get("editable", False) for provider in features):
+        excluded.add(FEATURES_CRUD)
+    if providers and all(
+        provider.get("type") == "feature" and provider.get("name") == "GeoJSON" and not provider.get("editable", False)
+        for provider in providers
+    ):
+        excluded.update(CQL_CLASSES)
+    if not excluded:
+        return upstream_conformance(api, request)
+    value_request = copy(request)
+    value_request._format = "json"
+    _headers, status, body = upstream_conformance(api, value_request)
+    document = json.loads(body)
+    document["conformsTo"] = [uri for uri in document["conformsTo"] if uri not in excluded]
+    headers = request.get_response_headers(**api.api_headers)
+    if request.format == "html":
+        body = render_j2_template(
+            api.tpl_config, api.config["server"]["templates"], "conformance.html", document, request.locale
+        )
+    else:
+        body = json.dumps(document, indent=2 if api.pretty_print else None)
+    return headers, status, body
 
 
 def _navigation(links):

@@ -170,6 +170,11 @@ schema/example/link and literal processor configuration keys, such as `type`,
 translation and metadata unchanged; nonmatching locale diagnostics and all other
 warnings/errors remain visible. See [the compatibility boundary](architecture.md#compatibility-corrections).
 
+The pinned release's Rasterio polygonization can emit a GDAL warning that its
+internal `Memory` driver is deprecated in favor of `MEM`. Processing and GeoJSON
+delivery still succeed. This upstream warning is retained; resolving it requires
+reviewing the Rasterio/GDAL dependency pair, rather than filtering diagnostics.
+
 The image does not set `PYGEOAPI_ASYNCAPI`: no AsyncAPI document or pub/sub
 interface is configured. This avoids requesting a nonexistent optional file
 at each worker startup. Explicitly supplied AsyncAPI paths still use upstream

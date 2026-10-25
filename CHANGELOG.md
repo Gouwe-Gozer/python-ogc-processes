@@ -2,6 +2,13 @@
 
 ## 0.1.0 — Unreleased
 
+- Correct inherited Features CRUD/CQL2 claims for read-only sample providers;
+  omit unsupported CQL query POSTs from OpenAPI and reject ignored filters.
+- Make the README's first raster-processing example runnable with the packaged
+  AHN4 sample, including the GeoTIFF download, and clarify synchronous execution.
+- Keep Bandit suppression explanations outside its directive syntax, removing
+  false unknown-test-name warnings without changing security checks.
+
 - Add shared Make validation commands, locked Geonovum 1.3.2 tooling and a
   manual CITE workflow against the real synchronous application. Preserve
   native reports and propose a fresh, explicitly classified current-service baseline.

@@ -4,8 +4,9 @@ An OGC API – Processes service for raster operations, powered by pygeoapi and 
 
 Designed around OGC API – Processes Part 1: Core, it exposes operations through
 standardized, discoverable endpoints, enabling clients to submit spatial data
-and retrieve processing results. The project currently supports synchronous
-execution, with asynchronous job management planned.
+and retrieve processing results. Execution is synchronous: each request returns
+the result or a download link when processing completes. Asynchronous jobs are
+not yet supported.
 
 The five Rasterio/GDAL operations below process **users' own GeoTIFFs**, supplied
 as controlled HTTPS references or inline base64.
@@ -28,6 +29,8 @@ docker compose --file compose.release.yml up --build --detach
 
 Open <http://localhost:5001/processes?f=json> for available processes and
 <http://localhost:5001/openapi> for interactive API documentation.
+Stop the release with `docker compose --file compose.release.yml down`;
+stored results are retained in its named volume.
 Set both the published port and client-facing URL when using another address:
 
 ```bash
@@ -44,18 +47,24 @@ keep `--file compose.release.yml` for the self-contained release.
 
 ## Process your raster
 
-Install the local example client with Python 3.12 and user-installed `uv`, then
-inspect, reproject and save a GeoTIFF:
+With the service running, install the local example client with Python 3.12 and
+user-installed `uv`, then inspect and reproject the packaged sample GeoTIFF:
 
 ```bash
 uv sync --locked --all-groups
-uv run python scripts/process_raster.py my-dem.tif --output my-dem-wgs84.tif \
+mkdir -p runtime-data
+uv run python scripts/process_raster.py \
+  src/geo_processes/data/samples/AHN4_R5_117000_517000.TIF \
+  --output runtime-data/ahn4-wgs84.tif \
   --target-crs EPSG:4326 --base-url http://localhost:5001
 ```
 
 The command prints source dimensions/band count, submits the file inline and
-saves the downloaded result. The destination's parent directory must exist;
-existing files are preserved and failed downloads are discarded.
+downloads the reprojected GeoTIFF to `runtime-data/ahn4-wgs84.tif`. Replace the
+input path to use your own raster. The destination's parent directory must exist;
+choose another output filename when rerunning, since existing files are preserved.
+Failed downloads are discarded. For a working GeoJSON point-sampling example,
+see [use the samples for processing](docs/sample-data.md#use-the-samples-for-processing).
 
 For a quick API check, submit the bundled fixture as ordinary inline data:
 

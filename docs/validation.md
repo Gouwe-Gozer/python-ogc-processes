@@ -10,16 +10,19 @@ illustrate representations and are not schemas. The unchanged
 ## Conformance claims and gaps
 
 `/conformance` advertises Processes Core, JSON, OpenAPI 3.0 and OGC Process
-Description, plus inherited Common, Features and CQL2 classes. It omits Callback,
+Description, plus inherited Common and read-only Features classes. It omits Callback,
 Job List and Dismiss. The [Core audit](core-conformance-audit.md) reviews
 Requirements 1–46 for the public synchronous profile and maps them to tests.
 
-The complete current declarations are captured in the CITE proposal's
+The pre-stabilization declarations are captured in the dated CITE proposal's
 [`discovery.json`](../validation/cite-teamengine/current/discovery.json).
-The Processes suite does not validate the inherited Features/CQL2 classes.
-In particular, the inherited Features `create-replace-delete` claim needs
-separate applicability review against the read-only sample providers; it has
-not been verified or silently removed as part of this testing task.
+The Processes suite does not validate inherited Features/CQL2 classes.
+The service now excludes the unsupported Features `create-replace-delete` claim
+when no feature provider is editable. It also excludes Basic CQL2/CQL2 text when
+all configured providers are read-only GeoJSON: that provider ignores CQL filters.
+Such queries now return 400, and the generated OpenAPI omits their query POSTs.
+Native bbox, paging and feature-ID reads remain available. The historical CITE
+snapshot is unchanged; use the live `/conformance` for current declarations.
 
 The confirmed gaps are corrected: raster/scalar references use shared bounded
 HTTPS resolution, job errors expose the prescribed URI in JSON/HTML, existing
@@ -136,6 +139,18 @@ modified to hide the overlap; these checks do not establish complete conformance
 ## Recorded checks
 
 These are dated observations, not permanently current test counts or guarantees:
+
+- Demo stabilization, **2026-10-25**: **536 tests passed**, **95.85% coverage**
+  (integrated validation checkpoint: 528 tests). `make test` and `make validate`
+  pass; Geonovum still matches the eight reviewed findings. CITE remains strict
+  and reports the same **36 passes, 5 failures and 13 skips**, with identical
+  individual case statuses. Reviewed baselines are unchanged. The release
+  passes all five operation smoke checks with the packaged AHN4 raster,
+  TIFF/GeoJSON downloads, README commands and the point-sampling example.
+  Saved downloads survive a normal release stop/start. Swagger and ReDoc render
+  the live catalogue without JavaScript errors or empty Swagger tag sections.
+  Read-only sample discovery no longer claims CRUD/CQL2; all 26 OpenAPI paths
+  remain, with only the two unsupported CQL query POSTs removed.
 
 - Async readiness/OpenAPI review, **2026-10-25**: **519 tests passed**,
   **95.72% coverage**. Swagger renders the retained operation groups without

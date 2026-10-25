@@ -15,6 +15,7 @@ from pygeoapi.plugin import load_plugin
 from pygeoapi.util import yaml_load
 
 from geo_processes import __version__
+from geo_processes.discovery import readonly_geojson_collections
 from geo_processes.errors import exception_document
 
 SCHEMA_BASE = "https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas"
@@ -56,6 +57,10 @@ def generate_openapi(config):
     document["info"]["version"] = __version__
     document["info"].pop("contact", None)
     paths = document["paths"]
+    for identifier in readonly_geojson_collections(config):
+        # In the pinned generator this POST is a CQL query, not feature creation.
+        # GeoJSONProvider accepts but ignores filterq, so it is unsupported here.
+        paths.get(f"/collections/{identifier}/items", {}).pop("post", None)
     paths["/conformance"]["get"]["responses"]["200"] = schema_response(
         "Supported conformance classes", "confClasses.yaml"
     )

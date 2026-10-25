@@ -64,7 +64,11 @@ Examples:
 /collections/sample-points/items?f=json&bbox=4.835,52.647,4.837,52.649
 ```
 
-Follow the returned `next` link for paging. Data edits are disabled. Integration
+Follow the returned `next` link for paging. Data edits and CQL filtering are
+unsupported. CQL requests return a clear HTTP 400 instead of silently returning
+unfiltered data; use bbox or individual feature IDs. The generated OpenAPI omits
+the unsupported CQL query POSTs, and `/conformance` omits the inherited CRUD and
+CQL2 claims for these providers. Integration
 tests validate responses against an unchanged offline snapshot of the
 [official Features schemas](https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/schemas/).
 This is evidence for the sample routes, not a new conformance certification.

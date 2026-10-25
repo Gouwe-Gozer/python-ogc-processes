@@ -23,7 +23,7 @@ masked statistics; [raster metadata](raster-info.md) is an application-owned con
 | `responses.py` | Explicit response body, media type, status and headers |
 | `app.py` | Flask request guard, JSON exception normalization and result downloads |
 | `errors.py` | Exception catalogue and API-instance JSON/HTML renderer, including job errors |
-| `discovery.py` | Required landing links and traversable process lists, independent of the manager |
+| `discovery.py` | Required landing links, process-list paging and configuration-scoped capability corrections |
 | `startup.py` | Runtime settings, directory probes and effective configuration summary |
 | `openapi.py` | Version-checked corrections to upstream OpenAPI generation |
 | `documentation.py`, `templates/openapi/redoc.html` | Supported template override for the pinned ReDoc presentation; other templates fall back to pygeoapi |
@@ -50,6 +50,11 @@ particular output identifiers or counts. Multipart output and job infrastructure
 are not implemented. File results are atomically published under opaque IDs;
 [storage](results.md) supplies expiry and cross-worker locking.
 
+Rasterio datasets are opened within each operation's context managers and never
+shared across executions. Input slots are locked for their full lifetime;
+output publication uses a separate writer lock and unique temporary directories.
+These existing isolation rules also apply to future execution models.
+
 The owned entrypoint runs the startup preflight, generates OpenAPI and launches
 Gunicorn. Importing the Flask application also validates runtime settings. See
 [development](development.md#startup-validation) and [release deployment](release-image.md).
@@ -70,6 +75,12 @@ Regression tests retain the following corrections for pygeoapi 0.24.0:
   headers; only ordinary JSON landing documents receive a body link.
 - The OpenAPI generator corrects discovery schemas, limits, error responses and
   execution choices. Process metadata is copied before upstream can mutate it.
+- Read-only feature providers do not inherit the unsupported Features CRUD claim.
+  When all providers are read-only GeoJSON, discovery also omits CQL2 claims:
+  this provider ignores parsed CQL filters. A request guard rejects such queries,
+  and OpenAPI omits their query POSTs. Native collection reads remain upstream;
+  conformance corrections use the API instance and original HTML template rather
+  than changing upstream global declarations.
 - `logging_filters.py` filters only Babel unknown-locale warnings from
   `pygeoapi.l10n.str2locale` whose identifiers match registered schema, example
   or link keys, or literal processor configuration keys used by HTML templates.

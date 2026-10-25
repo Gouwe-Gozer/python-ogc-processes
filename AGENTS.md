@@ -64,3 +64,7 @@ Prefer pygeoapi's existing APIs, managers, execution lifecycle and extension poi
 Before changing shared infrastructure, inspect the relevant upstream interfaces
 and justify why existing functionality is insufficient. Keep custom behavior
 narrowly scoped and documented; avoid coupling processors to a particular manager.
+
+
+## Rasterio/GDAL concurrency
+Processing operations must not share open Rasterio/GDAL dataset handles across concurrent executions unless explicitly synchronized or supported by a documented thread-safe mechanism. Prefer opening datasets within each execution using context managers. Keep temporary files and output paths isolated per job. Preserve explicit concurrency and resource limits when introducing asynchronous execution.

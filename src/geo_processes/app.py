@@ -9,7 +9,7 @@ from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_, execute_from_flask
 from werkzeug.datastructures import Headers
 
 from geo_processes.datasets import SAMPLE_DATA_DIR
-from geo_processes.discovery import landing_links, list_processes
+from geo_processes.discovery import conformance, landing_links, list_processes, readonly_geojson_collections
 from geo_processes.documentation import configure_documentation_templates
 from geo_processes.errors import exception_document, install_exception_renderer
 from geo_processes.inputs import MAX_EXECUTION_BYTES
@@ -58,8 +58,34 @@ def get_processes(process_id=None):
 APP.view_functions["pygeoapi.get_processes"] = get_processes
 
 
+def get_conformance():
+    return execute_from_flask(conformance, request)
+
+
+APP.view_functions["pygeoapi.conformance"] = get_conformance
+
+
 def _invalid_request(description):
     return jsonify(exception_document("InvalidParameterValue", description, 400)), 400
+
+
+@APP.before_request
+def reject_unsupported_sample_filtering():
+    """GeoJSONProvider ignores filterq; never silently return unfiltered data."""
+    arguments = request.view_args or {}
+    if (
+        request.endpoint != "pygeoapi.collection_items"
+        or arguments.get("item_id") is not None
+        or arguments.get("collection_id") not in readonly_geojson_collections(CONFIG)
+    ):
+        return None
+    if (request.method == "POST" and request.mimetype != "application/geo+json") or set(request.args) & {
+        "filter",
+        "filter-lang",
+        "filter-crs",
+    }:
+        return _invalid_request("CQL filtering is not supported for this sample collection; use bbox or feature IDs")
+    return None
 
 
 @APP.errorhandler(413)
