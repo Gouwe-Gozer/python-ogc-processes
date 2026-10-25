@@ -52,6 +52,13 @@ For behavior/deployment changes, also follow the configuration, OpenAPI and
 container checks in the development guide. Report checks that could not run and
 why. Never remove tests just to obtain a passing suite.
 
+`make test` runs these checks plus configuration/OpenAPI validation. `make validate`
+adds the locked Geonovum comparison against a running API. `make validate-cite`
+runs the separate official executable suite against an isolated application.
+Keep reviewed baselines unchanged unless an explicit evidence-based update is
+part of the task; documented CITE failures must remain failures. See the
+[validation workflows](docs/validation.md#repeatable-commands).
+
 ## pygeoapi-first architecture
 Prefer pygeoapi's existing APIs, managers, execution lifecycle and extension points.
 Before changing shared infrastructure, inspect the relevant upstream interfaces

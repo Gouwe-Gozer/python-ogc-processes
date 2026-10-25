@@ -10,9 +10,16 @@ illustrate representations and are not schemas. The unchanged
 ## Conformance claims and gaps
 
 `/conformance` advertises Processes Core, JSON, OpenAPI 3.0 and OGC Process
-Description, plus upstream Common/HTML discovery classes. It omits Callback,
+Description, plus inherited Common, Features and CQL2 classes. It omits Callback,
 Job List and Dismiss. The [Core audit](core-conformance-audit.md) reviews
 Requirements 1–46 for the public synchronous profile and maps them to tests.
+
+The complete current declarations are captured in the CITE proposal's
+[`discovery.json`](../validation/cite-teamengine/current/discovery.json).
+The Processes suite does not validate the inherited Features/CQL2 classes.
+In particular, the inherited Features `create-replace-delete` claim needs
+separate applicability review against the read-only sample providers; it has
+not been verified or silently removed as part of this testing task.
 
 The confirmed gaps are corrected: raster/scalar references use shared bounded
 HTTPS resolution, job errors expose the prescribed URI in JSON/HTML, existing
@@ -22,8 +29,9 @@ Qualified GeoJSON object inputs are covered by the current audit. Reassess
 conditional requirements when adding new input types, repeated occurrences,
 multiple outputs or asynchronous execution.
 
-The audit and regressions establish the recorded behavior, not a certificate or
-a new full TEAM Engine assessment. The published binary-schema overlap below
+The audit and regressions establish the recorded behavior, not a certificate.
+The [current CITE observation](../validation/cite-teamengine/current/README.md)
+adds executable-suite evidence with explicit failures/skips and coverage limits. The published binary-schema overlap below
 remains explicit. The static checker retains reviewed expectations for unreachable
 job-success/async responses and optional Job List support; no fake success
 responses or substitute job system were added to remove those findings.
@@ -31,6 +39,39 @@ responses or substitute job system were added to remove those findings.
 The application `/results/<id>/output.tif` route is an output-reference target,
 not `/jobs/{jobID}/results`. A future reusable-upload endpoint would also be an
 extension, not evidence of Core conformance.
+
+## Repeatable commands
+
+Install user-managed uv, Python 3.12, GNU Make and Docker Compose v2, then run
+`uv sync --locked --all-groups`. External tool versions are pinned; network
+access is needed for registry/schema downloads. No host Node, Java or Maven
+installation is needed by the standard commands.
+
+| Command | What it checks | API/report scope |
+| --- | --- | --- |
+| `make test` | Ruff, Bandit, pytest with coverage and configuration/OpenAPI validation | Our code and integration; XML reports in `runtime-data/validation/` |
+| `make validate-geonovum` | Geonovum 1.3.2 static Processes 1.0.0 analysis, exact reviewed-baseline comparison | Running API at `127.0.0.1:5001`; raw JSON in `runtime-data/validation/geonovum.json` |
+| `make validate` | Both commands above; excludes CITE | Requires the normal API running |
+| `make validate-cite` | Official Processes ETS 1.3 with TEAM Engine 6.0.0-RC2 | Builds its own isolated real API; native reports, summaries and metadata in `runtime-data/cite/` |
+
+Geonovum's eight-error report can match the reviewed baseline and return success;
+that means no diagnostic regression, not full compliance. CITE remains strict:
+its five recorded failures still produce a failed command. Infrastructure errors
+are identified separately and never recorded as passing tests. Make itself wraps
+unsuccessful commands in a nonzero status; the Python runners distinguish
+conformance/baseline failure (1) from infrastructure failure (2).
+
+Pull requests run the routine, release/runtime and Geonovum checks. CITE is an
+explicitly triggered separate CI workflow and can also run locally without GitHub.
+CI preserves reports even after failures. Neither runner automatically updates
+reviewed baselines; inspect the actual tests, requirements and applicability
+before proposing explicit tracked evidence changes.
+
+[CITE instructions](../validation/cite-teamengine/README.md) cover CLI/REST,
+manual browser fallback and cleanup. The [fresh baseline proposal](../validation/cite-teamengine/current/README.md)
+classifies every failure and skip. The unchanged predecessor baseline is
+historical. [Geonovum notes](../validation/geonovum/README.md) document the version,
+locked runtime, diagnostic fields and review policy.
 
 ## OGC review guide
 
@@ -82,12 +123,15 @@ modified to hide the overlap; these checks do not establish complete conformance
   external browser client; track it in [the interoperability log](client-interoperability.md).
 - Release smoke checks run processing through Gunicorn, download/open results
   from independent clients, inspect isolation and verify restart persistence.
-- [Geonovum 1.2.0](../validation/geonovum/README.md) checks OpenAPI statically.
+- [Geonovum 1.3.2](../validation/geonovum/README.md) checks OpenAPI statically.
   Its eight reviewed diagnostics are retained explicitly (including one
   conditional async-201 expectation per synchronous process).
-- [CITE/TEAM Engine evidence](../validation/cite-teamengine/README.md) concerns
-  the predecessor's integration-only echo fixture. No current raster-service
-  TEAM Engine run or certification is claimed.
+- [CITE/TEAM Engine](../validation/cite-teamengine/README.md) now runs the actual
+  service with a sync-only echo fixture on the same manager and response path.
+  All five real process descriptions are selected; raster execution smoke tests
+  run separately. The [current proposal](../validation/cite-teamengine/current/README.md)
+  records 36 passes, 5 failures and 13 skips. It is not certification; historical
+  predecessor results remain separate.
 
 ## Recorded checks
 

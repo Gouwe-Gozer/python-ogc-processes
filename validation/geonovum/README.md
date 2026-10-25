@@ -1,9 +1,11 @@
 # Geonovum checker baseline
 
-The reviewed report uses `@geonovum/ogc-checker` **1.2.0**, the OGC API –
-Processes **1.0.0** profile, Node **24** and npm **11.6.0**. It was rechecked
-against the Rasterio release on **2026-10-24**. This is static OpenAPI analysis;
-it neither executes rasters nor certifies conformance.
+The reviewed report uses `@geonovum/ogc-checker` **1.3.2**, the approved OGC API –
+Processes **1.0.0** profile, Node **24.22.1** and npm **11.19.1**. The pinned Node
+image and npm lockfile make the normal local/CI workflow reproducible without
+host Node installation. This is static OpenAPI analysis; it neither executes
+rasters nor certifies conformance. The [upgrade review](upgrade-1.3.2.md) records
+why the existing eight findings remain unchanged.
 
 ## Reviewed diagnostics
 
@@ -39,18 +41,32 @@ no asynchronous responses were added to the advertised contract.
 
 ## Compare a running service
 
-With Node 24/npm 11.6.0 available:
+With Docker, Make and the project uv environment available, start the service
+as described in the README, then:
 
 ```bash
-uv run python scripts/check_geonovum_baseline.py --input 'http://127.0.0.1:5001/openapi?f=json'
+make validate-geonovum
+make validate-geonovum GEONOVUM_INPUT='http://127.0.0.1:5002/openapi?f=json'
 ```
 
-Use `--raw-output runtime-data/geonovum-checker.json` to retain a raw report
-(create the parent directory first). Only a deliberate review should use
-`--update-baseline`; never update it automatically to make CI pass. The runner
-retries incomplete network/schema fetches and reports operational failures
-separately. CI runs this comparison on pull requests/manual dispatches, not
-ordinary pushes to `main`.
+The default command uses the pinned Node container and `npm ci` with
+`package-lock.json`. It needs Linux Docker host networking (or Docker Desktop
+host networking enabled). Reports are written to
+`runtime-data/validation/geonovum.json`; npm caches/logs and installed checker
+packages remain ignored. No application result volume is touched. Container
+cleanup is scoped to a generated name, including after a checker timeout.
+
+The existing standalone script also supports native `npx` invocation with the
+exact package version for diagnostics; the Docker/Make path is the reproducible
+locked workflow used by CI. Operational failures return 2; baseline mismatches
+return 1. An exact match returns 0 even though the retained raw report still
+contains eight errors. It is a regression baseline, not a compliance pass.
+
+Inspect code/path/source, conformance-class `ruleset`, severity and message
+changes before deliberately updating the baseline. Never run `--update-baseline`
+automatically in Make or CI. The 1.3.2 change is limited to version/class metadata;
+no new diagnostic is silently accepted. Pull requests and manual normal-CI
+runs preserve the raw report as an artifact, including successful comparisons.
 
 ## Diagnostic sources
 
@@ -62,5 +78,4 @@ A historical CI failure showed the same five findings as both added and removed.
 With checker 1.2.0/npm 11.6.0, a local Node 20.20.2 run used conformance URIs as
 sources; Node 24.22.1 used the tested OpenAPI URL and matched the baseline after
 normalization. Moving CI to Node 24 resolved that reproduced mismatch without
-relaxing comparison or changing capabilities. Action runtimes and the checker
-runtime are configured separately in the workflow.
+relaxing comparison or changing capabilities. The current locked Docker workflow replaces that host-runtime ambiguity.

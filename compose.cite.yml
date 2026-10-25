@@ -1,0 +1,49 @@
+# Isolated validation only; the runner supplies a unique Compose project name.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: ${CITE_API_IMAGE:?set by the validation runner}
+    environment:
+      PYGEOAPI_SERVER_URL: http://api:8080
+      GEO_OUTPUT_DIR: /var/lib/geo/results
+      GEO_INPUT_TMPDIR: /tmp/geo-inputs
+    volumes:
+      - ${CITE_RUN_DIR:?set by the validation runner}/api-config.yml:/pygeoapi/local.config.yml:ro
+      - ./tests/fixtures/test_processes:/pygeoapi/test_processes:ro
+      - ./scripts:/validation/scripts:ro
+      - results:/var/lib/geo/results
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    healthcheck:
+      test: [CMD, /venv/bin/python3, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8080/conformance', timeout=5)"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+  cite:
+    image: ${CITE_IMAGE:?set by the validation runner}
+    user: ${CITE_UID:-1000}:${CITE_GID:-1000}
+    entrypoint: [java, -Xmx1024m, -Duser.home=/tmp, -cp, '/usr/local/tomcat/webapps/teamengine/WEB-INF/lib/*:/usr/local/tomcat/lib/*', org.opengis.cite.ogcapiprocesses10.TestNGController]
+    command: [-o, /reports, /run/test-run-props.xml]
+    volumes:
+      - ${CITE_RUN_DIR:?set by the validation runner}:/run:ro
+      - ${CITE_RUN_DIR:?set by the validation runner}/reports:/reports
+    depends_on:
+      api:
+        condition: service_healthy
+  browser:
+    image: ${CITE_IMAGE:?set by the validation runner}
+    profiles: [browser]
+    ports: ['127.0.0.1::8080']
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  results:

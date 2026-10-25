@@ -2,6 +2,10 @@
 
 ## 0.1.0 — Unreleased
 
+- Add shared Make validation commands, locked Geonovum 1.3.2 tooling and a
+  manual CITE workflow against the real synchronous application. Preserve
+  native reports and propose a fresh, explicitly classified current-service baseline.
+
 - Consolidate historical documentation and remove completed rename instructions;
   document required manager placeholders, forward the documented terms URL
   in Compose and exclude local artifacts from the Docker build context.

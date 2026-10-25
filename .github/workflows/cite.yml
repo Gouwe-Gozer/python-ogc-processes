@@ -1,0 +1,32 @@
+name: OGC CITE validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          python-version: '3.12'
+      - name: Install locked dependencies
+        run: uv sync --locked --all-groups
+      - name: Run official suite against isolated application
+        run: make validate-cite
+      - name: Preserve native reports, summaries, metadata and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ogc-cite-results
+          path: runtime-data/cite/
+          if-no-files-found: warn
+          retention-days: 30

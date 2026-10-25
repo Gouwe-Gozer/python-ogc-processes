@@ -1,0 +1,443 @@
+{
+  "suite": "ogcapi-processes-1.0-1.3",
+  "counts": {
+    "PASS": 36,
+    "FAIL": 5,
+    "SKIP": 13
+  },
+  "configurationFailures": [],
+  "cases": [
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.conformance.Conformance",
+      "name": "testValidateConformanceOperationAndResponse",
+      "status": "PASS",
+      "requirement": "Implements /conf/core/conformance-success (partial)",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.general.GeneralHttp",
+      "name": "testHttp",
+      "status": "PASS",
+      "requirement": "Implements A.2.1.1. HTTP, Abstract Test 1 (Requirement /req/core/http)",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationAutoExecutionMode",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-creation-op",
+      "message": "This test is skipped because the server has not declared support for asynchronous execution mode. Also note that the specification does not mandate that servers create a job as a result of executing a process synchronously (See Clause 7.11.4 of OGC 18-062r2)"
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationDefaultExecutionMode",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-op",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationDefaultOutputs",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-op",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationInputArray",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-creation-input-array",
+      "message": "No input of type array found."
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationInputInline",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-input-inline",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationInputInlineBbox",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-creation-input-inline-bbox",
+      "message": "No input of type bounding box found."
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationInputInlineBinary",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-input-binary",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationInputInlineMixed",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-input-inline-mixed",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationInputInlineObject",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-input-inline-object",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationInputRef",
+      "status": "FAIL",
+      "requirement": "Implements Requirement /req/core/job-creation-input-ref",
+      "message": "body: More than 1 schema is valid. (code: 1023)\nFrom: body.<oneOf>\n expected [true] but found [false]"
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationInputValidation",
+      "status": "FAIL",
+      "requirement": "Implements Requirement /req/core/job-creation-input-validation",
+      "message": "body: More than 1 schema is valid. (code: 1023)\nFrom: body.<oneOf>\n expected [true] but found [false]"
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationInputs",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-inputs",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationOp",
+      "status": "FAIL",
+      "requirement": "Implements Requirement /req/core/job-creation-op",
+      "message": "body: Type expected 'object', found 'string'. (code: 1027)\nFrom: body.<type>\nbody: Field 'jobID' is required. (code: 1026)\nFrom: body.<required>\nbody: Field 'status' is required. (code: 1026)\nFrom: body.<required>\nbody: Field 'type' is required. (code: 1026)\nFrom: body.<required>\n expected [true] but found [false]"
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationRequest",
+      "status": "FAIL",
+      "requirement": "Implements Requirement /req/core/job-creation-request",
+      "message": "body: Type expected 'object', found 'string'. (code: 1027)\nFrom: body.<type>\nbody: Field 'jobID' is required. (code: 1026)\nFrom: body.<required>\nbody: Field 'status' is required. (code: 1026)\nFrom: body.<required>\nbody: Field 'type' is required. (code: 1026)\nFrom: body.<required>\n expected [true] but found [false]"
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationSuccessAsync",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-creation-success-async",
+      "message": "This test is skipped because the server has not declared support for asynchronous execution mode."
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationSyncDocument",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-sync-document",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationSyncRawMixedMulti",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-sync-raw-mixed-multi",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationSyncRawRef",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-sync-raw-ref",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationSyncRawValueMulti",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-sync-raw-value-multi",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobCreationSyncRawValueOne",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-creation-sync-raw-value-one",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobExceptionNoSuchJob",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-exception-no-such-job",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobOp",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResults",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-results",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResultsAsyncDocument",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-results-async-document",
+      "message": "This test is skipped because the server has not declared support for asynchronous execution mode."
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResultsAsyncRawMixedMulti",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-results-async-raw-mixed-multi",
+      "message": "This test is skipped because the server has not declared support for asynchronous execution mode."
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResultsAsyncRawRef",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-results-async-raw-ref",
+      "message": "This test is skipped because the server has not declared support for asynchronous execution mode."
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResultsAsyncRawValueMulti",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-results-async-raw-value-multi",
+      "message": "This test is skipped because the server has not declared support for asynchronous execution mode."
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResultsAsyncRawValueOne",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-results-async-raw-value-one",
+      "message": "This test is skipped because the server has not declared support for asynchronous execution mode."
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResultsExceptionResultsNotReady",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-results-exception-results-not-ready",
+      "message": "This test is skipped because the server has not declared support for asynchronous execution mode."
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResultsFailed",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-results-failed",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResultsNoSuchJob",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-results-exception-no-such-job",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobResultsSync",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/job-results-sync",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.jobs.Jobs",
+      "name": "testJobSuccess",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/core/job-success",
+      "message": "This test is skipped because the server has not declared support for asynchronous execution mode. Also note that the specification does not mandate that servers create a job as a result of executing a process synchronously (See Clause 7.11.4 of OGC 18-062r2)"
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage",
+      "name": "testLandingPageRetrieval",
+      "status": "PASS",
+      "requirement": "Implements Abstract Test 1: /conf/core/landingpage-op",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage",
+      "name": "testLandingPageValidation",
+      "status": "PASS",
+      "requirement": "Implements Abstract Test 2: /conf/core/landingpage-success",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.process.Process",
+      "name": "testProcess",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/process",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.process.Process",
+      "name": "testProcessExceptionNoSuchProcess",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/process-exception-no-such-process",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.process.Process",
+      "name": "testProcessSuccess",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/process-success",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.processlist.ProcessList",
+      "name": "testPlLimitDefinition",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/pl-limit-definition",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.processlist.ProcessList",
+      "name": "testPlLimitResponse",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/pl-limit-response",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.processlist.ProcessList",
+      "name": "testPlLinks",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/pl-links",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.processlist.ProcessList",
+      "name": "testProcessList",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/process-list",
+      "message": ""
+    },
+    {
+      "group": "Core",
+      "class": "org.opengis.cite.ogcapiprocesses10.processlist.ProcessList",
+      "name": "testProcessListSuccess",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/core/process-list-success",
+      "message": ""
+    },
+    {
+      "group": "Job List",
+      "class": "org.opengis.cite.ogcapiprocesses10.joblist.JobList",
+      "name": "testJobList",
+      "status": "FAIL",
+      "requirement": "Implements Requirement /req/job-list/job-list-op",
+      "message": "No processes listed at http://api:8080/jobs expected [true] but found [false]"
+    },
+    {
+      "group": "Job List",
+      "class": "org.opengis.cite.ogcapiprocesses10.joblist.JobList",
+      "name": "testJobListSuccess",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/job-list/job-list-success",
+      "message": ""
+    },
+    {
+      "group": "OGC Process Description",
+      "class": "org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription",
+      "name": "testOGCProcessDescriptionInputDef",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/ogc-process-description/input-def",
+      "message": ""
+    },
+    {
+      "group": "OGC Process Description",
+      "class": "org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription",
+      "name": "testOGCProcessDescriptionInputDefinitionOfMixedType",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/ogc-process-description/input-mixed-type",
+      "message": "No input definition of 'cite-echo' process identifies a mixed type input"
+    },
+    {
+      "group": "OGC Process Description",
+      "class": "org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription",
+      "name": "testOGCProcessDescriptionInputsDef",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/ogc-process-description/inputs-def",
+      "message": ""
+    },
+    {
+      "group": "OGC Process Description",
+      "class": "org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription",
+      "name": "testOGCProcessDescriptionJSON",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/ogc-process-description/json-encoding",
+      "message": ""
+    },
+    {
+      "group": "OGC Process Description",
+      "class": "org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription",
+      "name": "testOGCProcessDescriptionOutputDef",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/ogc-process-description/output-def",
+      "message": ""
+    },
+    {
+      "group": "OGC Process Description",
+      "class": "org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription",
+      "name": "testOGCProcessDescriptionOutputDefinitionOfMixedType",
+      "status": "SKIP",
+      "requirement": "Implements Requirement /req/ogc-process-description/output-mixed-type",
+      "message": "No output definition of 'cite-echo' process identifies a mixed type output"
+    },
+    {
+      "group": "OGC Process Description",
+      "class": "org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription",
+      "name": "testOGCProcessDescriptionOutputsDef",
+      "status": "PASS",
+      "requirement": "Implements Requirement /req/ogc-process-description/outputs-def",
+      "message": ""
+    }
+  ]
+}

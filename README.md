@@ -105,6 +105,8 @@ remaining implementation gaps are documented in [validation](docs/validation.md)
 
 ## Documentation
 
+- [Repeatable validation commands](docs/validation.md#repeatable-commands):
+  `make test`, `make validate-geonovum`, `make validate` and `make validate-cite`.
 - [Raster metadata](docs/raster-info.md) and [JSON exceptions](docs/errors.md).
 - [Sampling, reclassification and polygonization](docs/raster-operations.md).
 - [Development and checks](docs/development.md), [architecture](docs/architecture.md)

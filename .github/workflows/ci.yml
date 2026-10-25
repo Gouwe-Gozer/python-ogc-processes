@@ -31,40 +31,24 @@ jobs:
       - name: Install locked dependencies
         run: uv sync --locked --all-groups
 
-      - name: Check formatting
-        run: uv run ruff format --check src tests scripts
+      - name: Check code quality
+        run: make quality
 
-      - name: Lint
-        run: uv run ruff check src tests scripts
-
-      - name: Security lint
-        run: uv run bandit -r src scripts -c pyproject.toml
-
-      - name: Validate public API definition
-        run: |
-          uv run pygeoapi config validate \
-            --config config/pygeoapi.yml
-          uv run python -m geo_processes.openapi \
-            --config config/pygeoapi.yml \
-            --output /tmp/public-openapi.yml
-          uv run pygeoapi openapi validate \
-            /tmp/public-openapi.yml
-
-      - name: Validate integration API definition
-        env:
-          PYTHONPATH: ${{ github.workspace }}/tests/fixtures
-        run: |
-          uv run pygeoapi config validate \
-            --config config/pygeoapi.integration.yml
-          uv run pygeoapi openapi generate \
-            --format yaml \
-            --output-file /tmp/integration-openapi.yml \
-            config/pygeoapi.integration.yml
-          uv run pygeoapi openapi validate \
-            /tmp/integration-openapi.yml
+      - name: Validate configurations and OpenAPI
+        run: make validate-openapi
 
       - name: Test with coverage
-        run: uv run pytest --cov=geo_processes --cov-report=term-missing --cov-fail-under=70
+        run: make test-python
+
+      - name: Upload Python and API-definition reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: routine-validation
+          path: |
+            runtime-data/validation/*.xml
+            runtime-data/validation/*.yml
+          if-no-files-found: ignore
 
   api-validation:
     name: API runtime and conformance
@@ -83,20 +67,6 @@ jobs:
 
       - name: Install locked dependencies
         run: uv sync --locked --all-groups
-
-      - name: Install Node.js for the Geonovum checker
-        if: github.event_name != 'push'
-        uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-          package-manager-cache: false
-
-      - name: Install npm version with peer-resolution fix
-        if: github.event_name != 'push'
-        run: |
-          npm install --global npm@11.6.0
-          node --version
-          npm --version
 
       - name: Validate Compose configuration
         run: |
@@ -142,16 +112,14 @@ jobs:
 
       - name: Compare Geonovum diagnostics with the reviewed baseline
         if: github.event_name != 'push'
-        run: |
-          uv run python scripts/check_geonovum_baseline.py \
-            --raw-output /tmp/geonovum-checker.json
+        run: make validate-geonovum
 
-      - name: Upload Geonovum checker output after failure
-        if: failure() && github.event_name != 'push'
+      - name: Upload Geonovum checker report
+        if: always() && github.event_name != 'push'
         uses: actions/upload-artifact@v7
         with:
           name: geonovum-checker-output
-          path: /tmp/geonovum-checker.json
+          path: runtime-data/validation/geonovum.json
           if-no-files-found: ignore
 
       - name: Upload npm debug logs after checker failure
@@ -159,7 +127,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: npm-debug-logs
-          path: /home/runner/.npm/_logs/*.log
+          path: runtime-data/validation/npm-cache/_logs/*.log
           if-no-files-found: ignore
           retention-days: 14
 

@@ -21,11 +21,12 @@ versions may differ. Check both environments when changing processing behavior.
 
 ```bash
 uv sync --locked --all-groups
-uv run ruff format --check src tests scripts
-uv run ruff check src tests scripts
-uv run bandit -r src scripts -c pyproject.toml
-uv run pytest --cov=geo_processes --cov-report=term-missing --cov-fail-under=70
+make test
 ```
+
+`make test` runs the existing Ruff/Bandit, configuration/OpenAPI and pytest/
+coverage commands. GNU Make is needed; Python dependencies still come only from
+uv. Reports are in `runtime-data/validation/`.
 
 Tests include loopback HTTP and HTTPS servers and need permission to bind local
 sockets. TLS uses public test-only fixtures, with no production bypass flag.
@@ -210,9 +211,23 @@ That diagnostic configuration uses upstream TinyDB and `async-echo`; it is not
 evidence that the public service implements asynchronous jobs. It replaces the
 public configuration when using the Compose override, so run the stacks separately.
 
-CI runs quality, configuration/OpenAPI and release-container checks on `main`
-pushes, pull requests and manual dispatches. The Geonovum comparison runs only
-on pull requests and manual dispatches, using Node 24 and npm 11.6.0. Diagnostic
-source handling and the reviewed findings are documented in the
-[checker notes](../validation/geonovum/README.md). Runtime checks include independent
-client containers, result downloads and persistence across restart.
+## External validation and CI
+
+With the ordinary API running, `make validate-geonovum` compares its OpenAPI
+with the reviewed static baseline. `make validate` combines that with `make test`.
+`make validate-cite` separately starts and removes an isolated API and the official
+executable suite; it does not need the ordinary API running and never changes it.
+Docker supplies the pinned external validators, so host Node, Java and Maven
+are unnecessary for these commands.
+
+Pull requests run routine checks, release/runtime tests and Geonovum. Main
+pushes run the existing routine/release checks; CITE runs only through the
+separate manual **OGC CITE validation** workflow. Reports are retained as CI
+artifacts. CITE's currently recorded failures intentionally make that manual
+workflow fail; it is not a mandatory PR gate.
+
+See [validation](validation.md#repeatable-commands) for commands and evidence
+boundaries, [Geonovum](../validation/geonovum/README.md) for its reviewed findings,
+and [CITE](../validation/cite-teamengine/README.md) for unattended execution,
+report interpretation and the browser fallback. The old TinyDB diagnostic above
+is independent of this new CITE workflow; it does not validate public async support.
