@@ -159,6 +159,13 @@ explicit operator template path takes precedence over this default. ReDoc
 requires browser access to the external CDN. The page also links directly to
 the OpenAPI JSON, which remains usable without the renderer.
 
+The application OpenAPI generator removes only top-level tag declarations
+unused by any HTTP operation, avoiding empty UI sections inherited from
+pygeoapi's other API modules. Paths, operation tags, retained tag metadata and
+their order are preserved. The shared service description comes from
+`metadata.identification.description` in `config/pygeoapi.yml`; it describes
+intended OGC alignment without claiming certification.
+
 The inherited CITE echo fixture remains separate from the public service:
 
 ```bash

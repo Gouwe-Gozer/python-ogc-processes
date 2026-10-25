@@ -1,6 +1,6 @@
 # Processing your own rasters
 
-Both `raster-info` and `raster-warp` accept a self-contained GeoTIFF through an
+All five raster processes accept a self-contained GeoTIFF through an
 HTTPS reference, inline base64 string or qualified inline base64 value. The
 bundled demo file remains a test fixture; `demo-dem` is not an API input.
 Each execution acquires its own input and discards the staged file afterward.

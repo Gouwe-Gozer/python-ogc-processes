@@ -6,6 +6,19 @@ sampling, reclassification, polygonization, downloadable results and the local-f
 [README](../README.md), [inputs](inputs.md) and [results](results.md).
 The items below are proposals or unresolved decisions, not advertised capabilities.
 
+## Next milestone: PostgreSQL-backed asynchronous jobs
+
+Add asynchronous submission, status tracking and result retrieval using
+pygeoapi's PostgreSQL manager, with execution in background threads inside
+the API worker processes. Keep synchronous requests available. Independent
+workers, a queue and automatic recovery of interrupted computation are outside
+this milestone.
+
+The [readiness review](async-readiness.md) identifies the required result/error
+integration, bounded admission, persistent job/output lifecycle and PostgreSQL
+tests. Address those within the milestone; no broad processor rewrite is needed.
+PostgreSQL stores job metadata; it does not make in-process work restartable.
+
 ## Raster operations and CRS coverage
 
 - Add operations driven by concrete needs: cropping, resampling, band selection
@@ -40,11 +53,11 @@ job-error, OpenAPI and discovery behavior, with applicability for Requirements
 1–46. Revisit conditional rows when adding input/output types or execution modes.
 An external conformance assessment remains separate from these regression tests.
 
-Async execution is a later workload decision. The audit documents why the
-existing TinyDB diagnostic is not a configuration-only replacement for raster
-execution, and which fixes already work with either manager. Persistent jobs
-for synchronous runs remain optional; do not add artificial job state or success
-responses solely to silence conditional checker findings.
+The audit documents why the existing TinyDB diagnostic is not a configuration-only
+replacement for raster execution, and which fixes already work with either
+manager. The same execution boundary applies to the PostgreSQL manager. Retaining
+synchronous jobs remains a decision for that integration; if retained, their
+responses need the standard's monitor links.
 
 Before sharing a hosted service, choose users/access control, input/result
 visibility, TLS, logging and storage maintenance. Queuing, asynchronous workers,

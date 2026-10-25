@@ -1,8 +1,13 @@
 # geo-processes
 
-A small OGC API – Processes service for **users' own GeoTIFFs**, built on
-pygeoapi and Rasterio/GDAL. Submit a raster as an HTTPS reference or inline
-base64 and receive information or a reprojected file. Execution is synchronous.
+A lightweight geospatial processing API built on pygeoapi, designed around
+OGC API – Processes Part 1: Core. It exposes geospatial operations through
+standardized, discoverable endpoints, enabling clients to submit spatial data
+and retrieve processing results. The project currently supports synchronous
+execution, with asynchronous job management planned.
+
+The five Rasterio/GDAL operations below process **users' own GeoTIFFs**, supplied
+as controlled HTTPS references or inline base64.
 
 | Process | Purpose | Output |
 | --- | --- | --- |

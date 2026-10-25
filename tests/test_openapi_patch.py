@@ -9,7 +9,51 @@ from pygeoapi.process.manager.dummy import DummyManager
 from raster_fixtures import DEMO_SOURCE
 
 from geo_processes.datasets import DEMO_RASTER
-from geo_processes.openapi import SCHEMA_BASE, generate_openapi
+from geo_processes.openapi import SCHEMA_BASE, _remove_unused_tags, generate_openapi
+
+
+def test_tag_cleanup_preserves_operations_groupings_and_used_tag_metadata():
+    methods = ("get", "put", "post", "delete", "options", "head", "patch", "trace")
+    used = [{"name": method, "description": f"Group for {method}"} for method in reversed(methods)]
+    used[0]["externalDocs"] = {"url": "https://example.test/documentation"}
+    document = {
+        "tags": [{"name": "unused"}, *used, {"name": "path-metadata"}],
+        "paths": {
+            "/example": {
+                "summary": "An example path",
+                "parameters": [],
+                "x-metadata": {"tags": ["path-metadata"]},
+                **{method: {"tags": [method, "implicit-group"], "responses": {}} for method in methods},
+            },
+            "/untagged": {"get": {"responses": {}}},
+        },
+        "info": {"title": "Unchanged"},
+    }
+    expected = deepcopy(document)
+    expected["tags"] = deepcopy(used)
+    _remove_unused_tags(document)
+    assert document == expected
+
+
+def test_generated_openapi_omits_only_unused_tag_declarations(service_config):
+    upstream = get_oas(deepcopy(service_config))
+    document = generate_openapi(service_config)
+    tags = {tag["name"] for tag in document["tags"]}
+    assert tags == {"server", "sample-points", "sample-polygons"}
+    assert {tag["name"] for tag in upstream["tags"]} - tags == {
+        "coverages",
+        "edr",
+        "records",
+        "features",
+        "maps",
+        "processes",
+        "tiles",
+        "stac",
+    }
+    for path, item in upstream["paths"].items():
+        for method, operation in item.items():
+            if method in {"get", "post", "delete"}:
+                assert document["paths"][path][method].get("tags") == operation.get("tags")
 
 
 def test_upstream_still_needs_targeted_corrections(service_config):
@@ -30,6 +74,9 @@ def test_generated_openapi_is_valid_and_preserves_description(service_config):
     document = generate_openapi(service_config)
     assert validate_openapi_document(document)
     assert document["info"]["title"] == "Geo Processes API"
+    assert document["info"]["description"] == service_config["metadata"]["identification"]["description"]
+    assert "OGC API – Processes Part 1: Core" in document["info"]["description"]
+    assert "synchronous execution, with asynchronous job management planned" in document["info"]["description"]
     assert {"/jobs/{jobID}", "/jobs/{jobID}/results"} <= document["paths"].keys()
     assert "/jobs" not in document["paths"]
     assert "bgt-land-cover-summary" not in str(document)

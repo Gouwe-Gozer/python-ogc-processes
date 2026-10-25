@@ -2,6 +2,9 @@
 
 ## 0.1.0 — Unreleased
 
+- Remove unused OpenAPI tag declarations while preserving endpoints/groupings,
+  explain intended OGC alignment, and record PostgreSQL async readiness findings.
+
 - Publish the supplied points and a nearby raster-contained polygon through
   native read-only OGC Features collections, alongside the unchanged AHN4 TIFF.
 - Accept collection-level Features metadata in sampling inputs and validate

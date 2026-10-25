@@ -18,8 +18,9 @@ The confirmed gaps are corrected: raster/scalar references use shared bounded
 HTTPS resolution, job errors expose the prescribed URI in JSON/HTML, existing
 job routes are described, and discovery has required relations and usable paging.
 The public manager retains no jobs, as permitted for synchronous execution.
-Conditional requirements for repeated/object/bbox/mixed inputs, multiple outputs
-and async execution must be reassessed when those capabilities are introduced.
+Qualified GeoJSON object inputs are covered by the current audit. Reassess
+conditional requirements when adding new input types, repeated occurrences,
+multiple outputs or asynchronous execution.
 
 The audit and regressions establish the recorded behavior, not a certificate or
 a new full TEAM Engine assessment. The published binary-schema overlap below
@@ -91,6 +92,15 @@ modified to hide the overlap; these checks do not establish complete conformance
 ## Recorded checks
 
 These are dated observations, not permanently current test counts or guarantees:
+
+- Async readiness/OpenAPI review, **2026-10-25**: **519 tests passed**,
+  **95.72% coverage**. Swagger renders the retained operation groups without
+  unused generic tags in headless Chromium; all 26 OpenAPI paths and their
+  operation groupings match the pre-change definition. Quality/pre-commit,
+  public/integration configuration/OpenAPI and release smoke/isolation checks
+  pass. The reviewed eight-finding checker baseline is unchanged. PostgreSQL
+  execution was reviewed in source, not implemented or integration-tested;
+  see [the readiness review](async-readiness.md).
 
 - Public samples, **2026-10-25**: **517 tests passed**, **95.71% coverage**.
   Native Features collection/item/paging responses validate against the official

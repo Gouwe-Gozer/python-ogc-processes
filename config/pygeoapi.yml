@@ -26,7 +26,22 @@ logging:
 metadata:
   identification:
     title: Geo Processes API
-    description: Bounded synchronous raster inspection, reprojection, sampling, reclassification and polygonization powered by Rasterio.
+    description: >-
+      A lightweight geospatial processing API built on pygeoapi, designed around
+      OGC API – Processes Part 1: Core. It exposes geospatial operations through
+      standardized, discoverable endpoints, enabling clients to submit spatial
+      data and retrieve processing results. The project currently supports
+      synchronous execution, with asynchronous job management planned.
+
+      Rasterio/GDAL powers five bounded raster operations: information,
+      reprojection, point sampling, reclassification and polygonization.
+      Submit GeoTIFFs through controlled public HTTPS references or inline
+      base64. Results are JSON, GeoTIFF or GeoJSON, delivered by value or,
+      where supported, through expiring download references.
+
+      Intended alignment with the
+      [OGC standard](https://docs.ogc.org/is/18-062r2/18-062r2.html)
+      and passing regression tests do not establish formal OGC certification.
     keywords:
     - Rasterio
     - raster

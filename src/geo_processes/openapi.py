@@ -18,6 +18,19 @@ from geo_processes import __version__
 from geo_processes.errors import exception_document
 
 SCHEMA_BASE = "https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas"
+HTTP_METHODS = frozenset({"get", "put", "post", "delete", "options", "head", "patch", "trace"})
+
+
+def _remove_unused_tags(document):
+    """Keep declared tag metadata only when an operation uses that grouping."""
+    used_tags = {
+        tag
+        for path in document["paths"].values()
+        for method, operation in path.items()
+        if method in HTTP_METHODS
+        for tag in operation.get("tags", [])
+    }
+    document["tags"] = [tag for tag in document.get("tags", []) if tag["name"] in used_tags]
 
 
 def schema_response(description, schema):
@@ -185,6 +198,7 @@ def generate_openapi(config):
                 },
             }
         }
+    _remove_unused_tags(document)
     return document
 
 
