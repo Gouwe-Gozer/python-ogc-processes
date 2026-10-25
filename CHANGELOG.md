@@ -2,6 +2,10 @@
 
 ## 0.1.0 — Unreleased
 
+- Consolidate historical documentation and remove completed rename instructions;
+  document required manager placeholders, forward the documented terms URL
+  in Compose and exclude local artifacts from the Docker build context.
+
 - Adopt Raster Processes API / `raster-processes` branding and subtitle in service
   metadata, documentation and Docker images; update exception-document links and
   document the GitHub/local rename steps. Python imports and process IDs remain unchanged.
@@ -53,7 +57,6 @@
 
 The service derives MIT-licensed infrastructure from `bkn-terrain-processes`.
 Initial demo-only backend milestones were replaced by the Rasterio implementation
-and user-raster inputs. See the [historical planning record](CODEX_HANDOVER.md)
-and [backend/naming decision](docs/rasterio-pivot.md); previous detailed changelogs
+and user-raster inputs. See [project history](docs/history.md); previous detailed changelogs
 remain in Git history. Predecessor validation and release numbers do not describe
 this service.

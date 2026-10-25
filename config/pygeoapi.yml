@@ -19,6 +19,8 @@ server:
   ogc_schemas_location: /schemas.opengis.net
   manager:
     name: geo_processes.manager.OgcSynchronousManager
+    # Required by pygeoapi's config schema; unused by this synchronous manager.
+    # File results use GEO_OUTPUT_DIR and the application ResultStore instead.
     connection: unused
     output_dir: /tmp
 logging:

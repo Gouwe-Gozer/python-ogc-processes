@@ -158,8 +158,7 @@ These are dated observations, not permanently current test counts or guarantees:
   bounds or throughput claims.
 
 Use the development commands and CI for fresh results. Older backend checkpoints
-are summarized in [migration](migration.md), [warp](warp-milestone.md) and the
-[backend decision](rasterio-pivot.md); their full records remain in Git history.
+are summarized in [history](history.md); their full records remain in Git history.
 
 [processes-core]: https://docs.ogc.org/is/18-062r2/18-062r2.html
 [abstract-tests]: https://docs.ogc.org/is/18-062r2/18-062r2.html#_abstract_test_suite

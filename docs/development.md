@@ -5,8 +5,7 @@ Run commands from the repository root with user-installed `uv` and a local
 
 The service is **Raster Processes API**, with repository name `raster-processes`.
 Its existing Python package `geo_processes` and distribution `geo-processes`
-remain unchanged. See [renaming an existing checkout](renaming.md) for paths,
-virtual-environment recreation and Docker volume preservation.
+remain unchanged.
 
 | Component | Project constraint |
 | --- | --- |
@@ -95,8 +94,17 @@ historical handover.
 
 ## Container and integration checks
 
+Compose derives the project name `raster-processes` from the checkout directory.
+Both supplied API stacks use that project and port 5001 by default; run one at
+a time. Check `docker compose ls --all` when another container occupies the port.
+An exported `COMPOSE_PROJECT_NAME`, `COMPOSE_FILE` or local `.env` setting can
+override defaults; remove stale values rather than launching another copy.
+
 For bind-mounted development, use `docker compose up --build --detach`.
 Restart the API after source/configuration changes with `docker compose restart api`.
+Use `docker compose --file compose.release.yml ...` consistently for release
+commands. Switching files updates the same `api` service, rather than creating
+independent development and release projects.
 
 Start and test the self-contained release:
 
@@ -120,6 +128,23 @@ reference verifies persistence across a service restart. `compose.yml` mounts
 source and configuration read-only for development; restart after changing them.
 Both stacks use a named result volume. Normal `down` retains it; adding
 `--volumes` deletes it and all stored results.
+
+For a deliberate reset of disposable local results:
+
+```bash
+docker compose --file compose.release.yml down --volumes --remove-orphans
+docker compose --file compose.release.yml up --build --detach
+```
+
+Keep cleanup scoped to this Compose project; do not use global Docker prune.
+`PYGEOAPI_TERMS_OF_SERVICE` is forwarded by both Compose configurations, like
+the public URL and supported result/input settings. All existing `GEO_*`
+defaults and limits remain unchanged.
+
+The public manager's `connection` and `output_dir` fields are required by
+pygeoapi's configuration schema, although this synchronous manager does not use
+them. Actual result storage uses `GEO_OUTPUT_DIR`; keep the placeholders until
+the configured manager or upstream schema changes.
 
 The input smoke check creates a two-band raster independently of the bundled
 demo, submits it inline, checks info and all four warp modes, then downloads

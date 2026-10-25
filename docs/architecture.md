@@ -112,4 +112,5 @@ library, driver plugin or asynchronous machinery is introduced.
 
 `scripts/process_raster.py` is a user-facing example client. Smoke scripts cover
 all supported representations for developer checks. Historical implementation
-and naming decisions are separate from these maintained module boundaries.
+and naming decisions are summarized in [history](history.md), separate from
+these maintained module boundaries.

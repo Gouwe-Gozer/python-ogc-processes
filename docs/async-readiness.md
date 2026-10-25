@@ -14,7 +14,7 @@ milestone; a preliminary processing-framework rewrite is unnecessary.
 | Area | Finding and required action |
 | --- | --- |
 | Result and error integration | [`manager.py`](../src/geo_processes/manager.py) supplies the public result URL, calls processor `format_result()` and unwraps `ProcessResponse`; the stock base handler does none of these. Four processors return [`FileOutput`](../src/geo_processes/delivery.py), which is not a stock persistable result. Integrate serializable job results while preserving JSON/TIFF/GeoJSON, output IDs, raw/document and value/reference behavior. Preserve typed, sanitized failures: the stock handler collapses exceptions, and the job-results route reports every failed job as a generic 400. |
-| Job and file lifetime | [`storage.py`](../src/geo_processes/storage.py) expires files independently of jobs. The current manager configuration uses `/tmp` for manager outputs, while only `GEO_OUTPUT_DIR` has a persistent release volume. Choose an explicit persistent manager output directory and coordinate cleanup of job records, job response files and referenced results. Define interrupted-job behavior; database persistence does not resume a background thread. |
+| Job and file lifetime | [`storage.py`](../src/geo_processes/storage.py) expires files independently of jobs. The synchronous manager does not persist job response files; only `GEO_OUTPUT_DIR` has a persistent release volume. Choose an explicit persistent manager output directory for async and coordinate cleanup of job records, job response files and referenced results. Define interrupted-job behavior; database persistence does not resume a background thread. |
 | Bounded execution and state | Upstream starts a thread per accepted async request, without an admission cap. Its handler only writes `running` after `processor.execute()` returns. Add bounded admission and meaningful running/failure transitions, and handle worker interruption. Existing two input slots and the single nonblocking result writer remain useful limits, but do not bound background thread creation. |
 | PostgreSQL integration evidence | [`pyproject.toml`](../pyproject.toml)/`uv.lock` contain SQLAlchemy transitively but no `psycopg2` driver; the local driver is absent, although it is available in the pinned release base. Declare the required driver for reproducible local tests and verify the release version rather than installing it twice. Add a real PostgreSQL integration test/Compose setup, including database readiness during startup/OpenAPI generation, which instantiates the manager. No PostGIS extension is needed for job metadata. |
 
@@ -81,15 +81,3 @@ These are source-review findings; no PostgreSQL raster execution was run.
   confirmed. [Sample data](sample-data.md) currently records the supplied filename,
   checksum and alignment, but not a source dataset licence. Do not infer it from
   the code's MIT licence.
-
-## Project identity and rename checklist
-
-The selected public name is **Raster Processes API**, with repository/local
-directory name **`raster-processes`**. The subtitle is:
-
-> An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL.
-
-API metadata, documentation and Docker image names use that identity. Keep the
-Python package/distribution, environment names and process IDs stable. Service
-exception links use the new repository name. The [rename guide](renaming.md)
-covers the remaining GitHub/local actions and Docker project names.
