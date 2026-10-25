@@ -20,3 +20,4 @@ build
 dist
 logs
 pygeoapi-openapi.yml
+**/node_modules

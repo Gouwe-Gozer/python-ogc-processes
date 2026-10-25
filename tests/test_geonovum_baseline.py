@@ -37,7 +37,7 @@ def test_normalize_report_sorts_and_records_pinned_versions():
 
     assert normalized["checker"] == {
         "package": "@geonovum/ogc-checker",
-        "version": "1.2.0",
+        "version": "1.3.2",
     }
     assert normalized["standard"] == {
         "id": "ogc-api-processes",
@@ -106,7 +106,7 @@ def test_checker_retries_network_failure_and_returns_complete_report(monkeypatch
 
     assert len(commands) == 2
     assert waits == [2]
-    assert "@geonovum/ogc-checker@1.2.0" in commands[0]
+    assert "@geonovum/ogc-checker@1.3.2" in commands[0]
     assert commands[0][commands[0].index("--version") + 1] == "1.0.0"
     assert [item["code"] for item in normalized["diagnostics"]] == ["/req/core/example"]
 
@@ -140,6 +140,45 @@ def test_source_only_mismatch_is_visible_and_does_not_pass_comparison():
     assert not changes and not metadata_changes
     assert original["source"] in geonovum.describe_diagnostic(removed[0])
     assert changed["source"] in geonovum.describe_diagnostic(added[0])
+
+
+def test_diagnostic_conformance_class_is_retained_and_changes_fail_comparison():
+    original = {**diagnostic("rule", ["paths"]), "ruleset": "https://example.test/core"}
+    changed = {**original, "ruleset": "https://example.test/other"}
+    left = geonovum.normalize_report(report(original))
+    right = geonovum.normalize_report(report(changed))
+    assert left["diagnostics"][0]["ruleset"] == original["ruleset"]
+    assert geonovum.compare_reports(left, right)[2] == [(original, changed)]
+
+
+def test_container_command_uses_locked_checker_and_preserves_url_as_one_argument(tmp_path, monkeypatch):
+    import shutil
+
+    monkeypatch.setattr(geonovum, "PROJECT_ROOT", tmp_path)
+    folder = tmp_path / "validation/geonovum"
+    folder.mkdir(parents=True)
+    shutil.copyfile("validation/geonovum/package.json", folder / "package.json")
+    url = "http://127.0.0.1:5001/openapi?f=json&literal=value"
+    command = geonovum.container_command(url)
+    assert "@sha256:" in geonovum.NODE_IMAGE
+    assert command[command.index("--input") + 1] == url
+    assert "npm ci" in next(item for item in command if "npm ci" in item)
+
+
+def test_docker_timeout_cleans_up_only_its_generated_container(monkeypatch):
+    name = "raster-geonovum-owned-test"
+    monkeypatch.setattr(geonovum, "container_command", lambda _url: ["docker", "run", "--name", name])
+    calls = []
+
+    def run(command, **kwargs):
+        calls.append(command)
+        if command[1] == "run":
+            raise subprocess.TimeoutExpired(command, 1)
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    with pytest.raises(geonovum.CheckerOperationalError, match="complete report"):
+        geonovum.run_checker("http://example.test/openapi", attempts=1, use_docker=True, command_runner=run)
+    assert calls[-1] == ["docker", "rm", "--force", name]
 
 
 def test_run_checker_normalizes_its_input_source_before_baseline_comparison(monkeypatch):

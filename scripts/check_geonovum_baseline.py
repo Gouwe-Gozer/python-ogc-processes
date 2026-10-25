@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 
 # The checker runs without a shell and with a fixed argument vector.
@@ -13,9 +14,11 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 CHECKER_PACKAGE = "@geonovum/ogc-checker"
-CHECKER_VERSION = "1.2.0"
+CHECKER_VERSION = "1.3.2"
+NODE_IMAGE = "node:24.22.1-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53"
 STANDARD = "ogc-api-processes"
 STANDARD_VERSION = "1.0.0"
 CHECKER_TIMEOUT_SECONDS = 120
@@ -56,7 +59,7 @@ def diagnostic_identity(diagnostic: dict[str, Any]) -> tuple[str, tuple[str | in
 
 
 def normalize_diagnostic(diagnostic: Any) -> dict[str, Any]:
-    """Validate and retain every stable field emitted by checker v1.2.0."""
+    """Validate and retain stable fields, including the 1.3 conformance-class URI."""
     if not isinstance(diagnostic, dict):
         raise CheckerOperationalError("Checker returned a non-object diagnostic")
 
@@ -87,6 +90,10 @@ def normalize_diagnostic(diagnostic: Any) -> dict[str, Any]:
         if not isinstance(documentation_url, str):
             raise CheckerOperationalError("Checker diagnostic has an invalid documentationUrl")
         normalized["documentationUrl"] = documentation_url
+    if "ruleset" in diagnostic:
+        if not isinstance(diagnostic["ruleset"], str):
+            raise CheckerOperationalError("Checker diagnostic has an invalid ruleset")
+        normalized["ruleset"] = diagnostic["ruleset"]
     return normalized
 
 
@@ -164,6 +171,41 @@ def checker_command(npx: str, input_url: str) -> list[str]:
     ]
 
 
+def container_command(input_url: str) -> list[str]:
+    """Use a pinned runtime and npm lockfile without installing host Node tools."""
+    checker = PROJECT_ROOT / "validation/geonovum"
+    cache = PROJECT_ROOT / "runtime-data/validation/npm-cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    package = json.loads((checker / "package.json").read_text())
+    if package["dependencies"][CHECKER_PACKAGE] != CHECKER_VERSION:
+        raise CheckerOperationalError("Checker version and npm manifest disagree")
+    return [
+        "docker",
+        "run",
+        "--rm",
+        "--name",
+        "raster-geonovum-" + uuid4().hex[:12],
+        "--network",
+        "host",
+        "--user",
+        f"{os.getuid()}:{os.getgid()}",
+        "--mount",
+        f"type=bind,src={checker},dst=/checker",
+        "--mount",
+        f"type=bind,src={cache},dst=/npm-cache",
+        "--env",
+        "npm_config_cache=/npm-cache",
+        "--entrypoint",
+        "/bin/sh",
+        NODE_IMAGE,
+        "-c",
+        "npm ci --prefix /checker --ignore-scripts --no-audit --no-fund >&2 && "
+        'exec node /checker/node_modules/@geonovum/ogc-checker/dist/cli.mjs "$@"',
+        "checker",
+        *checker_command("npx", input_url)[3:],
+    ]
+
+
 def run_checker(
     input_url: str,
     attempts: int,
@@ -171,18 +213,20 @@ def run_checker(
     *,
     command_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
     wait: Callable[[float], None] = time.sleep,
+    use_docker: bool = False,
 ) -> dict[str, Any]:
     """Run the checker, retrying only incomplete operational attempts."""
     npx = shutil.which("npx")
-    if npx is None:
+    if npx is None and not use_docker:
         raise CheckerOperationalError("npx was not found; install Node.js 24 LTS (the CI runtime)")
 
     last_problem = "checker did not run"
     last_output = ""
     for attempt in range(1, attempts + 1):
+        arguments = container_command(input_url) if use_docker else checker_command(npx, input_url)
         try:
             result = command_runner(
-                checker_command(npx, input_url),
+                arguments,
                 capture_output=True,
                 text=True,
                 timeout=CHECKER_TIMEOUT_SECONDS,
@@ -208,6 +252,21 @@ def run_checker(
                         return normalize_report(report, input_url)
                     codes = ", ".join(str(item.get("code", "unknown")) for item in transient)
                     last_problem = f"incomplete schema resolution ({codes})"
+        finally:
+            # Killing the Docker CLI on timeout does not guarantee that its
+            # container stopped. Scope cleanup to the unique name we created.
+            if use_docker:
+                name = arguments[arguments.index("--name") + 1]
+                try:
+                    command_runner(
+                        ["docker", "rm", "--force", name],
+                        capture_output=True,
+                        text=True,
+                        timeout=30,
+                        check=False,
+                    )
+                except (OSError, subprocess.TimeoutExpired) as error:
+                    raise CheckerOperationalError(f"Could not clean up checker container {name}: {error}") from error
 
         if attempt < attempts:
             print(f"Checker attempt {attempt}/{attempts} incomplete: {last_problem}; retrying", file=sys.stderr)
@@ -274,6 +333,9 @@ def main() -> int:
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE, help="Diagnostic baseline JSON")
     parser.add_argument("--raw-output", type=Path, help="Write the latest unnormalised checker report here")
     parser.add_argument(
+        "--docker", action="store_true", help="Use the pinned Node image and npm lockfile (Linux host networking)"
+    )
+    parser.add_argument(
         "--attempts",
         type=int,
         default=DEFAULT_ATTEMPTS,
@@ -290,7 +352,7 @@ def main() -> int:
         parser.error("--attempts must be at least 1")
 
     try:
-        current = run_checker(args.input, args.attempts, args.raw_output)
+        current = run_checker(args.input, args.attempts, args.raw_output, use_docker=args.docker)
         if args.update_baseline:
             write_json(args.baseline, current)
             print(f"UPDATED Geonovum baseline with {len(current['diagnostics'])} diagnostics: {args.baseline}")

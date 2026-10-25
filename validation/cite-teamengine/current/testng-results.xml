@@ -1,0 +1,1459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results ignored="0" total="54" passed="36" failed="5" skipped="13">
+  <reporter-output>
+  </reporter-output>
+  <suite started-at="2026-10-25T11:29:01 UTC" name="ogcapi-processes-1.0-1.3" finished-at="2026-10-25T11:29:04 UTC" duration-ms="2870">
+    <groups>
+      <group name="processlist">
+        <method signature="ProcessList.testProcessList()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" name="testProcessList" class="org.opengis.cite.ogcapiprocesses10.processlist.ProcessList"/>
+        <method signature="ProcessList.testProcessListSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" name="testProcessListSuccess" class="org.opengis.cite.ogcapiprocesses10.processlist.ProcessList"/>
+      </group> <!-- processlist -->
+      <group name="process">
+        <method signature="Process.testProcess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" name="testProcess" class="org.opengis.cite.ogcapiprocesses10.process.Process"/>
+        <method signature="Process.testProcessExceptionNoSuchProcess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" name="testProcessExceptionNoSuchProcess" class="org.opengis.cite.ogcapiprocesses10.process.Process"/>
+        <method signature="Process.testProcessSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" name="testProcessSuccess" class="org.opengis.cite.ogcapiprocesses10.process.Process"/>
+      </group> <!-- process -->
+      <group name="A.2.1. Landing Page /">
+        <method signature="LandingPage.testLandingPageRetrieval()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011]" name="testLandingPageRetrieval" class="org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage"/>
+        <method signature="LandingPage.testLandingPageValidation()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011]" name="testLandingPageValidation" class="org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage"/>
+      </group> <!-- A.2.1. Landing Page / -->
+      <group name="ogcprocessdescription">
+        <method signature="OGCProcessDescription.testOGCProcessDescriptionJSON()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" name="testOGCProcessDescriptionJSON" class="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription"/>
+        <method signature="OGCProcessDescription.testOGCProcessDescriptionInputDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" name="testOGCProcessDescriptionInputDef" class="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription"/>
+        <method signature="OGCProcessDescription.testOGCProcessDescriptionInputDefinitionOfMixedType()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" name="testOGCProcessDescriptionInputDefinitionOfMixedType" class="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription"/>
+        <method signature="OGCProcessDescription.testOGCProcessDescriptionInputsDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" name="testOGCProcessDescriptionInputsDef" class="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription"/>
+        <method signature="OGCProcessDescription.testOGCProcessDescriptionOutputDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" name="testOGCProcessDescriptionOutputDef" class="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription"/>
+        <method signature="OGCProcessDescription.testOGCProcessDescriptionOutputDefinitionOfMixedType()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" name="testOGCProcessDescriptionOutputDefinitionOfMixedType" class="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription"/>
+        <method signature="OGCProcessDescription.testOGCProcessDescriptionOutputsDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" name="testOGCProcessDescriptionOutputsDef" class="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription"/>
+      </group> <!-- ogcprocessdescription -->
+      <group name="jobList">
+        <method signature="JobList.testJobList()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" name="testJobList" class="org.opengis.cite.ogcapiprocesses10.joblist.JobList"/>
+        <method signature="JobList.testJobListSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" name="testJobListSuccess" class="org.opengis.cite.ogcapiprocesses10.joblist.JobList"/>
+      </group> <!-- jobList -->
+      <group name="pl">
+        <method signature="ProcessList.testPlLimitDefinition()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" name="testPlLimitDefinition" class="org.opengis.cite.ogcapiprocesses10.processlist.ProcessList"/>
+        <method signature="ProcessList.testPlLimitResponse()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" name="testPlLimitResponse" class="org.opengis.cite.ogcapiprocesses10.processlist.ProcessList"/>
+        <method signature="ProcessList.testPlLinks()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" name="testPlLinks" class="org.opengis.cite.ogcapiprocesses10.processlist.ProcessList"/>
+      </group> <!-- pl -->
+      <group name="A.2.3. Conformance Path /conformance">
+        <method signature="Conformance.testValidateConformanceOperationAndResponse(org.opengis.cite.ogcapiprocesses10.openapi3.TestPoint)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.conformance.Conformance@3406472c]" name="testValidateConformanceOperationAndResponse" class="org.opengis.cite.ogcapiprocesses10.conformance.Conformance"/>
+      </group> <!-- A.2.3. Conformance Path /conformance -->
+    </groups>
+    <test started-at="2026-10-25T11:29:01 UTC" name="Core" finished-at="2026-10-25T11:29:04 UTC" duration-ms="2603">
+      <class name="org.opengis.cite.ogcapiprocesses10.jobs.Jobs">
+        <test-method is-config="true" signature="initCommonFixture(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="initCommonFixture" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@7ebc5be6]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- initCommonFixture -->
+        <test-method is-config="true" signature="setup(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="setup" finished-at="2026-10-25T11:29:04 UTC" duration-ms="40" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@7ebc5be6]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setup -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testJobCreationAutoExecutionMode()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationAutoExecutionMode" description="Implements Requirement /req/core/job-creation-op " finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[This test is skipped because the server has not declared support for asynchronous execution mode. Also note that the specification does not mandate that servers create a job as a result of executing a process synchronously (See Clause 7.11.4 of OGC 18-062r2)]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationAutoExecutionMode -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationAutoExecutionMode status=SKIP method=Jobs.testJobCreationAutoExecutionMode()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testJobCreationDefaultExecutionMode()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationDefaultExecutionMode" description="Implements Requirement /req/core/job-creation-op " finished-at="2026-10-25T11:29:04 UTC" duration-ms="12" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationDefaultExecutionMode -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationDefaultExecutionMode status=SUCCESS method=Jobs.testJobCreationDefaultExecutionMode()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationDefaultOutputs()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationDefaultOutputs" description="Implements Requirement /req/core/job-creation-op " finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationDefaultOutputs -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationDefaultOutputs status=SUCCESS method=Jobs.testJobCreationDefaultOutputs()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationInputArray()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationInputArray" description="Implements Requirement /req/core/job-creation-input-array " finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[No input of type array found.]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationInputArray -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationInputArray status=SKIP method=Jobs.testJobCreationInputArray()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationInputInline()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationInputInline" description="Implements Requirement /req/core/job-creation-input-inline " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationInputInline -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationInputInline status=SUCCESS method=Jobs.testJobCreationInputInline()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationInputInlineBbox()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationInputInlineBbox" description="Implements Requirement /req/core/job-creation-input-inline-bbox " finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[No input of type bounding box found.]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationInputInlineBbox -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testJobCreationInputInlineBinary()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationInputInlineBinary" description="Implements Requirement /req/core/job-creation-input-binary " finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationInputInlineBinary -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationInputInlineBbox status=SKIP method=Jobs.testJobCreationInputInlineBbox()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationInputInlineBinary status=SUCCESS method=Jobs.testJobCreationInputInlineBinary()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationInputInlineMixed()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationInputInlineMixed" description="Implements Requirement /req/core/job-creation-input-inline-mixed " finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationInputInlineMixed -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testJobCreationInputInlineObject()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationInputInlineObject" description="Implements Requirement /req/core/job-creation-input-inline-object " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationInputInlineObject -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationInputInlineMixed status=SUCCESS method=Jobs.testJobCreationInputInlineMixed()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationInputInlineObject status=SUCCESS method=Jobs.testJobCreationInputInlineObject()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationInputRef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationInputRef" description="Implements Requirement /req/core/job-creation-input-ref " finished-at="2026-10-25T11:29:04 UTC" duration-ms="8" status="FAIL">
+          <exception class="java.lang.AssertionError">
+            <message>
+              <![CDATA[body: More than 1 schema is valid. (code: 1023)
+From: body.<oneOf>
+ expected [true] but found [false]]]>
+            </message>
+          </exception> <!-- java.lang.AssertionError -->
+          <reporter-output>
+          </reporter-output>
+          <attributes>
+            <attribute name="request">
+              <![CDATA[<!-- non XML body -->
+{
+  "inputs" : {
+    "message" : "teststring"
+  },
+  "outputs" : {
+    "message" : {
+      "transmissionMode" : "value"
+    }
+  }
+}]]>
+            </attribute> <!-- request -->
+            <attribute name="response">
+              <![CDATA["\"teststring\""]]>
+            </attribute> <!-- response -->
+            <attribute name="post-request">
+              <![CDATA[POST http://api:8080/processes/cite-echo/execution HTTP/1.1]]>
+            </attribute> <!-- post-request -->
+          </attributes>
+        </test-method> <!-- testJobCreationInputRef -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationInputRef status=FAILURE method=Jobs.testJobCreationInputRef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testJobCreationInputValidation()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationInputValidation" description="Implements Requirement /req/core/job-creation-input-validation " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="FAIL">
+          <exception class="java.lang.AssertionError">
+            <message>
+              <![CDATA[body: More than 1 schema is valid. (code: 1023)
+From: body.<oneOf>
+ expected [true] but found [false]]]>
+            </message>
+          </exception> <!-- java.lang.AssertionError -->
+          <reporter-output>
+          </reporter-output>
+          <attributes>
+            <attribute name="request">
+              <![CDATA[<!-- non XML body -->
+{
+  "inputs" : {
+    "message" : "teststring"
+  },
+  "outputs" : {
+    "message" : {
+      "transmissionMode" : "value"
+    }
+  }
+}]]>
+            </attribute> <!-- request -->
+            <attribute name="response">
+              <![CDATA["\"teststring\""]]>
+            </attribute> <!-- response -->
+            <attribute name="post-request">
+              <![CDATA[POST http://api:8080/processes/cite-echo/execution HTTP/1.1]]>
+            </attribute> <!-- post-request -->
+          </attributes>
+        </test-method> <!-- testJobCreationInputValidation -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationInputValidation status=FAILURE method=Jobs.testJobCreationInputValidation()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationInputs()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationInputs" description="Implements Requirement /req/core/job-creation-inputs " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationInputs -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationInputs status=SUCCESS method=Jobs.testJobCreationInputs()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationOp()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationOp" description="Implements Requirement /req/core/job-creation-op " finished-at="2026-10-25T11:29:04 UTC" duration-ms="7" status="FAIL">
+          <exception class="java.lang.AssertionError">
+            <message>
+              <![CDATA[body: Type expected 'object', found 'string'. (code: 1027)
+From: body.<type>
+body: Field 'jobID' is required. (code: 1026)
+From: body.<required>
+body: Field 'status' is required. (code: 1026)
+From: body.<required>
+body: Field 'type' is required. (code: 1026)
+From: body.<required>
+ expected [true] but found [false]]]>
+            </message>
+          </exception> <!-- java.lang.AssertionError -->
+          <reporter-output>
+          </reporter-output>
+          <attributes>
+            <attribute name="request">
+              <![CDATA[<!-- non XML body -->
+{
+  "inputs" : {
+    "message" : "teststring"
+  },
+  "outputs" : {
+    "message" : {
+      "transmissionMode" : "value"
+    }
+  }
+}]]>
+            </attribute> <!-- request -->
+            <attribute name="response">
+              <![CDATA["\"teststring\""]]>
+            </attribute> <!-- response -->
+            <attribute name="post-request">
+              <![CDATA[POST http://api:8080/processes/cite-echo/execution HTTP/1.1]]>
+            </attribute> <!-- post-request -->
+          </attributes>
+        </test-method> <!-- testJobCreationOp -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationOp status=FAILURE method=Jobs.testJobCreationOp()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationRequest()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationRequest" description="Implements Requirement /req/core/job-creation-request " finished-at="2026-10-25T11:29:04 UTC" duration-ms="7" status="FAIL">
+          <exception class="java.lang.AssertionError">
+            <message>
+              <![CDATA[body: Type expected 'object', found 'string'. (code: 1027)
+From: body.<type>
+body: Field 'jobID' is required. (code: 1026)
+From: body.<required>
+body: Field 'status' is required. (code: 1026)
+From: body.<required>
+body: Field 'type' is required. (code: 1026)
+From: body.<required>
+ expected [true] but found [false]]]>
+            </message>
+          </exception> <!-- java.lang.AssertionError -->
+          <reporter-output>
+          </reporter-output>
+          <attributes>
+            <attribute name="request">
+              <![CDATA[<!-- non XML body -->
+{
+  "inputs" : {
+    "message" : "teststring"
+  },
+  "outputs" : {
+    "message" : {
+      "transmissionMode" : "value"
+    }
+  }
+}]]>
+            </attribute> <!-- request -->
+            <attribute name="response">
+              <![CDATA["\"teststring\""]]>
+            </attribute> <!-- response -->
+            <attribute name="post-request">
+              <![CDATA[POST http://api:8080/processes/cite-echo/execution HTTP/1.1]]>
+            </attribute> <!-- post-request -->
+          </attributes>
+        </test-method> <!-- testJobCreationRequest -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationRequest status=FAILURE method=Jobs.testJobCreationRequest()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationSuccessAsync()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationSuccessAsync" description="Implements Requirement /req/core/job-creation-success-async " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[This test is skipped because the server has not declared support for asynchronous execution mode.]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationSuccessAsync -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationSuccessAsync status=SKIP method=Jobs.testJobCreationSuccessAsync()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationSyncDocument()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationSyncDocument" description="Implements Requirement /req/core/job-creation-sync-document " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationSyncDocument -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationSyncDocument status=SUCCESS method=Jobs.testJobCreationSyncDocument()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationSyncRawMixedMulti()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationSyncRawMixedMulti" description="Implements Requirement /req/core/job-creation-sync-raw-mixed-multi " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationSyncRawMixedMulti -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationSyncRawMixedMulti status=SUCCESS method=Jobs.testJobCreationSyncRawMixedMulti()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationSyncRawRef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationSyncRawRef" description="Implements Requirement /req/core/job-creation-sync-raw-ref " finished-at="2026-10-25T11:29:04 UTC" duration-ms="2" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationSyncRawRef -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationSyncRawRef status=SUCCESS method=Jobs.testJobCreationSyncRawRef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobCreationSyncRawValueMulti()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationSyncRawValueMulti" description="Implements Requirement /req/core/job-creation-sync-raw-value-multi " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationSyncRawValueMulti -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testJobCreationSyncRawValueOne()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobCreationSyncRawValueOne" description="Implements Requirement /req/core/job-creation-sync-raw-value-one " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobCreationSyncRawValueOne -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationSyncRawValueMulti status=SUCCESS method=Jobs.testJobCreationSyncRawValueMulti()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobCreationSyncRawValueOne status=SUCCESS method=Jobs.testJobCreationSyncRawValueOne()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobExceptionNoSuchJob()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobExceptionNoSuchJob" description="Implements Requirement /req/core/job-exception-no-such-job " finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobExceptionNoSuchJob -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobExceptionNoSuchJob status=SUCCESS method=Jobs.testJobExceptionNoSuchJob()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobOp()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobOp" description="Implements Requirement /req/core/job " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobOp -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobOp status=SUCCESS method=Jobs.testJobOp()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testJobResults()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResults" description="Implements Requirement /req/core/job-results " finished-at="2026-10-25T11:29:04 UTC" duration-ms="6" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResults -->
+        <test-method signature="testJobResultsAsyncDocument()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResultsAsyncDocument" description="Implements Requirement /req/core/job-results-async-document " finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[This test is skipped because the server has not declared support for asynchronous execution mode.]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResultsAsyncDocument -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResults status=SUCCESS method=Jobs.testJobResults()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResultsAsyncDocument status=SKIP method=Jobs.testJobResultsAsyncDocument()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobResultsAsyncRawMixedMulti()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResultsAsyncRawMixedMulti" description="Implements Requirement /req/core/job-results-async-raw-mixed-multi " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[This test is skipped because the server has not declared support for asynchronous execution mode.]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResultsAsyncRawMixedMulti -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResultsAsyncRawMixedMulti status=SKIP method=Jobs.testJobResultsAsyncRawMixedMulti()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobResultsAsyncRawRef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResultsAsyncRawRef" description="Implements Requirement /req/core/job-results-async-raw-ref " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[This test is skipped because the server has not declared support for asynchronous execution mode.]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResultsAsyncRawRef -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResultsAsyncRawRef status=SKIP method=Jobs.testJobResultsAsyncRawRef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobResultsAsyncRawValueMulti()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResultsAsyncRawValueMulti" description="Implements Requirement /req/core/job-results-async-raw-value-multi " finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[This test is skipped because the server has not declared support for asynchronous execution mode.]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResultsAsyncRawValueMulti -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResultsAsyncRawValueMulti status=SKIP method=Jobs.testJobResultsAsyncRawValueMulti()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobResultsAsyncRawValueOne()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResultsAsyncRawValueOne" description="Implements Requirement /req/core/job-results-async-raw-value-one " finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[This test is skipped because the server has not declared support for asynchronous execution mode.]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResultsAsyncRawValueOne -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResultsAsyncRawValueOne status=SKIP method=Jobs.testJobResultsAsyncRawValueOne()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobResultsExceptionResultsNotReady()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResultsExceptionResultsNotReady" description="Implements Requirement /req/core/job-results-exception-results-not-ready " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[This test is skipped because the server has not declared support for asynchronous execution mode.]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResultsExceptionResultsNotReady -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResultsExceptionResultsNotReady status=SKIP method=Jobs.testJobResultsExceptionResultsNotReady()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobResultsFailed()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResultsFailed" description="Implements Requirement /req/core/job-results-failed " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResultsFailed -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResultsFailed status=SUCCESS method=Jobs.testJobResultsFailed()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobResultsNoSuchJob()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResultsNoSuchJob" description="Implements Requirement /req/core/job-results-exception-no-such-job " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResultsNoSuchJob -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResultsNoSuchJob status=SUCCESS method=Jobs.testJobResultsNoSuchJob()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobResultsSync()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobResultsSync" description="Implements Requirement /req/core/job-results-sync " finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobResultsSync -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testJobSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="testJobSuccess" description="Implements Requirement /req/core/job-success " finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[This test is skipped because the server has not declared support for asynchronous execution mode. Also note that the specification does not mandate that servers create a job as a result of executing a process synchronously (See Clause 7.11.4 of OGC 18-062r2)]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobSuccess -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobResultsSync status=SUCCESS method=Jobs.testJobResultsSync()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobSuccess status=SKIP method=Jobs.testJobSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.jobs.Jobs@1d131e1b] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+      </class> <!-- org.opengis.cite.ogcapiprocesses10.jobs.Jobs -->
+      <class name="org.opengis.cite.ogcapiprocesses10.general.GeneralHttp">
+        <test-method is-config="true" signature="initCommonFixture(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.general.GeneralHttp@2474f125]" started-at="2026-10-25T11:29:01 UTC" name="initCommonFixture" finished-at="2026-10-25T11:29:02 UTC" duration-ms="244" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@7ebc5be6]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- initCommonFixture -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.general.GeneralHttp@2474f125]" started-at="2026-10-25T11:29:02 UTC" name="clearMessages" finished-at="2026-10-25T11:29:02 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testHttp()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.general.GeneralHttp@2474f125]" started-at="2026-10-25T11:29:02 UTC" name="testHttp" description="Implements A.2.1.1. HTTP, Abstract Test 1 (Requirement /req/core/http)" finished-at="2026-10-25T11:29:02 UTC" duration-ms="652" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testHttp -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.general.GeneralHttp@2474f125]" started-at="2026-10-25T11:29:02 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:02 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testHttp status=SUCCESS method=GeneralHttp.testHttp()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.general.GeneralHttp@2474f125] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+      </class> <!-- org.opengis.cite.ogcapiprocesses10.general.GeneralHttp -->
+      <class name="org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage">
+        <test-method is-config="true" signature="initCommonFixture(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011]" started-at="2026-10-25T11:29:02 UTC" name="initCommonFixture" finished-at="2026-10-25T11:29:02 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@7ebc5be6]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- initCommonFixture -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011]" started-at="2026-10-25T11:29:02 UTC" name="clearMessages" finished-at="2026-10-25T11:29:02 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testLandingPageRetrieval()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011]" started-at="2026-10-25T11:29:02 UTC" name="testLandingPageRetrieval" description="Implements Abstract Test 1: /conf/core/landingpage-op" groups="A.2.1. Landing Page /" finished-at="2026-10-25T11:29:02 UTC" duration-ms="48" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testLandingPageRetrieval -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011]" started-at="2026-10-25T11:29:02 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:02 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testLandingPageRetrieval status=SUCCESS method=LandingPage.testLandingPageRetrieval()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testLandingPageValidation()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011]" started-at="2026-10-25T11:29:02 UTC" name="testLandingPageValidation" description="Implements Abstract Test 2: /conf/core/landingpage-success" groups="A.2.1. Landing Page /" finished-at="2026-10-25T11:29:03 UTC" duration-ms="577" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testLandingPageValidation -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011]" started-at="2026-10-25T11:29:02 UTC" name="clearMessages" finished-at="2026-10-25T11:29:02 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011]" started-at="2026-10-25T11:29:03 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:03 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testLandingPageValidation status=SUCCESS method=LandingPage.testLandingPageValidation()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage@7357a011] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+      </class> <!-- org.opengis.cite.ogcapiprocesses10.landingpage.LandingPage -->
+      <class name="org.opengis.cite.ogcapiprocesses10.conformance.Conformance">
+        <test-method is-config="true" signature="initCommonFixture(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.conformance.Conformance@3406472c]" started-at="2026-10-25T11:29:04 UTC" name="initCommonFixture" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@7ebc5be6]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- initCommonFixture -->
+        <test-method signature="testValidateConformanceOperationAndResponse(org.opengis.cite.ogcapiprocesses10.openapi3.TestPoint)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.conformance.Conformance@3406472c]" started-at="2026-10-25T11:29:04 UTC" name="testValidateConformanceOperationAndResponse" description="Implements /conf/core/conformance-success (partial)" groups="A.2.3. Conformance Path /conformance" data-provider="conformance" finished-at="2026-10-25T11:29:04 UTC" duration-ms="55" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[Server URL: http://api:8080 , Path: /conformance, Replacements: {}]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testValidateConformanceOperationAndResponse -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.conformance.Conformance@3406472c]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="storeRequirementClassesInTestContext(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.conformance.Conformance@3406472c]" started-at="2026-10-25T11:29:04 UTC" name="storeRequirementClassesInTestContext" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@7ebc5be6]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- storeRequirementClassesInTestContext -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.conformance.Conformance@3406472c]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testValidateConformanceOperationAndResponse status=SUCCESS method=Conformance.testValidateConformanceOperationAndResponse(org.opengis.cite.ogcapiprocesses10.openapi3.TestPoint)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.conformance.Conformance@3406472c] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+      </class> <!-- org.opengis.cite.ogcapiprocesses10.conformance.Conformance -->
+      <class name="org.opengis.cite.ogcapiprocesses10.process.Process">
+        <test-method is-config="true" signature="initCommonFixture(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="initCommonFixture" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@7ebc5be6]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- initCommonFixture -->
+        <test-method is-config="true" signature="setup(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="setup" finished-at="2026-10-25T11:29:04 UTC" duration-ms="41" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@7ebc5be6]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setup -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testProcess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="testProcess" description="Implements Requirement /req/core/process " groups="process" finished-at="2026-10-25T11:29:04 UTC" duration-ms="6" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testProcess -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testProcess status=SUCCESS method=Process.testProcess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testProcessExceptionNoSuchProcess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="testProcessExceptionNoSuchProcess" description="Implements Requirement /req/core/process-exception-no-such-process " groups="process" finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testProcessExceptionNoSuchProcess -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testProcessExceptionNoSuchProcess status=SUCCESS method=Process.testProcessExceptionNoSuchProcess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testProcessSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="testProcessSuccess" description="Implements Requirement /req/core/process-success " groups="process" finished-at="2026-10-25T11:29:04 UTC" duration-ms="4" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testProcessSuccess -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testProcessSuccess status=SUCCESS method=Process.testProcessSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.process.Process@73a8da0f] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+      </class> <!-- org.opengis.cite.ogcapiprocesses10.process.Process -->
+      <class name="org.opengis.cite.ogcapiprocesses10.processlist.ProcessList">
+        <test-method is-config="true" signature="initCommonFixture(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="initCommonFixture" finished-at="2026-10-25T11:29:03 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@7ebc5be6]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- initCommonFixture -->
+        <test-method is-config="true" signature="setup()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="setup" finished-at="2026-10-25T11:29:03 UTC" duration-ms="223" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setup -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="clearMessages" finished-at="2026-10-25T11:29:03 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testPlLimitDefinition()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="testPlLimitDefinition" description="Implements Requirement /req/core/pl-limit-definition " groups="pl" finished-at="2026-10-25T11:29:03 UTC" duration-ms="2" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testPlLimitDefinition -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="clearMessages" finished-at="2026-10-25T11:29:03 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:03 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testPlLimitDefinition status=SUCCESS method=ProcessList.testPlLimitDefinition()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testPlLimitResponse()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="testPlLimitResponse" description="Implements Requirement /req/core/pl-limit-response " groups="pl" finished-at="2026-10-25T11:29:03 UTC" duration-ms="86" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testPlLimitResponse -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:03 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testPlLimitResponse status=SUCCESS method=ProcessList.testPlLimitResponse()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="clearMessages" finished-at="2026-10-25T11:29:03 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testPlLinks()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="testPlLinks" description="Implements Requirement /req/core/pl-links " groups="pl" finished-at="2026-10-25T11:29:03 UTC" duration-ms="9" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testPlLinks -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:03 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testPlLinks status=SUCCESS method=ProcessList.testPlLinks()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testProcessList()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="testProcessList" description="Implements Requirement /req/core/process-list " groups="processlist" finished-at="2026-10-25T11:29:03 UTC" duration-ms="18" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testProcessList -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="clearMessages" finished-at="2026-10-25T11:29:03 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:03 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testProcessList status=SUCCESS method=ProcessList.testProcessList()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="clearMessages" finished-at="2026-10-25T11:29:03 UTC" duration-ms="1" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testProcessListSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:03 UTC" name="testProcessListSuccess" description="Implements Requirement /req/core/process-list-success " groups="processlist" finished-at="2026-10-25T11:29:04 UTC" duration-ms="388" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testProcessListSuccess -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testProcessListSuccess status=SUCCESS method=ProcessList.testProcessListSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.processlist.ProcessList@10f7f7de] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+      </class> <!-- org.opengis.cite.ogcapiprocesses10.processlist.ProcessList -->
+    </test> <!-- Core -->
+    <test started-at="2026-10-25T11:29:04 UTC" name="OGC Process Description" finished-at="2026-10-25T11:29:04 UTC" duration-ms="179">
+      <class name="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription">
+        <test-method is-config="true" signature="initCommonFixture(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="initCommonFixture" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@6e0d058a]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- initCommonFixture -->
+        <test-method is-config="true" signature="setup(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="setup" finished-at="2026-10-25T11:29:04 UTC" duration-ms="18" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@6e0d058a]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setup -->
+        <test-method signature="testOGCProcessDescriptionJSON()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="testOGCProcessDescriptionJSON" description="Implements Requirement /req/ogc-process-description/json-encoding" groups="ogcprocessdescription" finished-at="2026-10-25T11:29:04 UTC" duration-ms="21" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testOGCProcessDescriptionJSON -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testOGCProcessDescriptionJSON status=SUCCESS method=OGCProcessDescription.testOGCProcessDescriptionJSON()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testOGCProcessDescriptionInputDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="testOGCProcessDescriptionInputDef" description="Implements Requirement /req/ogc-process-description/input-def" groups="ogcprocessdescription" finished-at="2026-10-25T11:29:04 UTC" depends-on-methods="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription.testOGCProcessDescriptionJSON" duration-ms="23" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testOGCProcessDescriptionInputDef -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testOGCProcessDescriptionInputDef status=SUCCESS method=OGCProcessDescription.testOGCProcessDescriptionInputDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testOGCProcessDescriptionInputDefinitionOfMixedType()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="testOGCProcessDescriptionInputDefinitionOfMixedType" description="Implements Requirement /req/ogc-process-description/input-mixed-type" groups="ogcprocessdescription" finished-at="2026-10-25T11:29:04 UTC" depends-on-methods="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription.testOGCProcessDescriptionJSON" duration-ms="21" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[No input definition of 'cite-echo' process identifies a mixed type input]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testOGCProcessDescriptionInputDefinitionOfMixedType -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method signature="testOGCProcessDescriptionInputsDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="testOGCProcessDescriptionInputsDef" description="Implements Requirement /req/ogc-process-description/inputs-def" groups="ogcprocessdescription" finished-at="2026-10-25T11:29:04 UTC" depends-on-methods="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription.testOGCProcessDescriptionJSON" duration-ms="21" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testOGCProcessDescriptionInputsDef -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testOGCProcessDescriptionInputDefinitionOfMixedType status=SKIP method=OGCProcessDescription.testOGCProcessDescriptionInputDefinitionOfMixedType()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testOGCProcessDescriptionInputsDef status=SUCCESS method=OGCProcessDescription.testOGCProcessDescriptionInputsDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testOGCProcessDescriptionOutputDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="testOGCProcessDescriptionOutputDef" description="Implements Requirement /req/ogc-process-description/output-def " groups="ogcprocessdescription" finished-at="2026-10-25T11:29:04 UTC" depends-on-methods="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription.testOGCProcessDescriptionJSON" duration-ms="20" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testOGCProcessDescriptionOutputDef -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testOGCProcessDescriptionOutputDef status=SUCCESS method=OGCProcessDescription.testOGCProcessDescriptionOutputDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testOGCProcessDescriptionOutputDefinitionOfMixedType()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="testOGCProcessDescriptionOutputDefinitionOfMixedType" description="Implements Requirement /req/ogc-process-description/output-mixed-type" groups="ogcprocessdescription" finished-at="2026-10-25T11:29:04 UTC" depends-on-methods="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription.testOGCProcessDescriptionJSON" duration-ms="20" status="SKIP">
+          <exception class="org.testng.SkipException">
+            <message>
+              <![CDATA[No output definition of 'cite-echo' process identifies a mixed type output]]>
+            </message>
+          </exception> <!-- org.testng.SkipException -->
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testOGCProcessDescriptionOutputDefinitionOfMixedType -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testOGCProcessDescriptionOutputDefinitionOfMixedType status=SKIP method=OGCProcessDescription.testOGCProcessDescriptionOutputDefinitionOfMixedType()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testOGCProcessDescriptionOutputsDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="testOGCProcessDescriptionOutputsDef" description="Implements Requirement /req/ogc-process-description/outputs-def" groups="ogcprocessdescription" finished-at="2026-10-25T11:29:04 UTC" depends-on-methods="org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription.testOGCProcessDescriptionJSON" duration-ms="23" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testOGCProcessDescriptionOutputsDef -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testOGCProcessDescriptionOutputsDef status=SUCCESS method=OGCProcessDescription.testOGCProcessDescriptionOutputsDef()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription@37052337] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+      </class> <!-- org.opengis.cite.ogcapiprocesses10.ogcprocessdescription.OGCProcessDescription -->
+    </test> <!-- OGC Process Description -->
+    <test started-at="2026-10-25T11:29:04 UTC" name="Job List" finished-at="2026-10-25T11:29:04 UTC" duration-ms="87">
+      <class name="org.opengis.cite.ogcapiprocesses10.joblist.JobList">
+        <test-method is-config="true" signature="initCommonFixture(org.testng.ITestContext)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" started-at="2026-10-25T11:29:04 UTC" name="initCommonFixture" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[org.testng.TestRunner@2b41b8bb]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- initCommonFixture -->
+        <test-method is-config="true" signature="setup()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" started-at="2026-10-25T11:29:04 UTC" name="setup" finished-at="2026-10-25T11:29:04 UTC" duration-ms="12" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- setup -->
+        <test-method signature="testJobList()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" started-at="2026-10-25T11:29:04 UTC" name="testJobList" description="Implements Requirement /req/job-list/job-list-op " groups="jobList" finished-at="2026-10-25T11:29:04 UTC" duration-ms="3" status="FAIL">
+          <exception class="java.lang.AssertionError">
+            <message>
+              <![CDATA[No processes listed at http://api:8080/jobs expected [true] but found [false]]]>
+            </message>
+          </exception> <!-- java.lang.AssertionError -->
+          <reporter-output>
+          </reporter-output>
+          <attributes>
+            <attribute name="request">
+              <![CDATA[GET http://api:8080/jobs HTTP/1.1]]>
+            </attribute> <!-- request -->
+            <attribute name="response">
+              <![CDATA[{
+  "jobs" : [ ],
+  "links" : [ {
+    "href" : "http://api:8080/jobs?f=html",
+    "rel" : "alternate",
+    "type" : "text/html",
+    "title" : "Jobs list as HTML"
+  }, {
+    "href" : "http://api:8080/jobs?f=json",
+    "rel" : "self",
+    "type" : "application/json",
+    "title" : "Jobs list as JSON"
+  } ]
+}]]>
+            </attribute> <!-- response -->
+          </attributes>
+        </test-method> <!-- testJobList -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobList status=FAILURE method=JobList.testJobList()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+        <test-method signature="testJobListSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" started-at="2026-10-25T11:29:04 UTC" name="testJobListSuccess" description="Implements Requirement /req/job-list/job-list-success " groups="jobList" finished-at="2026-10-25T11:29:04 UTC" duration-ms="67" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- testJobListSuccess -->
+        <test-method is-config="true" signature="clearMessages()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" started-at="2026-10-25T11:29:04 UTC" name="clearMessages" finished-at="2026-10-25T11:29:04 UTC" duration-ms="0" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- clearMessages -->
+        <test-method is-config="true" signature="addAttributesOnTestFailure(org.testng.ITestResult)[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131]" started-at="2026-10-25T11:29:04 UTC" name="addAttributesOnTestFailure" finished-at="2026-10-25T11:29:04 UTC" duration-ms="1" status="PASS">
+          <params>
+            <param index="0">
+              <value>
+                <![CDATA[[TestResult name=testJobListSuccess status=SUCCESS method=JobList.testJobListSuccess()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.joblist.JobList@37efd131] output={null}]]]>
+              </value>
+            </param>
+          </params>
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- addAttributesOnTestFailure -->
+      </class> <!-- org.opengis.cite.ogcapiprocesses10.joblist.JobList -->
+      <class name="org.opengis.cite.ogcapiprocesses10.SuitePreconditions">
+        <test-method is-config="true" signature="verifyTestSubject()[pri:0, instance:org.opengis.cite.ogcapiprocesses10.SuitePreconditions@5be49b60]" started-at="2026-10-25T11:29:01 UTC" name="verifyTestSubject" finished-at="2026-10-25T11:29:01 UTC" duration-ms="7" status="PASS">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- verifyTestSubject -->
+      </class> <!-- org.opengis.cite.ogcapiprocesses10.SuitePreconditions -->
+    </test> <!-- Job List -->
+  </suite> <!-- ogcapi-processes-1.0-1.3 -->
+</testng-results>
