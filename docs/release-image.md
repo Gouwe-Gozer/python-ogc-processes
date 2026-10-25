@@ -60,10 +60,9 @@ settings. Result links are accessible to anyone who knows them until expiry.
 A normal `docker compose --file compose.release.yml down` retains the result
 volume; adding `--volumes` deletes it. Keep the same Compose project name when
 renaming a checkout or upgrading an existing installation, so Docker reuses the
-same volume. Historical environment/package renames are recorded in the
-[upgrade notes](rasterio-pivot.md#upgrade-names-and-preserve-results).
-The [repository rename guide](renaming.md) covers switching Docker project names
-and optionally retaining the old installation's test results.
+same volume. The current project is `raster-processes`, with result volume
+`raster-processes_results`. See [local reset instructions](development.md#container-and-integration-checks)
+when those disposable results should be discarded deliberately.
 
 Authentication, TLS termination, hosting, monitoring and access/egress policy
 remain deployment responsibilities; this repository supplies a bounded service

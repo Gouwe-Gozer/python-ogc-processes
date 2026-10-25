@@ -8,6 +8,7 @@ services:
       - "${API_PORT:-5001}:8080"
     environment:
       PYGEOAPI_SERVER_URL: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
+      PYGEOAPI_TERMS_OF_SERVICE: ${PYGEOAPI_TERMS_OF_SERVICE:-https://opensource.org/license/mit}
       GEO_OUTPUT_DIR: /var/lib/geo/results
       GEO_INPUT_TMPDIR: /tmp/geo-inputs
       GEO_INPUT_ALLOWED_HOSTS: ${GEO_INPUT_ALLOWED_HOSTS:-}

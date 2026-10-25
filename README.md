@@ -38,6 +38,10 @@ Result references use `PYGEOAPI_SERVER_URL`; choose an address clients can reach
 See [deployment](docs/release-image.md) for storage and operating settings,
 or [development](docs/development.md) for the bind-mounted development stack.
 
+The Compose project is `raster-processes`, derived from the checkout directory.
+Plain `docker compose up --detach` selects the development configuration;
+keep `--file compose.release.yml` for the self-contained release.
+
 ## Process your raster
 
 Install the local example client with Python 3.12 and user-installed `uv`, then
@@ -107,7 +111,6 @@ remaining implementation gaps are documented in [validation](docs/validation.md)
   and [adding a process](docs/adding-a-process.md).
 - [Release deployment](docs/release-image.md), [client interoperability](docs/client-interoperability.md)
   and [future work](docs/roadmap.md).
-- [Project identity and repository/local rename steps](docs/renaming.md).
 
 ## License and origins
 

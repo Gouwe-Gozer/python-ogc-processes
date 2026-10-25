@@ -4,7 +4,8 @@ This repository implements Raster Processes API, a Rasterio/GDAL-backed OGC API 
 Processes service built on pygeoapi. Code, configuration and tests define current
 behavior. Use [development](docs/development.md), [architecture](docs/architecture.md)
 and [validation](docs/validation.md) for maintained guidance.
-`CODEX_HANDOVER.md` is historical planning material, not an active task plan.
+Historical background is in [history](docs/history.md). `CODEX_HANDOVER.md`
+is only a historical pointer, not an active task plan.
 The Python package remains `geo_processes` (distribution `geo-processes`);
 the public project/repository name is `raster-processes`.
 
@@ -52,4 +53,7 @@ container checks in the development guide. Report checks that could not run and
 why. Never remove tests just to obtain a passing suite.
 
 ## pygeoapi-first architecture
- Prefer pygeoapi's existing APIs, managers, execution lifecycle and extension points over custom implementations. Before adding or changing shared infrastructure, inspect the relevant upstream pygeoapi interfaces and justify why existing functionality is insufficient. Keep custom behavior narrowly scoped and documented. Do not introduce internal contracts that unnecessarily couple processors to a particular manager.
+Prefer pygeoapi's existing APIs, managers, execution lifecycle and extension points.
+Before changing shared infrastructure, inspect the relevant upstream interfaces
+and justify why existing functionality is insufficient. Keep custom behavior
+narrowly scoped and documented; avoid coupling processors to a particular manager.

@@ -1,5 +1,9 @@
 .git
 .github
+.env
+.env.*
+.idea
+.vscode
 .venv
 .uv-cache
 .uv-python
@@ -7,6 +11,12 @@ __pycache__
 .pytest_cache
 .ruff_cache
 .coverage
+.coverage.*
+coverage.xml
 htmlcov
 runtime-data
 job-results
+build
+dist
+logs
+pygeoapi-openapi.yml
