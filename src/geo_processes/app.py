@@ -31,7 +31,8 @@ install_metadata_locale_filter(
     ),
 )
 configure_documentation_templates(api_)
-api_.manager.result_base_url = runtime_settings.url
+# Reuse pygeoapi's canonical URL, including any native api_rules route prefix.
+api_.manager.result_base_url = api_.base_url
 install_exception_renderer(api_)
 APP.config["MAX_CONTENT_LENGTH"] = MAX_EXECUTION_BYTES
 APP.register_blueprint(

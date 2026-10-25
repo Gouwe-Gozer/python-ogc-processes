@@ -96,12 +96,16 @@ def test_engine_limits_are_checked_before_warp(tmp_path, monkeypatch):
 def test_all_response_and_transmission_combinations(http_client, tmp_path, mode, transmission):
     request = {"inputs": INPUTS, "response": mode, "outputs": {"result": {"transmissionMode": transmission}}}
     Draft202012Validator(EXECUTE_SCHEMA).validate(request)
-    response = http_client.post(EXECUTION, json=request)
+    response = http_client.post(
+        EXECUTION, json=request, headers={"Accept": "application/json", "Prefer": "respond-async"}
+    )
     assert "X-Geo-Internal-Status" not in response.headers
     assert "Location" not in response.headers
+    assert "Preference-Applied" not in response.headers
     if mode == "raw" and transmission == "reference":
         assert response.status_code == 204
         assert not response.data
+        assert "Content-Type" not in response.headers
         assert 'type="image/tiff"' in response.headers["Link"]
         href = response.headers["Link"].split("<", 1)[1].split(">", 1)[0]
     else:

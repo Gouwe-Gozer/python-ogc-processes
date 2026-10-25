@@ -106,6 +106,13 @@ The origin must return a complete HTTP 200 response without HTTP content
 compression. Chunked transfer and TIFF's internal compression are supported.
 The entire file is downloaded; remote COG window reads are not implemented.
 
+A rejected upstream status is reported separately, for example
+`source returned HTTP 404; expected HTTP 200 (check the reference URL)`.
+Unsupported HTTP compression instead reports
+`source uses unsupported HTTP Content-Encoding; expected identity`.
+Both are input errors (our execution returns HTTP 400). Upstream response bodies,
+headers, URL/query details and reason phrases are not copied into the error.
+
 URLs must be ASCII HTTPS URIs on port 443, without userinfo credentials,
 fragments, alternate ports or backslashes. Percent-encode non-ASCII paths and
 queries. Signed query URLs work; arbitrary headers and cookies are not sent.
@@ -121,6 +128,49 @@ The first validated address is used; address retry is not implemented.
 hostnames. Empty allows any otherwise permitted public HTTPS host. Redirect
 hosts must also be listed. An allowlist never bypasses public-address checks;
 there is no private-address or TLS-disable switch.
+
+## Chain raster operations
+
+A warp or reclassification result can be supplied directly as the next raster
+input when its download URL satisfies the same public HTTPS policy. After a
+document/reference execution, the returned `result` object already has the
+accepted `href`/`type` shape. For example, create the next `raster-info` request:
+
+```python
+next_request = {"inputs": {"source": first_response["result"]}, "response": "document"}
+```
+
+The URL is fetched normally and its TIFF is validated again; there is no
+special internal-artifact lookup or bypass for service-owned hosts. Requirements:
+
+- Set `PYGEOAPI_SERVER_URL` to the external HTTPS base URL, including any proxy
+  prefix; see [TLS termination and routing](release-image.md#reverse-proxy-and-tls-termination).
+- From inside the API container, **all** DNS answers for the public hostname
+  must be public unicast addresses. Split DNS returning a private address is
+  rejected. The selected public address must route back through the proxy on
+  port 443, with a certificate trusted by the container and matching the hostname.
+  Public IPv4/IPv6 reachability and any NAT/hairpin route need live verification;
+  the resolver uses the first validated address without address retry.
+- If `GEO_INPUT_ALLOWED_HOSTS` is set, include the public service hostname and
+  any redirect host. Redirects are checked again. Ambient proxy settings are
+  ignored; private backends are never direct input destinations.
+- Result downloads must work without extra authentication headers or cookies
+  and return HTTP 200 without content compression. A proxy must honor
+  `Accept-Encoding: identity`. TLS may terminate there; the private proxy-to-API
+  hop does not bypass destination checks on the public input URL.
+- Keep an API worker available for the nested download. The default two sync
+  workers can serve one chaining execution plus its result GET. Two simultaneous
+  self-fetching executions can occupy both workers and time out waiting for
+  their downloads. A single sync worker cannot serve its own nested request.
+  Control chaining concurrency and verify capacity on the deployment; no worker
+  or resource limits are changed automatically.
+- Start the next operation before the result expires. Byte/sample limits still
+  apply; GeoJSON outputs cannot be used as raster inputs.
+
+Local `http://localhost:5001/results/...` references remain unsuitable for
+server-side chaining. Download the result in the client and submit it inline
+for local testing. Local TLS regressions cover reference reuse and private-DNS
+rejection; they do not establish public DNS, proxy or loaded-deployment behavior.
 
 ## Scalar input references
 

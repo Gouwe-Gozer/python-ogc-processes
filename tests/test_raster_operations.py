@@ -97,17 +97,24 @@ def test_process_descriptions_and_binary_source_schema(http_client, process):
 @pytest.mark.parametrize("process", PROCESSES)
 @pytest.mark.parametrize("response_mode", ["raw", "document"])
 @pytest.mark.parametrize("transmission", ["value", "reference"])
-def test_output_modes_metadata_and_downloads(http_client, process, response_mode, transmission):
-    response = execute(
-        http_client,
-        process,
-        inputs_for(process),
-        response=response_mode,
-        outputs={"result": {"transmissionMode": transmission}},
+def test_output_modes_metadata_and_downloads(http_client, process, response_mode, transmission, monkeypatch):
+    from pygeoapi.flask_app import api_
+
+    public_base = "https://public.example.test/proxy"
+    monkeypatch.setattr(api_.manager, "result_base_url", public_base)
+    response = http_client.post(
+        f"/processes/{process}/execution",
+        json={
+            "inputs": inputs_for(process),
+            "response": response_mode,
+            "outputs": {"result": {"transmissionMode": transmission}},
+        },
+        headers={"Accept": "application/json", "Prefer": "respond-async", "Host": "internal-api:8080"},
     )
     expected_type = "image/tiff" if process == "raster-reclassify" else GEOJSON_TYPE
     assert response.status_code == (204 if response_mode == "raw" and transmission == "reference" else 200)
     assert "Location" not in response.headers
+    assert "Preference-Applied" not in response.headers
     if transmission == "reference":
         if response_mode == "document":
             validate_official(response.get_json(), "results.yaml")
@@ -115,9 +122,11 @@ def test_output_modes_metadata_and_downloads(http_client, process, response_mode
             assert response.get_json()["result"]["type"] == expected_type
         else:
             assert response.data == b""
+            assert "Content-Type" not in response.headers
             url = response.headers["Link"].split(">", 1)[0][1:]
             assert f'type="{expected_type}"' in response.headers["Link"]
-        download = http_client.get(urlsplit(url).path)
+        assert url.startswith(public_base + "/results/")
+        download = http_client.get(url.removeprefix(public_base))
         assert download.status_code == 200 and download.mimetype == expected_type
         assert "attachment" in download.headers["Content-Disposition"]
         assert download.headers["Expires"] and download.headers["X-Content-Type-Options"] == "nosniff"

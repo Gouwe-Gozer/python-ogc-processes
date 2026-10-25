@@ -43,6 +43,23 @@ The application `/results/<id>/output.tif` route is an output-reference target,
 not `/jobs/{jobID}/results`. A future reusable-upload endpoint would also be an
 extension, not evidence of Core conformance.
 
+### Inherited job routes in the synchronous profile
+
+pygeoapi 0.24.0 registers `GET /jobs` independently of manager capabilities.
+Its dummy manager (the base of our synchronous manager) returns an empty list,
+so the route returns HTTP 200 with `jobs: []` before and after execution.
+Upstream generates its OpenAPI entry only for an asynchronous manager. We retain
+that behavior and keep `/jobs` outside the advertised synchronous contract;
+Job List is an optional class, not claimed merely because this route responds.
+This is inherited discoverability behavior, not evidence of retained or async jobs.
+
+Unknown job status/results and `DELETE /jobs/{jobID}` return 404 with the
+`no-such-job` type. Dismiss is not advertised either. Regression tests cover the
+empty list, absent optional claims, sync preferences and these JSON/HTML errors.
+We do not add successful job operations, fake records or new conformance claims
+to reconcile the optional checker expectations. Client integrations should use
+`jobControlOptions` and `/conformance` when determining job support.
+
 ## Repeatable commands
 
 Install user-managed uv, Python 3.12, GNU Make and Docker Compose v2, then run
@@ -139,6 +156,16 @@ modified to hide the overlap; these checks do not establish complete conformance
 ## Recorded checks
 
 These are dated observations, not permanently current test counts or guarantees:
+
+- Independent execution review, **2026-10-25**: **548 tests passed**, **96.07%
+  coverage**. `make validate` (including `make test`) passes; Geonovum matches
+  all eight reviewed findings. CITE remains **36 passed / 5 failed / 13 skipped**,
+  with identical individual case statuses and no baseline changes. Local TLS
+  regressions reuse generated TIFF references and reject private DNS for the
+  service's own hostname. Fresh-process checks verify canonical HTTPS result
+  links with proxy and native route prefixes. The release passes all five
+  sample-raster operations and downloadable results. Public HTTPS, proxy routing
+  and worker capacity still require deployment-specific verification.
 
 - Demo stabilization, **2026-10-25**: **536 tests passed**, **95.85% coverage**
   (integrated validation checkpoint: 528 tests). `make test` and `make validate`

@@ -158,6 +158,18 @@ skipped for custom rasters above its pixel limit. The pytest suite exercises
 HTTPS through a local TLS origin and tests destination, redirect,
 deadline, capacity and cleanup policies without contacting public services.
 
+Keep reproducible raster tests independent of public Git branches. Current
+Python tests use generated/packaged TIFFs and a local TLS origin; examples use
+the packaged AHN4 sample or explicitly replaceable `data.example.org` placeholders.
+The official schema snapshots are offline and checksummed. Optional live
+`--source-href` checks should use a full upstream commit SHA and record the
+raster checksum, comparing with the same local `--input-raster`. The project's
+`blob/main/docs/errors.md` URLs identify maintained exception documentation;
+they are not raster fixtures. For the separate `ogc-processes-tests` project,
+pin its successful GeoTIFF URL to an exact commit and checksum, or package an
+appropriately licensed fixture there; no changes to that repository are required
+to run this project's checks.
+
 The local storage lock uses Linux `flock`; use Linux or Docker for this service.
 See [result storage](results.md) for settings and maintenance commands.
 

@@ -159,10 +159,12 @@ def test_listing_honors_default_maximum_and_offset_for_a_larger_catalogue(http_c
     assert not any(link["rel"] == "next" for link in remaining["links"])
 
 
-@pytest.mark.parametrize("path", ["/jobs/unknown", "/jobs/unknown/results"])
+@pytest.mark.parametrize(
+    "method,path", [("get", "/jobs/unknown"), ("get", "/jobs/unknown/results"), ("delete", "/jobs/unknown")]
+)
 @pytest.mark.parametrize("format_", ["json", "html"])
-def test_unknown_jobs_have_the_required_exception_type_in_each_encoding(http_client, path, format_):
-    response = http_client.get(f"{path}?f={format_}")
+def test_unknown_jobs_have_the_required_exception_type_in_each_encoding(http_client, method, path, format_):
+    response = getattr(http_client, method)(f"{path}?f={format_}")
     assert response.status_code == 404
     uri = f"{OGC_EXCEPTIONS}/no-such-job"
     if format_ == "json":
@@ -210,10 +212,16 @@ def test_html_exception_text_is_escaped(app):
 
 
 def test_sync_success_does_not_create_or_advertise_a_persistent_job(http_client):
+    before = http_client.get("/jobs?f=json")
+    assert before.status_code == 200 and before.get_json()["jobs"] == []
     response = http_client.post("/processes/raster-info/execution", json={"inputs": {"source": DEMO_SOURCE}})
     assert response.status_code == 200
     assert "Location" not in response.headers
     assert "monitor" not in response.headers.get("Link", "")
+    after = http_client.get("/jobs?f=json")
+    assert after.status_code == 200 and after.get_json()["jobs"] == []
+    classes = http_client.get("/conformance?f=json").get_json()["conformsTo"]
+    assert not any(uri.endswith(("/conf/job-list", "/conf/dismiss")) for uri in classes)
     paths = http_client.get("/openapi?f=json").get_json()["paths"]
     assert "/jobs" not in paths
     for path in ("/jobs/{jobID}", "/jobs/{jobID}/results"):

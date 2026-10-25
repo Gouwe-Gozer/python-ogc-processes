@@ -3,10 +3,12 @@
 import os
 import subprocess
 import sys
+from copy import deepcopy
 
 import pytest
 import yaml
 
+from geo_processes.openapi import generate_openapi
 from geo_processes.startup import ConfigurationError, public_url, validate_runtime
 
 
@@ -116,3 +118,45 @@ def test_preflight_command_succeeds_or_exits_with_clear_error(service_config, ru
     assert result.returncode == 1
     assert "Startup configuration error: GEO_RESULT_RETENTION_SECONDS" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+@pytest.mark.parametrize("route_prefix", ["", "/v1"])
+def test_https_proxy_url_and_native_route_prefix_agree_in_discovery_and_results(
+    service_config, runtime_environment, monkeypatch, route_prefix
+):
+    config = deepcopy(service_config)
+    config["server"]["url"] = "https://public.example.test/proxy"
+    config["server"]["api_rules"] = {"url_prefix": route_prefix}
+    config_path = runtime_environment / "config.yml"
+    openapi_path = runtime_environment / "openapi.yml"
+    config_path.write_text(yaml.safe_dump(config))
+    openapi_path.write_text(yaml.safe_dump(generate_openapi(config)))
+    monkeypatch.setenv("PYGEOAPI_CONFIG", str(config_path))
+    monkeypatch.setenv("PYGEOAPI_OPENAPI", str(openapi_path))
+    check = """
+from geo_processes.app import APP
+from geo_processes.datasets import demo_source
+from pygeoapi.flask_app import API_RULES, api_
+
+client = APP.test_client()
+prefix = API_RULES.get_url_prefix('flask')
+expected_base = 'https://public.example.test/proxy' + prefix
+headers = {'Host': 'internal-api:8080', 'X-Forwarded-Host': 'untrusted.example',
+           'X-Forwarded-Proto': 'http', 'X-Forwarded-Prefix': '/wrong'}
+assert api_.base_url == expected_base
+description = client.get(prefix + '/processes/raster-warp', headers=headers).get_json()
+assert all(link['href'].startswith(expected_base + '/') for link in description['links'])
+definition = client.get(prefix + '/openapi?f=json', headers=headers).get_json()
+assert definition['servers'][0]['url'] == expected_base
+for mode in ('document', 'raw'):
+    payload = {'inputs': {'source': demo_source(), 'target_crs': 'EPSG:4326'},
+               'response': mode, 'outputs': {'result': {'transmissionMode': 'reference'}}}
+    response = client.post(prefix + '/processes/raster-warp/execution', json=payload, headers=headers)
+    assert response.status_code == (200 if mode == 'document' else 204), response.text
+    href = (response.get_json()['result']['href'] if mode == 'document'
+            else response.headers['Link'].split('>', 1)[0][1:])
+    assert href.startswith(expected_base + '/results/'), href
+    assert client.get(href.removeprefix('https://public.example.test/proxy')).status_code == 200
+"""
+    result = subprocess.run([sys.executable, "-c", check], capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stdout + result.stderr

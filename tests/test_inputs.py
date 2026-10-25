@@ -55,7 +55,7 @@ def input_directory(monkeypatch, tmp_path):
 
 @pytest.fixture(scope="module")
 def tls_origin(raster_payload):
-    seen = {"hosts": [], "sni": [], "paths": []}
+    seen = {"hosts": [], "sni": [], "paths": [], "responses": {}}
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_args):
@@ -65,6 +65,15 @@ def tls_origin(raster_payload):
             try:
                 seen["paths"].append(self.path)
                 seen["hosts"].append(self.headers.get("Host"))
+                if self.path in seen["responses"]:
+                    status, headers, data = seen["responses"][self.path]
+                    self.send_response(status)
+                    for key, value in headers.items():
+                        self.send_header(key, value)
+                    self.send_header("Content-Length", str(len(data)))
+                    self.end_headers()
+                    self.wfile.write(data)
+                    return
                 scalars = {
                     "/point.geojson": ("application/geo+json", b'{"type":"Point","coordinates":[5.39,52.15]}'),
                     "/multipoint.geojson": (
@@ -348,6 +357,84 @@ def test_https_failures_and_redirect_policies(https_origin, input_directory, pat
     origin, _seen = https_origin
     with pytest.raises(error), inputs.resolve_source({"href": origin + path}):
         pytest.fail("invalid source response was accepted")
+    assert not list(input_directory.glob("slot-*"))
+
+
+@pytest.mark.parametrize("upstream_status", [403, 404, 503, 200])
+def test_upstream_status_and_encoding_errors_are_distinct_and_sanitized(
+    http_client, https_origin, input_directory, upstream_status
+):
+    origin, seen = https_origin
+    path = "/upstream?signature=private-token"
+    seen["responses"][path] = (
+        upstream_status,
+        {"Content-Encoding": "private-encoding", "Content-Type": "text/html", "X-Debug": "private-header"},
+        b"private-body: storage details",
+    )
+    response = http_client.post(
+        "/processes/raster-info/execution", json={"inputs": {"source": {"href": origin + path}}}
+    )
+    assert response.status_code == 400
+    detail = response.get_json()["detail"]
+    if upstream_status != 200:
+        assert f"source returned HTTP {upstream_status}" in detail
+        assert "expected HTTP 200" in detail and "reference URL" in detail
+        assert "Content-Encoding" not in detail
+    else:
+        assert "unsupported HTTP Content-Encoding" in detail
+        assert "expected identity" in detail
+    assert all(secret not in response.text for secret in ("private-", origin, "storage details"))
+    assert not list(input_directory.glob("slot-*"))
+
+
+@pytest.mark.parametrize("mode", ["document", "raw"])
+@pytest.mark.parametrize("private_dns", [False, True])
+def test_generated_raster_references_chain_through_the_same_https_policy(
+    http_client, https_origin, raster_payload, monkeypatch, input_directory, mode, private_dns
+):
+    from pygeoapi.flask_app import api_
+
+    origin, seen = https_origin
+    public_base = origin + "/proxy"
+    monkeypatch.setattr(api_.manager, "result_base_url", public_base)
+    monkeypatch.setenv("GEO_INPUT_ALLOWED_HOSTS", "raster-source.test")
+    first = http_client.post(
+        "/processes/raster-warp/execution",
+        json={
+            "inputs": {"source": inline(raster_payload), "target_crs": "EPSG:4326"},
+            "response": mode,
+            "outputs": {"result": {"transmissionMode": "reference"}},
+        },
+    )
+    assert first.status_code == (200 if mode == "document" else 204)
+    reference = (
+        first.get_json()["result"]
+        if mode == "document"
+        else {"href": first.headers["Link"].split(">", 1)[0][1:], "type": "image/tiff"}
+    )
+    href = reference["href"]
+    assert href.startswith(public_base + "/results/")
+    # Serve the actual stored download through the existing TLS fixture, as a
+    # proxy would. Production has no test routing or private-address bypass.
+    download = http_client.get(href.removeprefix(public_base))
+    assert download.status_code == 200
+    seen["responses"][urlsplit(href).path] = (download.status_code, {"Content-Type": download.mimetype}, download.data)
+    if private_dns:
+        monkeypatch.setattr(
+            inputs.socket,
+            "getaddrinfo",
+            lambda *_args, **_kwargs: [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("192.168.1.10", 443))],
+        )
+    second = http_client.post("/processes/raster-info/execution", json={"inputs": {"source": reference}})
+    if private_dns:
+        assert second.status_code == 400
+        assert "exclusively to public" in second.get_json()["detail"]
+    else:
+        assert second.status_code == 200
+        assert second.get_json()["size"] == [64, 48]
+        assert second.get_json()["crs"]["epsg"] == 4326
+        assert seen["paths"][-1] == urlsplit(href).path
+        assert seen["sni"][-1] == seen["hosts"][-1] == "raster-source.test"
     assert not list(input_directory.glob("slot-*"))
 
 

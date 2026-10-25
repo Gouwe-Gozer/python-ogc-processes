@@ -191,8 +191,12 @@ def _fetch(url, destination, *, max_bytes=None, media_types=MEDIA_TYPES):
                     raise RasterInputError("source redirect limit exceeded or Location is missing")
                 url = urljoin(url, location)
                 continue
-            if response.status != 200 or response.getheader("Content-Encoding", "identity").lower() != "identity":
-                raise RasterInputError("source must return HTTP 200 without content encoding")
+            if response.status != 200:
+                raise RasterInputError(
+                    f"source returned HTTP {response.status}; expected HTTP 200 (check the reference URL)"
+                )
+            if response.getheader("Content-Encoding", "identity").lower() != "identity":
+                raise RasterInputError("source uses unsupported HTTP Content-Encoding; expected identity")
             length = response.getheader("Content-Length")
             expected = int(length) if length is not None else None
             if expected is not None and expected < 0:

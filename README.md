@@ -79,6 +79,8 @@ See [input examples](docs/inputs.md) for HTTPS references and manual local-file
 requests, and [result formats](docs/results.md#http-contract) for all warp modes.
 See [sampling, reclassification and polygonization](docs/raster-operations.md)
 for parameters, executable local-file examples and GeoJSON delivery.
+For output-to-input reuse, see [raster chaining](docs/inputs.md#chain-raster-operations):
+generated references need public HTTPS deployment to meet the input policy.
 
 ## Supported scope
 

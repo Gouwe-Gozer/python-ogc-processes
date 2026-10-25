@@ -18,9 +18,27 @@ omitted transmission means value. Document mode does not silently change value
 to reference. `Prefer: respond-async` is ignored without a misleading applied
 preference or job location. Unsupported formats and identifiers return JSON 400.
 
+`Accept: application/json` does not select document mode or wrap a raw file in
+JSON. Choose `response: document` explicitly for an output-keyed JSON object
+(`info` for raster information, `result` for file outputs). For raw/value, use
+the returned `Content-Type` to decode the native TIFF or GeoJSON. For
+raw/reference, HTTP 204 has no body or `Content-Type`; read the `Link` header
+and fetch its target instead. It is a completed execution, not a job response.
+
+These representations follow [OGC Part 1, section 7.11.4](https://docs.ogc.org/is/18-062r2/18-062r2.html):
+Requirements 28 (native raw output), 30 (204 and links) and 32 (JSON results
+map). The [official results schema](https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/results.yaml)
+maps output identifiers directly to values or references; it does not introduce
+an `outputs` array. The `Prefer` behavior follows Requirement 26B for sync-only
+processes. Regression tests exercise these modes with `Accept: application/json`
+and `Prefer: respond-async` together.
+
 Reference URLs use the configured `PYGEOAPI_SERVER_URL`, including its path
 prefix, independently of the incoming Host header. It must be an absolute HTTP
 or HTTPS URL reachable by the client. The API never returns a container path.
+pygeoapi's native `server.api_rules.url_prefix`, when configured, is also included.
+See [reference chaining](inputs.md#chain-raster-operations) for the additional
+requirements when the API itself fetches a generated URL as the next input.
 GET `/results/<id>/output.tif` returns `image/tiff`, an attachment filename,
 `Cache-Control: no-store`, and an `Expires` timestamp. Invalid, missing and
 expired IDs return JSON 404. Internal storage failures return sanitized JSON 500.

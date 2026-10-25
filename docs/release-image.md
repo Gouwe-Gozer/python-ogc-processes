@@ -39,6 +39,28 @@ container launcher; these variables are not forwarded from the host by the
 supplied Compose files. A bind-port override also needs matching port mapping
 and health-check configuration.
 
+## Reverse proxy and TLS termination
+
+Set `PYGEOAPI_SERVER_URL=https://raster.example.org/geo` before starting the API
+when that is the client-facing base. This explicit configuration controls
+discovery and result links; incoming `Host` and `X-Forwarded-*` headers do not
+replace it. Regenerate/restart the service after changing the URL.
+
+The proxy can terminate trusted public TLS on port 443 and forward to internal
+HTTP port 8080 (or the host's published port). With `/geo` only in `server.url`,
+strip that external prefix before forwarding: the native routes are still at
+`/processes`, `/results`, etc. If using pygeoapi's additional
+`server.api_rules.url_prefix`, retain that native prefix upstream and update any
+explicit resource links accordingly. Result links reuse pygeoapi's computed base
+URL, including that prefix. URL-prefix tests cover both deployment shapes.
+
+Preserve response statuses, `Link` headers, media types and attachment headers;
+a raw/reference result is intentionally an empty HTTP 204. For reference inputs,
+the API container needs outbound access to the public origin. See
+[chaining requirements](inputs.md#chain-raster-operations), including public DNS,
+identity content encoding and available worker capacity. No TLS-termination,
+trusted-proxy middleware or production hostname is provisioned by this image.
+
 ## Isolation and storage
 
 Release Compose sets:

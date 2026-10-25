@@ -2,6 +2,11 @@
 
 ## 0.1.0 — Unreleased
 
+- Preserve pygeoapi's native route prefix in result references and distinguish
+  upstream HTTP status failures from unsupported content encoding.
+- Cover JSON Accept headers, sync preferences, public-reference chaining and
+  private-DNS rejection; document proxy/worker requirements and inherited job routes.
+
 - Correct inherited Features CRUD/CQL2 claims for read-only sample providers;
   omit unsupported CQL query POSTs from OpenAPI and reject ignored filters.
 - Make the README's first raster-processing example runnable with the packaged
