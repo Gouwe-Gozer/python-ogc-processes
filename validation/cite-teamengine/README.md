@@ -31,7 +31,8 @@ The runner:
 3. Runs independent raster processing/download smoke checks.
 4. Invokes the official suite's supported `TestNGController` Java CLI from the
    unmodified image, using the engine libraries already installed there.
-5. Collects native TestNG XML and EARL, JSON/HTML/Markdown summaries, versions,
+5. Requests the engine's official HTML report/ZIP alongside native TestNG XML
+   and EARL; collects JSON/HTML/Markdown summaries, versions,
    image identities, application commit/dirty state, configuration and logs.
 6. Removes its own temporary containers, network, result volume and application
    image tag, retaining the reports. It never stops the ordinary API or other projects.
@@ -43,16 +44,31 @@ exercise the echo; the raster smoke tests are separate integration evidence.
 
 ## Reports and exit behavior
 
-Reports are in `runtime-data/cite/raster-cite-<unique-id>/`. Start with
-`summary.html`, `summary.md`, `summary.json` and `metadata.json`; native XML/EARL
-are under `reports/testng/<run-id>/`. CLI/application/startup/cleanup logs and
-the exact effective config are retained beside them.
+Reports are in `runtime-data/cite/raster-cite-<unique-id>/`. Open the **official
+TEAM Engine report** at `reports/testng/<run-id>/result/index.html`, or share
+`official-report.zip` in the run's root directory. Keep the complete
+`result/` directory together when copying the unpacked report.
+
+The pinned engine's original `reports/testng/<run-id>/result.zip` is retained
+unchanged. Its ZIP writer flattens asset directories, so our runner also packages
+the unchanged official HTML/assets as `official-report.zip`, preserving their
+relative paths. The report itself is generated entirely by TEAM Engine. Some
+test-source/Javadoc links target its web application and are unavailable offline;
+test results, request/response details and presentation assets remain local.
+
+Our lightweight `summary.html` and `summary.md` link to those official reports;
+they remain separate from TEAM Engine's presentation. `summary.json` indexes
+individual cases and `metadata.json` records versions and report paths. Native
+XML/EARL remain under `reports/testng/<run-id>/`. CLI/application/startup/cleanup
+logs and the exact effective config are retained beside them. GitHub Actions
+uploads the complete run directory, including the official HTML and ZIP.
 
 The Python runner returns **0** for a complete run without failures, **1** for
 reported test failures and **2** for infrastructure/report/cleanup errors.
 GNU Make wraps unsuccessful recipes in its own nonzero status; read the
 `FAIL` versus `INFRASTRUCTURE ERROR` output and retained logs to distinguish them.
-Missing reports or malformed/inconsistent totals never count as a pass.
+Missing reports (including official HTML/ZIP) or malformed/inconsistent totals
+never count as a pass.
 
 The [current-service proposal](current/README.md) records **36 passed, 5 failed,
 13 skipped** with individual classifications. These known failures still make
@@ -63,7 +79,11 @@ The [current-service proposal](current/README.md) records **36 passed, 5 failed,
 
 Both the official Java CLI and the authenticated REST interface were exercised.
 CLI is used by default because it writes native files directly, needs no Tomcat
-startup/login, and avoids ZIP extraction or browser automation. The official
+startup/login, and avoids ZIP extraction or browser automation. The engine's
+`acceptMediaType=application/zip` test-run property requests its own HTML/ZIP
+generation without rerunning tests or replacing the XML/EARL. The pinned
+[official executor](https://github.com/opengeospatial/teamengine/blob/6.0.0-RC2/teamengine-spi/src/main/java/com/occamlab/te/spi/executors/testng/TestNGExecutor.java)
+uses the same report generator as REST's `Accept: application/zip`. The official
 [TEAM Engine guide](https://opengeospatial.github.io/teamengine/users.html)
 documents CLI, REST and browser operation; the suite's controller documents its
 [programmatic entry point](https://github.com/opengeospatial/ets-ogcapi-processes10/blob/1.3/src/main/java/org/opengis/cite/ogcapiprocesses10/TestNGController.java).

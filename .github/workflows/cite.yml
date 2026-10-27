@@ -22,7 +22,7 @@ jobs:
         run: uv sync --locked --all-groups
       - name: Run official suite against isolated application
         run: make validate-cite
-      - name: Preserve native reports, summaries, metadata and logs
+      - name: Preserve official HTML/XML reports, summaries, metadata and logs
         if: always()
         uses: actions/upload-artifact@v7
         with:

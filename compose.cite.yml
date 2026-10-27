@@ -30,7 +30,8 @@ services:
   cite:
     image: ${CITE_IMAGE:?set by the validation runner}
     user: ${CITE_UID:-1000}:${CITE_GID:-1000}
-    entrypoint: [java, -Xmx1024m, -Duser.home=/tmp, -cp, '/usr/local/tomcat/webapps/teamengine/WEB-INF/lib/*:/usr/local/tomcat/lib/*', org.opengis.cite.ogcapiprocesses10.TestNGController]
+    # HTML reporting also needs the engine's bundled XSLT and presentation assets.
+    entrypoint: [java, -Xmx1024m, -Duser.home=/tmp, -cp, '/usr/local/tomcat/webapps/teamengine/WEB-INF/classes:/usr/local/tomcat/webapps/teamengine/WEB-INF/lib/*:/usr/local/tomcat/lib/*', org.opengis.cite.ogcapiprocesses10.TestNGController]
     command: [-o, /reports, /run/test-run-props.xml]
     volumes:
       - ${CITE_RUN_DIR:?set by the validation runner}:/run:ro

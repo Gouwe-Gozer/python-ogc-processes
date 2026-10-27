@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="272" height="134" viewBox="6 54 272 134">
+  <path d="M 18,176
+           L 18,120
+           L 45,73
+           L 70,119
+           L 96,73
+           L 123,120
+           L 123,176
+           L 175,176
+           L 175,120
+           L 190,94
+           L 223,76
+           L 254,94
+           L 266,120
+           L 266,176"
+        fill="none"
+        stroke="#0D6EFD"
+        stroke-width="15"
+        stroke-linecap="butt"
+        stroke-linejoin="miter"/>
+</svg>

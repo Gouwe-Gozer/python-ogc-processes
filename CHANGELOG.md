@@ -2,6 +2,9 @@
 
 ## 0.1.0 — Unreleased
 
+- Generate TEAM Engine's official HTML report and shareable ZIP during CLI CITE
+  validation, retaining native XML/EARL and linking from the local summaries.
+
 - Scope Callback conformance to each manager's subscriber capability instead of
   mutating pygeoapi's global declarations during manager construction.
 - Move shared input/execution exceptions into `errors.py`, preserving their

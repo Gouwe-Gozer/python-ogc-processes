@@ -1,6 +1,7 @@
 """Test validation orchestration/report semantics, not the external algorithms."""
 
 import json
+from zipfile import ZipFile
 
 import pytest
 import yaml
@@ -19,6 +20,13 @@ def test_cite_config_retains_real_processes_manager_and_adds_only_sync_fixture(t
             assert config["resources"][name] == resource
     assert config["server"]["url"] == "http://api:8080"
     assert "cite-echo" not in service_config["resources"]
+
+
+def test_cite_cli_includes_the_engine_html_resources_on_its_classpath():
+    config = yaml.safe_load((cite.ROOT / "compose.cite.yml").read_text())
+    entrypoint = config["services"]["cite"]["entrypoint"]
+    classpath = entrypoint[entrypoint.index("-cp") + 1].split(":")
+    assert "/usr/local/tomcat/webapps/teamengine/WEB-INF/classes" in classpath
 
 
 @pytest.mark.parametrize("mode", ["raw", "document"])
@@ -67,6 +75,44 @@ def test_inconsistent_or_missing_results_are_not_treated_as_conformance_success(
         cite.summarize(tmp_path / "missing.xml")
 
 
+def test_official_reports_are_retained_and_linked_from_summaries(tmp_path):
+    run = tmp_path / "reports/testng/run-id"
+    (run / "result").mkdir(parents=True)
+    (run / "result/index.html").write_text('<html><script src="js/report.js"></script></html>')
+    (run / "result/js").mkdir()
+    (run / "result/js/report.js").write_text("// official report asset")
+    with ZipFile(run / "result.zip", "w") as archive:
+        archive.write(run / "result/index.html", "index.html")
+    metadata = cite.official_reports(tmp_path, report(run))
+    assert metadata == {
+        "officialHtmlReport": "reports/testng/run-id/result/index.html",
+        "nativeHtmlArchive": "reports/testng/run-id/result.zip",
+        "officialHtmlArchive": "official-report.zip",
+    }
+    with ZipFile(tmp_path / metadata["officialHtmlArchive"]) as archive:
+        assert archive.read("index.html") == (run / "result/index.html").read_bytes()
+        assert archive.read("js/report.js") == (run / "result/js/report.js").read_bytes()
+    with ZipFile(tmp_path / metadata["nativeHtmlArchive"]) as archive:
+        assert archive.namelist() == ["index.html"]  # original engine ZIP is unchanged
+    cite.write_reports(tmp_path, cite.summarize(run / "testng-results.xml"), metadata)
+    assert f'href="{metadata["officialHtmlReport"]}"' in (tmp_path / "summary.html").read_text()
+    assert f"({metadata['officialHtmlArchive']})" in (tmp_path / "summary.md").read_text()
+
+
+@pytest.mark.parametrize("artifact", ["index.html", "result.zip", "invalid-zip"])
+def test_missing_or_invalid_official_report_is_an_infrastructure_error(tmp_path, artifact):
+    (tmp_path / "result").mkdir()
+    (tmp_path / "result/index.html").write_text("official report")
+    with ZipFile(tmp_path / "result.zip", "w") as archive:
+        archive.writestr("index.html", "official report")
+    if artifact == "invalid-zip":
+        (tmp_path / "result.zip").write_text("not a ZIP")
+    else:
+        (tmp_path / ("result/index.html" if artifact == "index.html" else "result.zip")).unlink()
+    with pytest.raises(cite.InfrastructureError, match="official TEAM Engine|Official TEAM Engine"):
+        cite.official_reports(tmp_path, tmp_path / "testng-results.xml")
+
+
 def test_cleanup_is_scoped_and_still_runs_when_log_collection_fails(tmp_path, monkeypatch):
     (tmp_path / "compose.cite.yml").write_text("test profile")
     monkeypatch.setattr(cite, "ROOT", tmp_path)
@@ -88,6 +134,8 @@ def test_cleanup_is_scoped_and_still_runs_when_log_collection_fails(tmp_path, mo
 
     monkeypatch.setattr(cite, "command", command)
     assert cite.run() == 2
+    properties = next(tmp_path.glob("runtime-data/cite/*/test-run-props.xml")).read_text()
+    assert '<entry key="acceptMediaType">application/zip</entry>' in properties
     assert any("down" in command for command in commands)
     teardown = next(command for command in commands if "down" in command)
     assert teardown[teardown.index("--profile") + 1] == "browser"

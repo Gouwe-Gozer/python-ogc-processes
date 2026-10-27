@@ -93,6 +93,13 @@ CI preserves reports even after failures. Neither runner automatically updates
 reviewed baselines; inspect the actual tests, requirements and applicability
 before proposing explicit tracked evidence changes.
 
+For CITE's official human-readable report, open
+`runtime-data/cite/raster-cite-<unique-id>/reports/testng/<run-id>/result/index.html`.
+The run's `official-report.zip` packages the unchanged HTML/assets for sharing,
+preserving their relative paths; TEAM Engine's original ZIP is also retained.
+Our run summaries link to the report and shareable ZIP; the checked-in `current/`
+directory remains a historical evidence snapshot.
+
 [CITE instructions](../validation/cite-teamengine/README.md) cover CLI/REST,
 manual browser fallback and cleanup. The [fresh baseline proposal](../validation/cite-teamengine/current/README.md)
 classifies every failure and skip. The unchanged predecessor baseline is

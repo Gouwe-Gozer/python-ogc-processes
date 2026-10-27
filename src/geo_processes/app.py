@@ -36,6 +36,10 @@ api_.manager.result_base_url = api_.base_url
 install_exception_renderer(api_)
 APP.config["MAX_CONTENT_LENGTH"] = MAX_EXECUTION_BYTES
 APP.register_blueprint(
+    Blueprint("assets", __name__, static_folder="static", static_url_path="/assets"),
+    url_prefix=(API_RULES.get_url_prefix("flask") or "").rstrip("/"),
+)
+APP.register_blueprint(
     Blueprint("sample_data", __name__, static_folder=str(SAMPLE_DATA_DIR), static_url_path="/sample-data"),
     url_prefix=(API_RULES.get_url_prefix("flask") or "").rstrip("/"),
 )
