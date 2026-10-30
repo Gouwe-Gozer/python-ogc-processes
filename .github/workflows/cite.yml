@@ -20,7 +20,7 @@ jobs:
           python-version: '3.12'
       - name: Install locked dependencies
         run: uv sync --locked --all-groups
-      - name: Run official suite against isolated application
+      - name: Run official suite against combined API, PostgreSQL and worker
         run: make validate-cite
       - name: Preserve official HTML/XML reports, summaries, metadata and logs
         if: always()

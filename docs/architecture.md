@@ -9,7 +9,7 @@ masked statistics; [raster metadata](raster-info.md) is an application-owned con
 
 | Location | Responsibility |
 | --- | --- |
-| `config/pygeoapi.yml` | Explicit public process and synchronous manager registration |
+| `config/pygeoapi.yml` | Public process registration and default durable manager; explicit synchronous override |
 | `contracts/<operation>.py` | Independent operation descriptions and executable schemas |
 | `contracts/files.py` | Small schema builders for the repeated file-result contract |
 | `contracts/sources.py` | Binary raster value schema and supported execution representations |
@@ -20,6 +20,7 @@ masked statistics; [raster metadata](raster-info.md) is an application-owned con
 | `inputs.py` | Controlled HTTPS/base64 acquisition, private staging and cleanup |
 | `storage.py`, `delivery.py` | TIFF/GeoJSON publication, shared expiry/quotas and OGC file-result formatting |
 | `manager.py` | Synchronous execution and delegated representations |
+| `async_manager.py`, `worker.py`, `jobs.py` | Default PostgreSQL-backed handoff, independent bounded worker and stored-response HTTP adapter |
 | `responses.py` | Explicit response body, media type, status and headers |
 | `app.py` | Flask request guard, JSON exception normalization and result downloads |
 | `errors.py` | Shared execution exceptions, catalogue and API-instance JSON/HTML renderer |
@@ -46,14 +47,14 @@ adding more CRSs or algorithms requires validation and meaningful raster tests.
 
 `OgcSynchronousManager` delegates `format_result()` to each processor and accepts
 `ProcessResponse` for native bytes or explicit headers/status. It does not assume
-particular output identifiers or counts. Multipart output and job infrastructure
-are not implemented. File results are atomically published under opaque IDs;
+particular output identifiers or counts. Multipart output is not implemented. Durable jobs use the same
+execution/formatting method in a separate worker; see [async execution](asynchronous-execution.md). File results are atomically published under opaque IDs;
 [storage](results.md) supplies expiry and cross-worker locking.
 
 Rasterio datasets are opened within each operation's context managers and never
 shared across executions. Input slots are locked for their full lifetime;
 output publication uses a separate writer lock and unique temporary directories.
-These existing isolation rules also apply to future execution models.
+The separate async worker preserves these isolation rules.
 
 The owned entrypoint runs the startup preflight, generates OpenAPI and launches
 Gunicorn. Importing the Flask application also validates runtime settings. See
@@ -123,7 +124,7 @@ extraction. pygeoapi supplies registration, routing and execution dispatch; its
 stock manager does not supply our expiring non-job downloads or OGC result
 mapping. The existing formatter hook is reused, with no new manager coupling or
 job lifecycle. GeoJSON uses Rasterio/GDAL and the standard library; no vector
-library, driver plugin or asynchronous machinery is introduced.
+processing library or driver plugin is introduced by these operations.
 
 `scripts/process_raster.py` is a user-facing example client. Smoke scripts cover
 all supported representations for developer checks. Historical implementation

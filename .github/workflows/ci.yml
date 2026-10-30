@@ -51,10 +51,12 @@ jobs:
           if-no-files-found: ignore
 
   api-validation:
-    name: API runtime and conformance
+    name: Combined API runtime and conformance
     needs: quality
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+    env:
+      GEO_JOB_PASSWORD: ci-disposable-job-database
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -73,7 +75,7 @@ jobs:
           docker compose config --quiet
           docker compose --file compose.release.yml config --quiet
 
-      - name: Build and start self-contained API
+      - name: Build and start API, PostgreSQL and worker
         env:
           PYGEOAPI_SERVER_URL: http://127.0.0.1:5001
         run: docker compose --file compose.release.yml up --build --detach
@@ -86,6 +88,9 @@ jobs:
 
       - name: Process an independently generated user raster
         run: uv run python scripts/smoke_inputs.py --base-url http://127.0.0.1:5001
+
+      - name: Verify synchronous and durable asynchronous raster execution
+        run: uv run python scripts/smoke_async.py --base-url http://127.0.0.1:5001
 
       - name: Check reference downloads from a separate client container
         run: |
@@ -107,11 +112,18 @@ jobs:
           uv run python scripts/smoke_discovery.py --base-url http://127.0.0.1:5001 --wait-seconds 60
           uv run python scripts/smoke_warp.py --check-saved-reference /tmp/warp-reference.txt
 
+      - name: Check restart and worker interruption scenarios
+        env:
+          GEO_TEST_ASYNC_CONTAINERS: "1"
+        run: uv run pytest tests/test_async_containers.py tests/test_sync_deployment.py -v
+
       - name: Check release-container isolation
         run: uv run python scripts/check_release_container.py
 
       - name: Compare Geonovum diagnostics with the reviewed baseline
         if: github.event_name != 'push'
+        env:
+          GEONOVUM_INPUT: http://127.0.0.1:5001/openapi?f=json
         run: make validate-geonovum
 
       - name: Upload Geonovum checker report
@@ -133,7 +145,7 @@ jobs:
 
       - name: Show API logs after failure
         if: failure()
-        run: docker compose --file compose.release.yml logs --no-color api
+        run: docker compose --file compose.release.yml logs --no-color api worker db
 
       - name: Stop API
         if: always()

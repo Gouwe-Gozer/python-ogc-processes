@@ -89,3 +89,16 @@ when those disposable results should be discarded deliberately.
 Authentication, TLS termination, hosting, monitoring and access/egress policy
 remain deployment responsibilities; this repository supplies a bounded service
 and release artifact rather than managed production operations.
+
+## Deployment services
+
+`compose.release.yml` uses the shared `compose.base.yml` definition: one API,
+PostgreSQL and one independent worker using the same release image. Job requests,
+state and formatted results persist in the database volume; file downloads use
+the shared result volume. Ordinary requests are synchronous; `respond-async`
+uses the worker. Set `GEO_JOB_PASSWORD` for hosted use and retain it across
+restarts; the default password is for local development only. The database is
+not exposed on a host port.
+
+Apply `-f compose.sync.yml` after the release file to start the database-free,
+synchronous-only API. See [execution and deployment details](asynchronous-execution.md).

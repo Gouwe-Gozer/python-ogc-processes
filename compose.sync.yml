@@ -1,0 +1,11 @@
+# Explicit database-free opt-out, applied after compose.yml or compose.release.yml.
+services:
+  api:
+    environment:
+      GEO_MANAGER_CLASS: geo_processes.manager.OgcSynchronousManager
+      GEO_JOB_DSN: unused
+    depends_on: !reset {}
+  worker:
+    profiles: [durable-only]
+  db:
+    profiles: [durable-only]

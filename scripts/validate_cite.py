@@ -1,4 +1,4 @@
-"""Run the official CITE CLI against an isolated instance of the real application."""
+"""Run official validation against an isolated combined API, PostgreSQL and worker."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import html
 import json
 import os
 import shlex
+import socket
 
 # Fixed executable/argument vectors, never a shell.
 import subprocess  # nosec B404
@@ -50,19 +51,23 @@ def command(arguments, *, environment=None, log=None, timeout=900):
     return result.stdout.strip()
 
 
-def prepare_config(destination):
-    """Copy the canonical configuration; add only the sync fixture and internal URL."""
+def prepare_config(destination, *, password="cite-test-only", echo=True, public_url="http://api:8080"):
+    """Copy canonical runtime wiring and optionally register the test-only echo."""
     with (ROOT / "config/pygeoapi.yml").open() as stream:
         config = yaml_load(stream)
     original_url = config["server"]["url"].rstrip("/")
-    config["server"]["url"] = "http://api:8080"
-    config["metadata"]["identification"]["url"] = "http://api:8080"
+    config["server"]["logo"] = config["server"]["logo"].replace(original_url, public_url, 1)
+    config["server"]["url"] = public_url
+    config["metadata"]["identification"]["url"] = public_url
     for name in ("sample-points", "sample-polygons"):
         for provider in config["resources"][name]["providers"]:
             provider["data"] = "/pygeoapi/geo_processes/data/samples/" + Path(provider["data"]).name
         for link in config["resources"][name].get("links", []):
-            link["href"] = link["href"].replace(original_url, "http://api:8080", 1)
-    config["resources"]["cite-echo"] = {"type": "process", "processor": {"name": CLASS_NAME}}
+            link["href"] = link["href"].replace(original_url, public_url, 1)
+    config["server"]["manager"]["name"] = "geo_processes.async_manager.DurableProcessManager"
+    config["server"]["manager"]["connection"] = f"postgresql://geo:{password}@db:5432/geo"
+    if echo:
+        config["resources"]["cite-echo"] = {"type": "process", "processor": {"name": CLASS_NAME}}
     destination.write_text(yaml.safe_dump(config, sort_keys=False))
     return config
 
@@ -184,15 +189,24 @@ def source_fingerprint():
     return digest.hexdigest()
 
 
-def run(*, browser=False):
+def run(*, browser=False, geonovum=False):
     settings = json.loads(SETTINGS.read_text())
-    project = "raster-cite-" + uuid4().hex[:12]
-    directory = ROOT / "runtime-data/cite" / project
+    validator = "geonovum" if geonovum else "cite"
+    project = f"raster-{validator}-" + uuid4().hex[:12]
+    directory = ROOT / "runtime-data" / validator / project
     directory.mkdir(parents=True)
     (directory / "reports").mkdir()
-    config = prepare_config(directory / "api-config.yml")
+    password = uuid4().hex
+    port = 0
+    public_url = "http://api:8080"
+    if geonovum:
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            port = listener.getsockname()[1]
+        public_url = f"http://127.0.0.1:{port}"
+    config = prepare_config(directory / "api-config.yml", password=password, echo=not geonovum, public_url=public_url)
     parameters = {
-        "iut": "http://api:8080",
+        "iut": public_url,
         "echoprocessid": "cite-echo",
         "testallprocesses": "on",
         "processtestlimit": "0",
@@ -205,6 +219,9 @@ def run(*, browser=False):
     ET.ElementTree(properties).write(directory / "test-run-props.xml", encoding="utf-8", xml_declaration=True)
     environment = {
         **os.environ,
+        "GEO_JOB_PASSWORD": password,
+        "CITE_API_PORT": str(port),
+        "CITE_PUBLIC_URL": public_url,
         "CITE_RUN_DIR": str(directory),
         "CITE_IMAGE": settings["image"],
         "CITE_API_IMAGE": project + ":test",
@@ -222,19 +239,21 @@ def run(*, browser=False):
         "applicationSourceSha256": source_fingerprint(),
         "configurationSha256": hashlib.sha256((directory / "api-config.yml").read_bytes()).hexdigest(),
         "composeSha256": hashlib.sha256((ROOT / "compose.cite.yml").read_bytes()).hexdigest(),
+        "composeBaseSha256": hashlib.sha256((ROOT / "compose.base.yml").read_bytes()).hexdigest(),
         "manager": config["server"]["manager"]["name"],
         "processes": [name for name, resource in config["resources"].items() if resource["type"] == "process"],
         "composeVersion": command(["docker", "compose", "version", "--short"]),
-        "mode": "browser" if browser else "cli",
+        "mode": "browser" if browser else validator,
+        "deployment": "combined",
     }
     (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     keep = False
     exit_code = 2
-    print(f"CITE project: {project}\nReports: {directory}", flush=True)
+    print(f"Validation project: {project}\nReports: {directory}", flush=True)
     try:
         print("Building and starting the isolated application", flush=True)
         command(
-            [*compose, "up", "--build", "--wait", "--wait-timeout", "120", "api"],
+            [*compose, "up", "--build", "--wait", "--wait-timeout", "120", "api", "worker"],
             environment=environment,
             log=directory / "application-start.log",
         )
@@ -258,22 +277,23 @@ def run(*, browser=False):
         )
         (directory / "discovery.json").write_text(wire + "\n")
         metadata["advertisedConformance"] = json.loads(wire)["conformance"]["conformsTo"]
-        command(
-            [
-                *compose,
-                "exec",
-                "-T",
-                "-e",
-                "PYTHONPATH=/pygeoapi:/validation",
-                "api",
-                "/venv/bin/python3",
-                "/validation/scripts/smoke_inputs.py",
-                "--base-url",
-                "http://api:8080",
-            ],
-            environment=environment,
-            log=directory / "raster-smoke.log",
-        )
+        for script, log_name in (("smoke_inputs.py", "raster-smoke.log"), ("smoke_async.py", "async-smoke.log")):
+            arguments = (
+                [sys.executable, str(ROOT / "scripts" / script)]
+                if geonovum
+                else [
+                    *compose,
+                    "exec",
+                    "-T",
+                    "-e",
+                    "PYTHONPATH=/pygeoapi:/validation",
+                    "api",
+                    "/venv/bin/python3",
+                    f"/validation/scripts/{script}",
+                ]
+            )
+            command([*arguments, "--base-url", public_url], environment=environment, log=directory / log_name)
+        metadata["asyncSmokePassed"] = True
         if browser:
             command(
                 [*compose, "--profile", "browser", "up", "--detach", "browser"],
@@ -306,25 +326,39 @@ def run(*, browser=False):
             )
             keep = True
             return 0
-        print("Running the official CITE CLI", flush=True)
-        command([*compose, "run", "--rm", "cite"], environment=environment, log=directory / "cite-cli.log")
-        metadata["validatorImage"] = json.loads(command(["docker", "image", "inspect", settings["image"]]))[0]["Id"]
-        reports = list((directory / "reports").rglob("testng-results.xml"))
-        if len(reports) != 1:
-            raise InfrastructureError(f"Expected one native TestNG report; found {len(reports)}")
-        summary = summarize(reports[0])
-        if summary["suite"] != f"{settings['suite']}-{settings['suiteVersion']}":
-            raise InfrastructureError(f"Unexpected suite version in report: {summary['suite']}")
-        metadata.update(official_reports(directory, reports[0]))
-        metadata["finished"] = datetime.now(UTC).isoformat()
-        write_reports(directory, summary, metadata)
-        print(f"Official TEAM Engine HTML: {directory / metadata['officialHtmlReport']}", flush=True)
-        print(f"Shareable official report ZIP: {directory / metadata['officialHtmlArchive']}", flush=True)
-        print(f"CITE: {summary['counts']}", flush=True)
-        for case in summary["cases"]:
-            if case["status"] == "FAIL":
-                print(f"FAIL {case['name']}: {case['message']}", flush=True)
-        exit_code = 1 if summary["counts"]["FAIL"] or summary["configurationFailures"] else 0
+        if geonovum:
+            from scripts import check_geonovum_baseline
+
+            port = command([*compose, "port", "api", "8080"], environment=environment)
+            exit_code = check_geonovum_baseline.main(
+                [
+                    "--docker",
+                    "--input",
+                    f"http://{port}/openapi?f=json",
+                    "--raw-output",
+                    str(directory / "geonovum.json"),
+                ]
+            )
+        else:
+            print("Running the official CITE CLI", flush=True)
+            command([*compose, "run", "--rm", "cite"], environment=environment, log=directory / "cite-cli.log")
+            metadata["validatorImage"] = json.loads(command(["docker", "image", "inspect", settings["image"]]))[0]["Id"]
+            reports = list((directory / "reports").rglob("testng-results.xml"))
+            if len(reports) != 1:
+                raise InfrastructureError(f"Expected one native TestNG report; found {len(reports)}")
+            summary = summarize(reports[0])
+            if summary["suite"] != f"{settings['suite']}-{settings['suiteVersion']}":
+                raise InfrastructureError(f"Unexpected suite version in report: {summary['suite']}")
+            metadata.update(official_reports(directory, reports[0]))
+            metadata["finished"] = datetime.now(UTC).isoformat()
+            write_reports(directory, summary, metadata)
+            print(f"Official TEAM Engine HTML: {directory / metadata['officialHtmlReport']}", flush=True)
+            print(f"Shareable official report ZIP: {directory / metadata['officialHtmlArchive']}", flush=True)
+            print(f"CITE: {summary['counts']}", flush=True)
+            for case in summary["cases"]:
+                if case["status"] == "FAIL":
+                    print(f"FAIL {case['name']}: {case['message']}", flush=True)
+            exit_code = 1 if summary["counts"]["FAIL"] or summary["configurationFailures"] else 0
     except InfrastructureError as error:
         print(f"INFRASTRUCTURE ERROR: {error}", file=sys.stderr)
         (directory / "infrastructure-error.txt").write_text(str(error) + "\n")
@@ -333,7 +367,7 @@ def run(*, browser=False):
         if not keep:
             # A log collection failure must not prevent the actual teardown.
             for arguments, log in (
-                ([*compose, "logs", "--no-color", "api"], directory / "application.log"),
+                ([*compose, "logs", "--no-color", "api", "worker", "db"], directory / "application.log"),
                 (
                     [*compose, "--profile", "browser", "down", "--volumes", "--remove-orphans"],
                     directory / "cleanup.log",
@@ -348,17 +382,22 @@ def run(*, browser=False):
                 except InfrastructureError as error:
                     print(f"INFRASTRUCTURE ERROR during cleanup: {error}", file=sys.stderr)
                     exit_code = 2
+    metadata["finished"] = datetime.now(UTC).isoformat()
+    metadata["exitCode"] = exit_code
+    (directory / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     return exit_code
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument(
         "--browser", action="store_true", help="Leave an isolated browser fallback running; print its cleanup command"
     )
+    modes.add_argument("--geonovum", action="store_true", help="Run Geonovum against the isolated combined deployment")
     args = parser.parse_args()
     try:
-        return run(browser=args.browser)
+        return run(browser=args.browser, geonovum=args.geonovum)
     except (InfrastructureError, OSError, ValueError, ET.ParseError) as error:
         print(f"INFRASTRUCTURE ERROR: {error}", file=sys.stderr)
         return 2

@@ -54,9 +54,15 @@ def generate_openapi(config):
     if version("pygeoapi") != "0.24.0":
         raise RuntimeError("reassess OpenAPI compatibility corrections for this pygeoapi version")
     document = get_oas(deepcopy(config))
+    durable_async = (
+        config["server"].get("manager", {}).get("name") == "geo_processes.async_manager.DurableProcessManager"
+    )
     document["info"]["version"] = __version__
     document["info"].pop("contact", None)
     paths = document["paths"]
+    if durable_async:
+        paths.pop("/jobs", None)
+        paths.get("/jobs/{jobId}", {}).pop("delete", None)
     for identifier in readonly_geojson_collections(config):
         # In the pinned generator this POST is a CQL query, not feature creation.
         # GeoJSONProvider accepts but ignores filterq, so it is unsupported here.
@@ -104,6 +110,27 @@ def generate_openapi(config):
         )
         operation["responses"]["404"] = exception_response("Unknown job identifier", "NoSuchJob", 404)
         operation["responses"]["400"] = exception_response("Invalid query parameter", "InvalidParameterValue", 400)
+        if durable_async:
+            operation["responses"]["200"] = (
+                schema_response("Job status", "statusInfo.yaml")
+                if not suffix
+                else {
+                    "description": "Stored response in the originally requested format and transmission mode",
+                    "content": {
+                        "application/json": {"schema": {}},
+                        "image/tiff": {"schema": {"type": "string", "format": "binary"}},
+                        "application/geo+json": {"schema": {"type": "object"}},
+                    },
+                }
+            )
+            operation["responses"]["503"] = exception_response("Job database unavailable", "ServerBusy", 503)
+            if suffix:
+                operation["responses"]["204"] = {"description": "Raw/reference result; download URL in Link header"}
+                operation["responses"]["500"] = exception_response(
+                    "Execution failed or interrupted", "NoApplicableCode", 500
+                )
+                operation["responses"]["413"] = exception_response("Input too large", "RequestTooLarge", 413)
+                operation["responses"]["404"]["description"] = "Unknown/expired job, or ResultNotReady while pending"
     for identifier, resource in config["resources"].items():
         if resource["type"] == "collection":
             operation = paths.get(f"/collections/{identifier}/items", {}).get("get", {})
@@ -138,7 +165,21 @@ def generate_openapi(config):
         )
         execution["responses"]["500"] = exception_response("Process execution failed", "NoApplicableCode", 500)
         execution["responses"]["503"] = exception_response("Processing capacity unavailable", "ServerBusy", 503)
-        if processor.metadata["jobControlOptions"] == ["sync-execute"]:
+        if durable_async:
+            execution["responses"]["201"] = schema_response("Job accepted for independent execution", "statusInfo.yaml")
+            execution["responses"]["201"]["headers"] = {
+                "Location": {"schema": {"type": "string", "format": "uri"}, "description": "Job status URL"},
+                "Preference-Applied": {"schema": {"type": "string", "enum": ["respond-async"]}},
+            }
+            execution["parameters"] = [
+                {
+                    "name": "Prefer",
+                    "in": "header",
+                    "description": "Default is synchronous; respond-async queues a durable job",
+                    "schema": {"type": "string", "enum": ["wait", "respond-async"]},
+                }
+            ]
+        elif processor.metadata["jobControlOptions"] == ["sync-execute"]:
             execution["responses"].pop("201", None)
             execution["parameters"] = [
                 {

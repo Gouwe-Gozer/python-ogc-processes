@@ -118,7 +118,7 @@ def run(base_url: str, wait_seconds: int) -> None:
         request = urllib.request.Request(
             _url(base_url, f"/processes/{PROCESS_ID}/execution"),
             data=payload,
-            headers={"Content-Type": "application/json", "Prefer": "respond-async"},
+            headers={"Content-Type": "application/json"},
         )
         # base_url was validated above; the client intentionally reaches this service.
         with urllib.request.urlopen(request, timeout=10) as response:  # nosec B310

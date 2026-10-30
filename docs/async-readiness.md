@@ -1,5 +1,9 @@
 # Async readiness review — 2026-10-25
 
+Historical review: the earlier in-process proposal below is superseded by the
+[durable separate-worker implementation](asynchronous-execution.md). Keep the
+review as background; use that guide for current behavior and deployment.
+
 Reviewed the synchronous service at `2f6cae1` against installed pygeoapi 0.24.0.
 The next milestone is asynchronous submission, status tracking and result
 retrieval using pygeoapi's PostgreSQL manager and in-process execution. No async

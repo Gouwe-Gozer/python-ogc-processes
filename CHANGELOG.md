@@ -2,6 +2,14 @@
 
 ## 0.1.0 — Unreleased
 
+- Make the combined API/PostgreSQL/worker deployment the default, retain an explicit
+  synchronous-only opt-out, and share Compose wiring across development, release
+  and validation. Evaluate real async behavior in default Geonovum/CITE workflows.
+
+- Add opt-in PostgreSQL-backed durable async execution with a separate bounded
+  worker, retained requests/results, explicit interruption failures and restart tests.
+  Preserve synchronous processor behavior and existing file/input limits.
+
 - Generate TEAM Engine's official HTML report and shareable ZIP during CLI CITE
   validation, retaining native XML/EARL and linking from the local summaries.
 

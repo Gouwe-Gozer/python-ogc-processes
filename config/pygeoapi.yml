@@ -19,10 +19,10 @@ server:
     attribution: '&copy; OpenStreetMap contributors'
   ogc_schemas_location: /schemas.opengis.net
   manager:
-    name: geo_processes.manager.OgcSynchronousManager
-    # Required by pygeoapi's config schema; unused by this synchronous manager.
-    # File results use GEO_OUTPUT_DIR and the application ResultStore instead.
-    connection: unused
+    name: ${GEO_MANAGER_CLASS:-geo_processes.async_manager.DurableProcessManager}
+    # The default deployment supports both execution modes; compose.sync.yml is the opt-out.
+    # File results use GEO_OUTPUT_DIR; durable request/response payloads use PostgreSQL.
+    connection: ${GEO_JOB_DSN:-postgresql://geo:raster-local-only@db:5432/geo}
     output_dir: /tmp
 logging:
   level: INFO
@@ -34,8 +34,9 @@ metadata:
 
       Designed around OGC API – Processes Part 1: Core, it exposes operations through
       standardized, discoverable endpoints, enabling clients to submit spatial
-      data and retrieve processing results. The project currently supports
-      synchronous execution, with asynchronous job management planned.
+      data and retrieve processing results. The default deployment supports synchronous
+      execution and durable asynchronous jobs using PostgreSQL and a separate worker.
+      A lightweight synchronous-only deployment is available explicitly.
 
       Rasterio/GDAL powers five bounded raster operations: information,
       reprojection, point sampling, reclassification and polygonization.

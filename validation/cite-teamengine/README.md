@@ -2,12 +2,13 @@
 
 `make validate-cite` runs the official OGC API – Processes 1.0 ETS against an
 isolated instance of **Raster Processes API**. It uses the same application,
-pygeoapi 0.24.0, synchronous manager, processors and response handling as the
-release, plus one test-only echo process. Ordinary release configuration is unchanged.
+pygeoapi 0.24.0, durable PostgreSQL manager, separate worker, processors and result
+handling as the normal deployment, plus one test-only echo process. Shared service
+wiring is extended from `compose.base.yml`; there is no parallel API implementation.
 
 ## Prerequisites and one-command execution
 
-Install Docker with Compose v2 supporting `up --wait`, GNU Make, user-installed
+Install Docker with Compose 2.24+, GNU Make, user-installed
 `uv` and Python 3.12. Then run from the repository root:
 
 ```bash
@@ -26,19 +27,22 @@ The runner:
 
 1. Creates a unique `raster-cite-*` Compose project and effective config copied
    from the canonical public config. It adds only internal network paths and
-   the synchronous `cite-echo` fixture.
-2. Builds/starts the real API without publishing its port or using existing volumes.
-3. Runs independent raster processing/download smoke checks.
+   the `cite-echo` fixture.
+2. Builds/starts the real API, PostgreSQL and worker, using fresh named volumes
+   and a randomly allocated loopback-only API port.
+3. Runs independent synchronous raster checks and async info/warp/status/results/
+   download checks before invoking the official suite.
 4. Invokes the official suite's supported `TestNGController` Java CLI from the
    unmodified image, using the engine libraries already installed there.
 5. Requests the engine's official HTML report/ZIP alongside native TestNG XML
    and EARL; collects JSON/HTML/Markdown summaries, versions,
    image identities, application commit/dirty state, configuration and logs.
-6. Removes its own temporary containers, network, result volume and application
+6. Removes its own temporary containers, network, result/database volumes and application
    image tag, retaining the reports. It never stops the ordinary API or other projects.
 
 The echo fixture has matching input/output identifiers required by the suite,
-uses the ordinary processor/formatter interfaces and advertises sync only.
+uses the ordinary processor/formatter interfaces, and the durable manager
+advertises both execution modes. Async requests run through the actual worker.
 All five raster process descriptions are also selected. Execution tests primarily
 exercise the echo; the raster smoke tests are separate integration evidence.
 
@@ -70,10 +74,11 @@ GNU Make wraps unsuccessful recipes in its own nonzero status; read the
 Missing reports (including official HTML/ZIP) or malformed/inconsistent totals
 never count as a pass.
 
-The [current-service proposal](current/README.md) records **36 passed, 5 failed,
-13 skipped** with individual classifications. These known failures still make
-`make validate-cite` fail. They are not a mandatory PR gate yet. The inherited
-[predecessor baseline](baseline/README.md) remains historical and is not an expected score.
+The [combined-deployment observation](combined/README.md) records **45 passed,
+4 failed, 5 skipped**, with explicit classifications. These failures still make
+`make validate-cite` fail; CITE is not a mandatory PR gate. The earlier
+[synchronous observation](current/README.md) (**36/5/13**) and
+[predecessor snapshot](baseline/README.md) remain historical, unchanged records.
 
 ## Supported CLI, REST and browser fallback
 
@@ -94,7 +99,8 @@ For manual diagnosis:
 make validate-cite CITE_ARGS=--browser
 ```
 
-This explicitly leaves a separate API and TEAM Engine web instance running. The
+This explicitly leaves the isolated API/database/worker and TEAM Engine web
+instance running. It does not alter an existing deployment. The
 command prints a randomly allocated loopback-only URL and exact cleanup commands;
 these are also in its `metadata.json`. Wait for Tomcat startup if the page is
 initially unavailable. Log in with the image's local test account **ogctest / ogctest**.

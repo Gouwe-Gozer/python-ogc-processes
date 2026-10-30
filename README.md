@@ -4,9 +4,10 @@ An OGC API – Processes service for raster operations, powered by pygeoapi and 
 
 Designed around OGC API – Processes Part 1: Core, it exposes operations through
 standardized, discoverable endpoints, enabling clients to submit spatial data
-and retrieve processing results. Execution is synchronous: each request returns
-the result or a download link when processing completes. Asynchronous jobs are
-not yet supported.
+and retrieve processing results. The default deployment runs one API with
+PostgreSQL and a separate worker. Ordinary requests remain synchronous;
+`Prefer: respond-async` submits a durable job with status and result endpoints.
+See [asynchronous execution](docs/asynchronous-execution.md).
 
 The five Rasterio/GDAL operations below process **users' own GeoTIFFs**, supplied
 as controlled HTTPS references or inline base64.
@@ -30,7 +31,7 @@ docker compose --file compose.release.yml up --build --detach
 Open <http://localhost:5001/processes?f=json> for available processes and
 <http://localhost:5001/openapi> for interactive API documentation.
 Stop the release with `docker compose --file compose.release.yml down`;
-stored results are retained in its named volume.
+stored results and job data are retained in their named volumes.
 Set both the published port and client-facing URL when using another address:
 
 ```bash
@@ -43,7 +44,18 @@ or [development](docs/development.md) for the bind-mounted development stack.
 
 The Compose project is `raster-processes`, derived from the checkout directory.
 Plain `docker compose up --detach` selects the development configuration;
-keep `--file compose.release.yml` for the self-contained release.
+keep `--file compose.release.yml` for the self-contained release. Both start
+`api`, `db` and `worker`, sharing the definitions in `compose.base.yml`.
+The database has no published host port. Set `GEO_JOB_PASSWORD` to a persistent,
+URL-safe password for hosted use; the built-in password is for local development.
+
+For a lightweight API without PostgreSQL or a worker:
+
+```bash
+docker compose -f compose.yml -f compose.sync.yml up --build --detach
+```
+
+Use `-f compose.release.yml -f compose.sync.yml` for the self-contained equivalent.
 
 ## Process your raster
 
@@ -107,8 +119,8 @@ the matching raster footprint. Feature data follows OGC API – Features convent
   Explicit reference transmission provides a downloadable result.
 - Stored results expire after **24 hours** by default. Capacity defaults to
   **64 MiB / 256 files**; busy/full processing returns 503. See [result lifecycle](docs/results.md).
-- Dataset identifiers, server paths, reusable uploads, callbacks and async jobs
-  are unsupported. The service has no built-in authentication; result links are
+- Dataset identifiers, server paths, reusable uploads and callbacks are unsupported.
+  The synchronous-only opt-out does not retain jobs. The service has no built-in authentication; result links are
   accessible to anyone who knows them until expiry.
 
 Passing tests is not OGC certification. The advertised conformance classes and
