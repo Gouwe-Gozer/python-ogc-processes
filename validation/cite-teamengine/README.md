@@ -140,6 +140,24 @@ Geonovum independently still matches the **one-diagnostic** combined baseline.
 [echo-common-source]: https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/CommonFixture.java
 [echo-description-source]: https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/ogcprocessdescription/OGCProcessDescription.java
 
+## Job List observation (2026-10-31)
+
+Run `raster-cite-71c76ab441cd`: **52 passed / 2 failed / 0 skipped**.
+`testJobList` and `testJobListSuccess` now pass against the real durable manager.
+The two remaining failures are `testJobCreationInputRef` and
+`testJobCreationInputValidation`, with the JSON MIME-content issue described above.
+`testJobResultsAsyncRawValueOne` passes this run; its timing-sensitive polling
+failure is not treated as an application fix or a guarantee for later runs.
+The polling method checks its attempt limit before examining a fetched terminal
+status; earlier claims about counter carry-over and pause-test queue pressure were
+not established by the retained evidence.
+
+The unchanged official report and verdicts are under
+`runtime-data/cite/raster-cite-71c76ab441cd/`. Historical snapshots remain unchanged.
+New PostgreSQL/HTTP tests additionally cover all required Job List filters,
+empty lists, pagination, safe metadata, configured public links and error headers.
+A real API/database restart test confirms queued and completed listings survive.
+
 ## Supported CLI, REST and browser fallback
 
 Both the official Java CLI and the authenticated REST interface were exercised.

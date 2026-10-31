@@ -86,6 +86,13 @@ Regression tests retain the following corrections for pygeoapi 0.24.0:
   Callback declarations follow the API instance manager's native
   `supports_subscribing` capability, independently of `is_async`. Constructing
   our manager does not modify pygeoapi's global conformance declarations.
+  Job List follows the durable manager's `supports_job_list` flag. Its narrow
+  `get_jobs` override adds bound SQL filters, retention and pagination to the
+  existing PostgreSQL table; upstream 0.24.0 ignores limit/offset there.
+  `jobs.py` shares the individual-job status serializer and upstream HTML template.
+  Job List requires `processID` in acceptance/status documents; the existing
+  request-local HTTP adapter adds it to upstream's 201 body. No new table,
+  lifecycle state or processor coupling is introduced.
 - The OpenAPI generator corrects discovery schemas, limits, error responses and
   execution choices. Process metadata is copied before upstream can mutate it.
 - Read-only feature providers do not inherit the unsupported Features CRUD claim.

@@ -1,5 +1,6 @@
 """Flask boundary guard for registered synchronous process endpoints."""
 
+import json
 from collections.abc import Mapping
 from copy import copy
 from email.utils import formatdate
@@ -69,17 +70,19 @@ def durable_job_routes():
     if request.endpoint not in {"pygeoapi.get_jobs", "pygeoapi.get_job_result"}:
         return None
     identifier = (request.view_args or {}).get("job_id")
-    allowed = "GET, HEAD, OPTIONS" if identifier is not None else "OPTIONS"
+    allowed = "GET, HEAD, OPTIONS"
     if request.method == "OPTIONS":
         return "", 204, {"Allow": allowed}
-    if identifier is None or request.method not in {"GET", "HEAD"}:
+    if request.method not in {"GET", "HEAD"}:
         return (
-            jsonify(exception_document("NoApplicableCode", "job listing and dismissal are not supported", 405)),
+            jsonify(exception_document("NoApplicableCode", "job dismissal is not supported", 405)),
             405,
             {"Allow": allowed},
         )
-    from geo_processes.jobs import job_response
+    from geo_processes.jobs import job_list, job_response
 
+    if identifier is None:
+        return execute_from_flask(job_list, request)
     return job_response(api_, identifier, results=request.endpoint == "pygeoapi.get_job_result")
 
 
@@ -134,6 +137,11 @@ def execute_process_jobs(process_id):
         if status == 200 and json_result:
             value, pretty = json_result[0]
             body = htmlsafe_json(value, pretty=pretty)
+        elif status == 201 and getattr(api.manager, "supports_job_list", False):
+            # Job List requires processID in every statusInfo, including acceptance.
+            document = json.loads(body)
+            document["processID"] = identifier
+            body = htmlsafe_json(document, pretty=api.pretty_print)
         return headers, status, body
 
     # Re-encode before upstream's Flask adapter applies compression and builds the response.

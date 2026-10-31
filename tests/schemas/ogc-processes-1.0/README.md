@@ -14,3 +14,6 @@ copyright and licence in https://docs.ogc.org/is/18-062r2/18-062r2.html.
 
 `statusInfo.yaml` and `statusCode.yaml` were added unchanged on 2026-10-30 for
 durable async status/acceptance regression tests.
+
+`jobList.yaml` was added unchanged on 2026-10-31 for Job List HTTP/schema tests;
+its status/link dependencies were already included.

@@ -141,11 +141,15 @@ def test_queued_request_survives_api_and_database_restart(deployment):
     deployment["docker"]("stop", "worker")
     job = submit(deployment)
     assert requests.get(job, timeout=5).json()["status"] == "accepted"
+    listed = requests.get(deployment["url"] + "/jobs", timeout=5).json()["jobs"]
+    assert any(row["jobID"] == job.rsplit("/", 1)[1] and row["status"] == "accepted" for row in listed)
     pending = requests.get(job + "/results", timeout=5)
     assert pending.status_code == 404 and pending.json()["code"] == "ResultNotReady"
     deployment["docker"]("restart", "api", "db")
     wait_ready(deployment)
     assert requests.get(job, timeout=5).json()["status"] == "accepted"
+    listed = requests.get(deployment["url"] + "/jobs", timeout=5).json()["jobs"]
+    assert any(row["jobID"] == job.rsplit("/", 1)[1] and row["status"] == "accepted" for row in listed)
     deployment["docker"]("start", "worker")
     assert poll(job)["status"] == "successful"
     before = requests.get(job + "/results", timeout=5)
@@ -153,6 +157,8 @@ def test_queued_request_survives_api_and_database_restart(deployment):
     deployment["docker"]("restart", "api")
     wait_ready(deployment)
     assert requests.get(job + "/results", timeout=5).json() == before.json()
+    listed = requests.get(deployment["url"] + "/jobs", timeout=5).json()["jobs"]
+    assert any(row["jobID"] == job.rsplit("/", 1)[1] and row["status"] == "successful" for row in listed)
 
 
 @pytest.mark.parametrize(
@@ -222,7 +228,7 @@ def test_worker_retains_input_security_and_sync_contract(deployment):
         deployment["url"] + "/processes/raster-info/execution", json={"inputs": {"source": DEMO_SOURCE}}, timeout=10
     )
     assert synchronous.status_code == 200 and "Location" not in synchronous.headers
-    assert requests.get(deployment["url"] + "/jobs", timeout=5).status_code == 405
+    assert requests.get(deployment["url"] + "/jobs", timeout=5).status_code == 200
 
 
 @pytest.mark.parametrize("process", ["raster-sample-points", "raster-reclassify", "raster-polygonize"])

@@ -7,6 +7,8 @@ standardized, discoverable endpoints, enabling clients to submit spatial data
 and retrieve processing results. The default deployment runs one API with
 PostgreSQL and a separate worker. Ordinary requests remain synchronous;
 `Prefer: respond-async` submits a durable job with status and result endpoints.
+List retained asynchronous jobs at `/jobs?f=json`; filter or page the list using
+[Job List parameters](docs/asynchronous-execution.md#list-retained-jobs).
 See [asynchronous execution](docs/asynchronous-execution.md).
 
 The five Rasterio/GDAL operations below process **users' own GeoTIFFs**, supplied

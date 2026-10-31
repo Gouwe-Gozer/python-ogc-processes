@@ -80,7 +80,9 @@ in a separate worker. Unknown or expired job IDs return `NoSuchJob` (404).
 Retrieving results while a job is accepted or running returns `ResultNotReady`
 (404). Failed jobs retain their cause-specific error for result retrieval.
 Job status/results and their error responses use `Cache-Control: no-store`.
-See [asynchronous execution](asynchronous-execution.md) for lifetime and
+Invalid Job List filters/pagination return 400 / `InvalidParameterValue`;
+database outages return 503 / `ServerBusy`. Job lists expose retained status
+metadata only. See [asynchronous execution](asynchronous-execution.md) for lifetime and
 interruption behavior.
 
 Ordinary synchronous requests create no retained jobs. The explicit

@@ -25,7 +25,7 @@ CHECKER_TIMEOUT_SECONDS = 120
 DEFAULT_ATTEMPTS = 5
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_BASELINE = PROJECT_ROOT / "validation" / "geonovum" / "combined-baseline.json"
+DEFAULT_BASELINE = PROJECT_ROOT / "validation" / "geonovum" / "job-list-baseline.json"
 
 EXIT_BASELINE_MISMATCH = 1
 EXIT_OPERATIONAL_ERROR = 2

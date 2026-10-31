@@ -14,6 +14,7 @@ from pygeoapi.util import render_j2_template
 
 FORMATS = {"json": "application/json", "html": "text/html", "jsonld": "application/ld+json"}
 CONFORMANCE_REL = "http://www.opengis.net/def/rel/ogc/1.0/conformance"
+JOB_LIST_CONFORMANCE_URI = "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/job-list"
 CALLBACK_CONFORMANCE_URI = "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/callback"
 FEATURES_CRUD = "http://www.opengis.net/spec/ogcapi-features-4/1.0/conf/create-replace-delete"
 CQL_CLASSES = {
@@ -36,7 +37,7 @@ def readonly_geojson_collections(config):
 
 def landing_page(api, request):
     """Upstream infers optional job-list links from async execution support."""
-    if not getattr(api.manager, "durable_async", False):
+    if not getattr(api.manager, "durable_async", False) or getattr(api.manager, "supports_job_list", False):
         return upstream_landing_page(api, request)
     # Scope the correction to native landing-page rendering in every encoding;
     # do not change the actual manager or its execution/discovery capabilities.
@@ -66,13 +67,16 @@ def conformance(api, request):
         for provider in providers
     ):
         excluded.update(CQL_CLASSES)
-    if not excluded:
-        return upstream_conformance(api, request)
+    job_list = getattr(api.manager, "supports_job_list", False)
+    if not job_list:
+        excluded.add(JOB_LIST_CONFORMANCE_URI)
     value_request = copy(request)
     value_request._format = "json"
     _headers, status, body = upstream_conformance(api, value_request)
     document = json.loads(body)
     document["conformsTo"] = [uri for uri in document["conformsTo"] if uri not in excluded]
+    if job_list and JOB_LIST_CONFORMANCE_URI not in document["conformsTo"]:
+        document["conformsTo"].append(JOB_LIST_CONFORMANCE_URI)
     headers = request.get_response_headers(**api.api_headers)
     if request.format == "html":
         body = render_j2_template(
@@ -93,8 +97,8 @@ def _navigation(links):
 
 
 def describe_process(api, request, identifier):
-    """Retain native metadata without implying the optional job-list extension."""
-    if not getattr(api.manager, "durable_async", False):
+    """Retain native metadata; suppress job-list links for unsupported managers."""
+    if not getattr(api.manager, "durable_async", False) or getattr(api.manager, "supports_job_list", False):
         return describe_processes(api, request, identifier)
     value_request = copy(request)
     value_request._format = "json"

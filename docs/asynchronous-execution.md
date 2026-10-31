@@ -58,7 +58,7 @@ The input must still be a valid inline base64 GeoTIFF or controlled public HTTPS
 reference. Check the example's input before submitting your own data.
 
 A successful submission returns **201**, `Preference-Applied: respond-async`, a
-`Location` pointing to `/jobs/{jobID}`, and JSON containing `jobID`, `type` and
+`Location` pointing to `/jobs/{jobID}`, and JSON containing `jobID`, `processID`, `type` and
 `status`. No raster processing or remote-input download occurs in that HTTP
 request. Referenced inputs are fetched when the worker executes the job, so
 their URLs must remain usable until then. Omit the preference to retain the existing synchronous behavior; those
@@ -84,6 +84,49 @@ or relax HTTPS/private-network restrictions for chaining.
 All five existing processors use the same execution/formatting path. Initial
 container lifecycle tests focus on information and warp; the manager tests also
 check failure contracts, capacity and expiry. No processor was modified for async.
+
+## List retained jobs
+
+`GET /jobs` returns HTTP 200 with `jobs` (the same status documents as individual
+job retrieval) and navigation `links`. JSON and native pygeoapi HTML are supported:
+
+```bash
+curl 'http://localhost:5001/jobs?f=json&processID=raster-warp&status=accepted,running&limit=5'
+# Inclusive creation-time interval; .. or an empty endpoint opens that end:
+curl 'http://localhost:5001/jobs?datetime=2026-10-31T00:00:00Z/..'
+```
+
+| Parameter | Meaning |
+| --- | --- |
+| `type` | Comma-separated job types; this service stores only `process` jobs |
+| `processID` | Comma-separated process identifiers |
+| `status` | Comma-separated states, such as `accepted,running` or `successful,failed` |
+| `datetime` | RFC 3339 creation instant or inclusive interval; timestamps require timezones |
+| `minDuration`, `maxDuration` | Integer execution seconds, inclusive; running jobs use time since start, completed jobs use finish minus start |
+| `limit` | Default 10, maximum 50 under the current server limits; larger requests are throttled |
+| `offset` | Nonnegative pagination offset, default 0 |
+| `f` | `json` or `html` |
+
+Values within `type`, `processID` and `status` combine with OR; different filters
+combine with AND. Repeated array parameters are accepted as well as comma-separated
+values. Section 11 declares duration parameters as integer arrays without defining
+how multiple bounds combine; every supplied bound applies here (strongest minimum
+and strongest maximum). Duration-filtered lists omit jobs without the necessary
+start/finish timestamps, including accepted jobs. Unfiltered lists include accepted
+jobs. Invalid query syntax returns 400; unknown IDs/types/states select no matches.
+
+Only unexpired asynchronous jobs are listed, ordered by creation time then job ID.
+Follow `next`/`prev` links, which preserve filters and the effective limit;
+`self`/`alternate` links are present in the body and HTTP Link header. Offsets do not
+provide a snapshot: concurrent expiry or state changes can change later pages.
+Job responses use `Cache-Control: no-store`.
+
+**Access boundary:** this application has no authentication or per-user job ownership.
+Job IDs and status metadata are discoverable to anyone who can access `/jobs`.
+The list never includes request inputs, stored result bodies or internal paths;
+status/result URLs retain their existing access behavior. Protect the whole API
+consistently at deployment if data or job metadata must be private. This feature
+does not introduce an authorization model.
 
 ## Persistence and interruption
 
@@ -131,14 +174,14 @@ choose a retention window longer than expected queue wait and execution time.
 
 ## Scope and verification
 
-No callbacks, job-list extension, dismissal, progress, retries, distributed queue
-or workflow chaining are supplied. `/jobs` listing and job DELETE return 405 in
-the combined deployment. Process descriptions omit inherited job-list links; OpenAPI omits
-those operations and adds 201/status/result responses only for the durable
-manager. Core has no separate async conformance class; the existing intended
+The durable manager supports the optional Job List class, including its Section 11
+filters and pagination. Discovery and OpenAPI advertise it only for that manager;
+the synchronous opt-out does not claim Job List. No callbacks, dismissal, progress,
+retries, distributed queue or workflow chaining are supplied. Job DELETE remains
+405. OpenAPI includes listing and 201/status/result responses for the durable manager. Core has no separate async conformance class; the existing intended
 Core alignment remains subject to the documented limitations and external review.
 
-Relevant Core 1.0 clauses: [Requirements 25–26, 34–46](https://docs.ogc.org/is/18-062r2/18-062r2.html).
+Relevant Core 1.0 clauses: [Requirements 25–26, 34–46 and Section 11 (64–79)](https://docs.ogc.org/is/18-062r2/18-062r2.html).
 Stock pygeoapi starts API-local threads, lacks durable request handoff, does not
 call our result formatter, emits a job Location on synchronous calls when the
 manager is async, and simplifies result/error responses. The narrow manager/HTTP
@@ -149,7 +192,7 @@ which is false here; no additional certification claim is made.
 ```bash
 # Manager/HTTP tests create isolated schemas in a disposable PostgreSQL database.
 GEO_TEST_JOB_DSN=postgresql://USER:PASSWORD@localhost:5432/TEST_DB \
-  uv run pytest tests/test_async_manager.py -v
+  uv run pytest tests/test_async_manager.py tests/test_job_list.py -v
 
 # Builds the real release image and creates/removes only raster-async-test-* resources.
 GEO_TEST_ASYNC_CONTAINERS=1 uv run pytest tests/test_async_containers.py -v

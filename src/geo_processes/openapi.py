@@ -41,6 +41,15 @@ def schema_response(description, schema):
     }
 
 
+def job_status_response(description):
+    response = schema_response(description, "statusInfo.yaml")
+    schema = response["content"]["application/json"]["schema"]
+    response["content"]["application/json"]["schema"] = {
+        "allOf": [schema, {"type": "object", "required": ["processID"]}]
+    }
+    return response
+
+
 def exception_response(description, code, status, *, html=True):
     response = schema_response(description, "exception.yaml")
     response["content"]["application/json"]["example"] = exception_document(code, description, status)
@@ -61,7 +70,6 @@ def generate_openapi(config):
     document["info"].pop("contact", None)
     paths = document["paths"]
     if durable_async:
-        paths.pop("/jobs", None)
         paths.get("/jobs/{jobId}", {}).pop("delete", None)
     for identifier in readonly_geojson_collections(config):
         # In the pinned generator this POST is a CQL query, not feature creation.
@@ -92,6 +100,64 @@ def generate_openapi(config):
     listing["parameters"].append(
         {"name": "offset", "in": "query", "schema": {"type": "integer", "minimum": 0, "default": 0}}
     )
+    if durable_async:
+        response = schema_response("Retained job statuses", "jobList.yaml")
+        schema = response["content"]["application/json"]["schema"]
+        response["content"]["application/json"]["schema"] = {
+            "allOf": [
+                schema,
+                {
+                    "type": "object",
+                    "properties": {"jobs": {"type": "array", "items": {"type": "object", "required": ["processID"]}}},
+                },
+            ]
+        }
+        response["content"]["text/html"] = {"schema": {"type": "string"}}
+        parameters = [
+            {
+                "name": name,
+                "in": "query",
+                "required": False,
+                "style": "form",
+                "explode": name != "maxDuration",
+                "description": description,
+                "schema": {"type": "array", "items": {"type": kind}},
+            }
+            for name, kind, description in (
+                ("type", "string", "Job types; only process jobs are stored"),
+                ("processID", "string", "Process identifiers (OR within this filter)"),
+                ("status", "string", "Job statuses (OR within this filter)"),
+                ("minDuration", "integer", "Minimum execution seconds; all supplied bounds apply"),
+                ("maxDuration", "integer", "Maximum execution seconds; all supplied bounds apply"),
+            )
+        ]
+        parameters += [
+            {
+                "name": "datetime",
+                "in": "query",
+                "description": "Created time: RFC 3339 instant or inclusive interval; .. denotes an open end",
+                "schema": {"type": "string"},
+            },
+            {"name": "f", "in": "query", "schema": {"type": "string", "enum": ["json", "html"]}},
+            *deepcopy(listing["parameters"][-2:]),
+        ]
+        paths["/jobs"] = {
+            "get": {
+                "summary": "List retained asynchronous jobs",
+                "description": (
+                    "Filters combine with AND. Pagination uses offset in stable creation order. "
+                    "Only retained async jobs are listed; this deployment has no per-user ownership filtering."
+                ),
+                "operationId": "getJobs",
+                "tags": ["jobs"],
+                "parameters": parameters,
+                "responses": {
+                    "200": response,
+                    "400": exception_response("Invalid job-list query", "InvalidParameterValue", 400),
+                    "503": exception_response("Job database unavailable", "ServerBusy", 503),
+                },
+            }
+        }
     for suffix, title in (("", "Job status"), ("/results", "Job results")):
         # Preserve upstream's complete operations if a future async manager is
         # configured. The current manager stores no jobs: every ID is unknown.
@@ -112,7 +178,7 @@ def generate_openapi(config):
         operation["responses"]["400"] = exception_response("Invalid query parameter", "InvalidParameterValue", 400)
         if durable_async:
             operation["responses"]["200"] = (
-                schema_response("Job status", "statusInfo.yaml")
+                job_status_response("Job status")
                 if not suffix
                 else {
                     "description": "Stored response in the originally requested format and transmission mode",
@@ -166,7 +232,7 @@ def generate_openapi(config):
         execution["responses"]["500"] = exception_response("Process execution failed", "NoApplicableCode", 500)
         execution["responses"]["503"] = exception_response("Processing capacity unavailable", "ServerBusy", 503)
         if durable_async:
-            execution["responses"]["201"] = schema_response("Job accepted for independent execution", "statusInfo.yaml")
+            execution["responses"]["201"] = job_status_response("Job accepted for independent execution")
             execution["responses"]["201"]["headers"] = {
                 "Location": {"schema": {"type": "string", "format": "uri"}, "description": "Job status URL"},
                 "Preference-Applied": {"schema": {"type": "string", "enum": ["respond-async"]}},

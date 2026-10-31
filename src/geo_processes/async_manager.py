@@ -46,6 +46,7 @@ class DurableProcessManager(PostgreSQLManager):
     """
 
     durable_async = True
+    supports_job_list = True
 
     def __init__(self, manager_def):
         manager_def = deepcopy(manager_def)
@@ -146,6 +147,72 @@ class DurableProcessManager(PostgreSQLManager):
         if job["created"] < self.cutoff():
             raise JobNotFoundError()
         return job
+
+    def get_jobs(
+        self,
+        status=None,
+        limit=10,
+        offset=0,
+        *,
+        types=None,
+        process_ids=None,
+        created_range=None,
+        min_duration=None,
+        max_duration=None,
+        now=None,
+    ):
+        """Filter/page existing rows without loading private requests or results."""
+        clauses = ["created >= :cutoff", "type = 'process'"]
+        parameters = {"cutoff": self.cutoff(), "limit": limit or 10, "offset": offset or 0}
+        if types is not None and "process" not in types:
+            clauses.append("FALSE")
+        if isinstance(status, JobStatus):
+            status = [status.value]
+        elif isinstance(status, str):
+            status = [status]
+        for name, column, values in (("status", "status", status), ("process", "process_id", process_ids)):
+            if values is not None:
+                placeholders = []
+                for index, value in enumerate(values):
+                    key = f"{name}_{index}"
+                    parameters[key] = value
+                    placeholders.append(":" + key)
+                clauses.append(f"{column} IN ({', '.join(placeholders)})" if placeholders else "FALSE")
+        if created_range:
+            for bound, operator, value in zip(("after", "before"), (">=", "<="), created_range, strict=True):
+                if value is not None:
+                    clauses.append(f"created {operator} :{bound}")
+                    parameters[bound] = value
+        if min_duration is not None or max_duration is not None:
+            parameters["now"] = now or datetime.now(UTC).replace(tzinfo=None)
+            duration = (
+                "EXTRACT(EPOCH FROM (CASE WHEN status = 'running' THEN :now - started "
+                "WHEN status IN ('successful', 'failed', 'dismissed') THEN finished - started END))"
+            )
+            clauses.append(f"{duration} IS NOT NULL")
+            for name, operator, value in (("minimum", ">=", min_duration), ("maximum", "<=", max_duration)):
+                if value is not None:
+                    clauses.append(f"{duration} {operator} :{name}")
+                    parameters[name] = value
+        # Only fixed predicates/placeholder names are interpolated; all client values bind.
+        where = " AND ".join(clauses)
+        projection = "identifier, process_id, status, message, created, started, finished, updated"
+        ordering = "ORDER BY created, identifier LIMIT :limit OFFSET :offset"
+        query = f"SELECT {projection} FROM {{jobs}} WHERE {where} {ordering}"  # nosec B608
+        with self._engine.connect() as connection:
+            count = connection.execute(
+                self._sql(f"SELECT count(*) FROM {{jobs}} WHERE {where}"),  # nosec B608
+                parameters,
+            ).scalar_one()
+            rows = (
+                connection.execute(
+                    self._sql(query),
+                    parameters,
+                )
+                if parameters["offset"] < count
+                else []
+            )
+            return {"jobs": [dict(row._mapping) for row in rows], "numberMatched": count}
 
     def request(self, job_id):
         with self._engine.connect() as connection:

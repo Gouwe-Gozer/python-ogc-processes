@@ -257,28 +257,25 @@ def test_unavailable_stored_response_is_not_cacheable(async_client, durable):
     assert response.headers["Cache-Control"] == "no-store"
 
 
-def test_default_remains_synchronous_and_optional_capabilities_are_not_advertised(async_client, durable):
+def test_default_remains_synchronous_and_only_supported_capabilities_are_advertised(async_client, durable):
     manager, config, _ = durable
     response = async_client.post("/processes/raster-info/execution", json={"inputs": {"source": DEMO_SOURCE}})
     assert response.status_code == 200 and "Location" not in response.headers
     assert manager.claim() is None
     description = async_client.get("/processes/raster-info?f=json").json
     assert description["jobControlOptions"] == ["sync-execute", "async-execute"]
-    assert not any(link["rel"].endswith("/job-list") for link in description["links"])
-    assert not any(link["rel"].endswith("/job-list") for link in async_client.get("/?f=json").json["links"])
-    assert "Browse jobs" not in async_client.get("/?f=html").text
+    assert any(link["rel"].endswith("/job-list") for link in description["links"])
+    assert any(link["rel"].endswith("/job-list") for link in async_client.get("/?f=json").json["links"])
+    assert "Browse jobs" in async_client.get("/?f=html").text
     assert manager.is_async is True
-    assert not any(
-        uri.endswith("/callback") or uri.endswith("/job-list")
-        for uri in async_client.get("/conformance").json["conformsTo"]
-    )
-    assert async_client.get("/jobs").status_code == 405
+    assert not any(uri.endswith("/callback") for uri in async_client.get("/conformance").json["conformsTo"])
+    assert async_client.get("/jobs").status_code == 200
     dismissal = async_client.delete("/jobs/unknown")
     assert dismissal.status_code == 405 and "DELETE" not in dismissal.headers["Allow"]
     assert async_client.options("/jobs/unknown").status_code == 204
     document = generate_openapi(config)
     assert validate_openapi_document(document)
-    assert "/jobs" not in document["paths"]
+    assert "/jobs" in document["paths"]
     assert "delete" not in document["paths"]["/jobs/{jobId}"]
     assert "201" in document["paths"]["/processes/raster-info/execution"]["post"]["responses"]
 

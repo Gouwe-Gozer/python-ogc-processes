@@ -6,20 +6,32 @@ static OpenAPI analysis, not execution testing or certification.
 
 ## Default combined deployment
 
-`combined-baseline.json` records one reviewed finding:
+`job-list-baseline.json` is the default reviewed comparison for the Job List
+implementation. Run `raster-geonovum-150b5f8f1dcc` removed the old missing-`/jobs`
+finding and added exactly one finding:
 
-- `/req/job-list/job-list-op`: no `/jobs` listing operation is advertised.
+- `/req/job-list/duration-definition#maxDuration`: checker expects a different
+  array serialization from the advertised `style: form, explode: false`.
 
-Job List is an optional extension intentionally excluded from this service.
-Async submission and individual job status/results are implemented; listing,
-dismissal and callbacks are not. This retained finding is not a missing Core
-execution/status/results operation.
+This is a **checker limitation**, not an accepted application defect.
+[Requirement 74](https://docs.ogc.org/is/18-062r2/18-062r2.html#req_job-list_duration-definition)
+explicitly specifies `explode: false` for `maxDuration`. The pinned checker's
+`jobListParameter` rule omits that setting; `standards-checker`'s `hasParameter`
+therefore applies the OpenAPI array default `true` and compares it with `false`.
+A direct invocation of the installed function rejects `false` and accepts `true`;
+the reproduction is retained in `runtime-data/validation/job-list-parameter-check.jsonl`.
+The service accepts comma-separated and repeated values; no checker code or valid
+parameter declaration was changed to hide the finding.
 
-The combined run resolved seven findings from the historical synchronous
-baseline: five missing 201 responses, missing job-status 200 and missing
-job-results 200. No diagnostics were added. Those responses are backed by real
-worker execution and HTTP tests, not fabricated declarations. The original
-`baseline.json` remains unchanged as the explicit synchronous-profile record.
+The other array parameters advertise their normative repeated-key defaults.
+All required filters, result schemas, links and limits have HTTP/PostgreSQL tests;
+both official CITE Job List methods pass. Geonovum only analyzes OpenAPI.
+
+This is an explicit evidence-based baseline addition. The earlier
+`combined-baseline.json` (one missing optional Job List finding) and `baseline.json`
+(eight synchronous-profile findings) remain unchanged as historical comparisons.
+The original combined work resolved seven missing async/status/results responses
+through implemented worker behavior. Normal commands never update baselines.
 
 ## Run
 
@@ -29,7 +41,7 @@ make validate-geonovum
 
 The default now builds an isolated combined API/PostgreSQL/worker stack, runs
 synchronous and async info/warp/download smoke checks, then evaluates the live
-OpenAPI against the combined baseline. Reports, effective configuration and logs
+OpenAPI against the Job List baseline. Reports, effective configuration and logs
 are retained under `runtime-data/geonovum/`. Only that generated project's
 containers/network/volumes/image are removed. Existing deployments are untouched.
 
@@ -49,7 +61,7 @@ uv run python scripts/check_geonovum_baseline.py --docker \
   --baseline validation/geonovum/baseline.json
 ```
 
-A match returns 0 despite the reviewed optional-extension finding; it is a
+A match returns 0 despite the reviewed checker limitation; it is a
 regression check, not a compliance pass. Mismatches return 1, incomplete checker
 runs return 2. Full diagnostic fields, sources and rulesets remain significant.
 Only sources exactly matching the tested URL normalize to `<input>`. Transient

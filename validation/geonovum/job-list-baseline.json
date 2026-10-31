@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "checker": {
+    "package": "@geonovum/ogc-checker",
+    "version": "1.3.2"
+  },
+  "standard": {
+    "id": "ogc-api-processes",
+    "version": "1.0.0"
+  },
+  "rulesets": [
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/core",
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/job-list",
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/json",
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/ogc-process-description"
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "/req/job-list/duration-definition#maxDuration",
+      "message": "The operation SHALL support a parameter `maxDuration`. Parameter object is not compatible with: {\"name\":\"maxDuration\",\"in\":\"query\",\"required\":false,\"schema\":{\"type\":\"array\",\"items\":{\"type\":\"integer\"}}}.",
+      "path": [
+        "paths",
+        "/jobs",
+        "get",
+        "parameters",
+        "4"
+      ],
+      "source": "<input>",
+      "documentationUrl": "https://docs.ogc.org/is/18-062r2/18-062r2.html#req_job-list_duration-definition",
+      "ruleset": "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/job-list"
+    }
+  ]
+}

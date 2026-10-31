@@ -10,8 +10,9 @@ illustrate representations and are not schemas. The unchanged
 ## Conformance claims and gaps
 
 `/conformance` advertises Processes Core, JSON, OpenAPI 3.0 and OGC Process
-Description, plus inherited Common and read-only Features classes. It omits Callback,
-Job List and Dismiss. The [Core audit](core-conformance-audit.md) reviews
+Description and Job List in the durable deployment, plus inherited Common and
+read-only Features classes. It omits Callback and Dismiss. The synchronous opt-out
+does not advertise Job List. The [Core audit](core-conformance-audit.md) reviews
 Requirements 1–46 for the earlier synchronous profile. The default combined
 deployment now also has durable async HTTP, PostgreSQL and container lifecycle
 coverage; see [execution and limits](asynchronous-execution.md).
@@ -51,8 +52,17 @@ records the earlier **45 passed / 4 failed / 5 skipped**. The subsequent
 records **49 passed / 5 failed / 0 skipped**, including a newly exposed suite
 polling-counter limitation. All five former skips pass; historical snapshots and
 the published binary-schema overlap below remain unchanged.
-Geonovum now retains only the optional Job List finding; seven previously
-unreachable job/async-response findings are resolved by implemented behavior.
+The subsequent Job List implementation passes both CITE Job List methods:
+**52 passed / 2 failed / 0 skipped** in run `raster-cite-71c76ab441cd`. The two
+remaining failures are the multipart JSON MIME-content checks described in the
+CITE notes. The previously timing-sensitive async raw-value method passed this
+run; this change does not claim to fix its polling behavior.
+Geonovum's missing-list finding is resolved. One new, independently reproduced
+checker limitation remains: 1.3.2 expects `maxDuration` to use `explode: true`,
+whereas Requirement 74 explicitly specifies `false`. The separate
+[`job-list-baseline.json`](../validation/geonovum/job-list-baseline.json) records
+that exact finding; the earlier combined and synchronous baselines are unchanged.
+See [the evidence and comparison](../validation/geonovum/README.md).
 Neither result establishes full conformance or certification.
 
 The application `/results/<id>/output.tif` route is an output-reference target,
@@ -90,9 +100,9 @@ installation is needed by the standard commands.
 | `make validate` | Both commands above; excludes CITE | Starts its own isolated combined validation stack |
 | `make validate-cite` | Official Processes ETS 1.3 with TEAM Engine 6.0.0-RC2 | Builds the default API/PostgreSQL/worker stack, verifies async execution; native reports, summaries and metadata in `runtime-data/cite/` |
 
-Geonovum's one-finding combined report can match its reviewed baseline and return success;
-that means no diagnostic regression, not full compliance. CITE remains strict:
-its four recorded failures still produce a failed command. Infrastructure errors
+Geonovum's one-finding Job List report can match its explicitly reviewed baseline
+and return success; that means no diagnostic regression, not full compliance.
+CITE remains strict: its two remaining recorded failures produce a failed command. Infrastructure errors
 are identified separately and never recorded as passing tests. Make itself wraps
 unsuccessful commands in a nonzero status; the Python runners distinguish
 conformance/baseline failure (1) from infrastructure failure (2).
@@ -128,6 +138,7 @@ locked runtime, diagnostic fields and review policy.
 | Synchronous results | Section 7.11.4, Requirements 28, 30, 32 | [Four file-result response modes](results.md#http-contract), TIFF/GeoJSON documents and independent downloads |
 | Multiple raw outputs | Section 7.11.4, Requirements 29, 31 | Multipart delivery not implemented |
 | Job resources | Sections 7.12–7.13; Permission 7 | Durable async status/results; pending/unknown/failure responses; no retained synchronous jobs |
+| Job List | Section 11, Requirements 64–79 | PostgreSQL filters/pagination, official schema, mandatory processID, links and restart tests |
 | OpenAPI/exceptions | Section 10; Requirement 15 for unknown processes | [Catalogue](errors.md), generated definition and actual JSON exception/schema tests |
 | Conformance assessment | Annex A | Partial evidence; no current-service certification |
 
@@ -168,18 +179,29 @@ modified to hide the overlap; these checks do not establish complete conformance
 - Release smoke checks run processing through Gunicorn, download/open results
   from independent clients, inspect isolation and verify restart persistence.
 - [Geonovum](../validation/geonovum/README.md) evaluates the actual combined
-  deployment and matches one reviewed optional Job List finding. The eight-finding
-  synchronous baseline remains available explicitly.
+  deployment and matches one reviewed `maxDuration` serialization-check limitation.
+  The earlier one-finding combined and eight-finding synchronous baselines remain available explicitly.
 - [CITE/TEAM Engine](../validation/cite-teamengine/README.md) runs the default
   durable manager and worker, exercising its echo through both execution modes.
   The runner requests all-process testing, but the pinned suite's description
   class does not apply that setting and checks only the echo. Our HTTP/schema
   tests cover raster descriptions; actual raster smokes run separately. See the
   [expanded echo observation](../validation/cite-teamengine/README.md#expanded-echo-coverage-2026-10-31)
-  for 49 passes, 5 failures, no skips and explicit checker limitations. The earlier
+  and the Job List observation above for dated verdicts and checker limitations. The earlier
   [combined observation](../validation/cite-teamengine/combined/README.md) is historical.
 
 ## Recorded checks
+
+- Job List, **2026-10-31**: `make test` and `make validate` pass with the disposable
+  PostgreSQL tests enabled: **683 passed / 11 optional Docker tests skipped**,
+  **91.51% coverage**. Separately, the release API/database restart regression
+  passes for accepted/completed listings and retained results. Both CITE Job List
+  methods pass; the full run reports **52 passed / 2 failed / 0 skipped**, with
+  the known multipart JSON-content failures retained. Geonovum matches the new
+  one-finding `maxDuration` checker-limitation baseline; historical baselines are
+  unchanged. Evidence: `runtime-data/cite/raster-cite-71c76ab441cd/` and
+  `runtime-data/geonovum/raster-geonovum-ea52849a49ea/`. No existing deployment was
+  restarted.
 
 - Default combined deployment, **2026-10-31**: `make test` passes with **569 passed /
   22 optional tests skipped**, **82.54% coverage**, plus passing quality and
