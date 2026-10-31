@@ -2,7 +2,8 @@
 
 Warp/reclassify write GeoTIFF; sample/polygonize write WGS84 GeoJSON. All file-producing executions create a
 stored result, including requests that return the raster by value. The public
-output identifier is `result`. No persistent OGC job resource is created.
+output identifier is `result`. Synchronous calls create no persistent OGC job resource. The default
+[combined deployment](asynchronous-execution.md) persists requests and formatted job results.
 
 ## HTTP contract
 
@@ -15,22 +16,25 @@ output identifier is `result`. No persistent OGC job resource is created.
 
 Omitted response means raw; omitted outputs means the defined `result` output;
 omitted transmission means value. Document mode does not silently change value
-to reference. `Prefer: respond-async` is ignored without a misleading applied
-preference or job location. Unsupported formats and identifiers return JSON 400.
+to reference. With `Prefer: respond-async`, the default deployment returns 201
+and a job URL; retrieving that job's results preserves the table above. Without
+that preference, execution remains synchronous. The explicit synchronous-only
+opt-out ignores the preference without a misleading applied preference or job
+location. Unsupported formats and identifiers return JSON 400.
 
 `Accept: application/json` does not select document mode or wrap a raw file in
 JSON. Choose `response: document` explicitly for an output-keyed JSON object
 (`info` for raster information, `result` for file outputs). For raw/value, use
 the returned `Content-Type` to decode the native TIFF or GeoJSON. For
 raw/reference, HTTP 204 has no body or `Content-Type`; read the `Link` header
-and fetch its target instead. It is a completed execution, not a job response.
+and fetch its target instead. This is a result representation; asynchronous job acceptance itself returns 201.
 
 These representations follow [OGC Part 1, section 7.11.4](https://docs.ogc.org/is/18-062r2/18-062r2.html):
 Requirements 28 (native raw output), 30 (204 and links) and 32 (JSON results
 map). The [official results schema](https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/results.yaml)
 maps output identifiers directly to values or references; it does not introduce
-an `outputs` array. The `Prefer` behavior follows Requirement 26B for sync-only
-processes. Regression tests exercise these modes with `Accept: application/json`
+an `outputs` array. Execution selection follows Requirements 25–26: the combined deployment honors
+`respond-async`; the synchronous-only opt-out follows Requirement 26B. Regression tests exercise these modes with `Accept: application/json`
 and `Prefer: respond-async` together.
 
 Reference URLs use the configured `PYGEOAPI_SERVER_URL`, including its path

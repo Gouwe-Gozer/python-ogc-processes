@@ -1,5 +1,9 @@
 # Development
 
+Normal Compose startup runs the API, PostgreSQL and a separate worker. See
+[durable async execution](asynchronous-execution.md) for job handling, lifecycle
+tests and the explicit database-free synchronous opt-out.
+
 Run commands from the repository root with user-installed `uv` and a local
 `.venv`. No host system packages or global Python installs are needed.
 
@@ -40,11 +44,16 @@ Validate the public configuration and generated definition:
 
 ```bash
 uv run pygeoapi config validate --config config/pygeoapi.yml
-uv run python -m geo_processes.openapi --output pygeoapi-openapi.yml
+GEO_MANAGER_CLASS=geo_processes.manager.OgcSynchronousManager uv run python -m geo_processes.openapi --output pygeoapi-openapi.yml
 uv run pygeoapi openapi validate pygeoapi-openapi.yml
 ```
 
-Use the application generator above to match `/openapi`. The upstream
+The command above generates the explicit synchronous-only profile offline, as
+used by fast unit tests and `make test`. To generate the combined definition
+locally, set `GEO_JOB_DSN` to a reachable PostgreSQL database and omit that manager
+override. Default runtime validation and CITE exercise the actual combined
+configuration, including async OpenAPI/status/result responses. Use the
+application generator to match `/openapi`. The upstream
 `pygeoapi openapi generate` command produces an uncorrected diagnostic document.
 The compatibility tests explicitly compare that output with the runtime contract.
 

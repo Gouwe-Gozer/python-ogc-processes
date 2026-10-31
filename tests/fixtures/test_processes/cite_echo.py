@@ -1,4 +1,4 @@
-"""Test-only synchronous echo using the public application's processor interface."""
+"""Test-only echo using the public application's processor interface."""
 
 import json
 from copy import deepcopy
@@ -15,7 +15,7 @@ from geo_processes.responses import ProcessResponse
 PROCESS_METADATA = {
     "version": "1.0.0",
     "id": "cite-echo",
-    "title": "CITE synchronous echo fixture",
+    "title": "CITE echo fixture",
     "description": "Test-only string echo through the ordinary application manager and response formatter.",
     "jobControlOptions": ["sync-execute"],
     "outputTransmission": ["value"],

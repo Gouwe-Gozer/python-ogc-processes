@@ -82,7 +82,8 @@ def test_generated_openapi_is_valid_and_preserves_description(service_config):
         "An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL."
     )
     assert "OGC API – Processes Part 1: Core" in document["info"]["description"]
-    assert "synchronous execution, with asynchronous job management planned" in document["info"]["description"]
+    assert "default deployment supports synchronous" in document["info"]["description"]
+    assert "durable asynchronous jobs" in document["info"]["description"]
     assert {"/jobs/{jobID}", "/jobs/{jobID}/results"} <= document["paths"].keys()
     assert "/jobs" not in document["paths"]
     assert "bgt-land-cover-summary" not in str(document)

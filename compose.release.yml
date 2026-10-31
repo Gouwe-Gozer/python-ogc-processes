@@ -1,45 +1,18 @@
 services:
   api:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    image: raster-processes:0.1.0
+    extends:
+      file: compose.base.yml
+      service: api
     ports:
-      - "${API_PORT:-5001}:8080"
-    environment:
-      PYGEOAPI_SERVER_URL: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
-      PYGEOAPI_TERMS_OF_SERVICE: ${PYGEOAPI_TERMS_OF_SERVICE:-https://opensource.org/license/mit}
-      GEO_OUTPUT_DIR: /var/lib/geo/results
-      GEO_INPUT_TMPDIR: /tmp/geo-inputs
-      GEO_INPUT_ALLOWED_HOSTS: ${GEO_INPUT_ALLOWED_HOSTS:-}
-      GEO_RESULT_RETENTION_SECONDS: ${GEO_RESULT_RETENTION_SECONDS:-86400}
-      GEO_RESULT_MAX_BYTES: ${GEO_RESULT_MAX_BYTES:-67108864}
-      GEO_RESULT_MAX_COUNT: ${GEO_RESULT_MAX_COUNT:-256}
-    volumes:
-      - results:/var/lib/geo/results
-    mem_limit: 512m
-    cpus: 1.0
-    pids_limit: 128
-    read_only: true
-    tmpfs:
-      - /tmp:rw,noexec,nosuid,size=64m
-    cap_drop:
-      - ALL
-    security_opt:
-      - no-new-privileges:true
-    healthcheck:
-      test:
-        - CMD
-        - /venv/bin/python3
-        - -c
-        - >-
-          import urllib.request;
-          urllib.request.urlopen('http://localhost:8080/conformance', timeout=5)
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    restart: unless-stopped
-
+    - ${API_PORT:-5001}:8080
+  worker:
+    extends:
+      file: compose.base.yml
+      service: worker
+  db:
+    extends:
+      file: compose.base.yml
+      service: db
 volumes:
-  results:
+  results: null
+  jobs-db: null

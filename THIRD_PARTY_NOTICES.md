@@ -123,3 +123,17 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
+
+## PostgreSQL job-management dependencies
+
+- [psycopg2-binary 2.9.11](https://www.psycopg.org/): LGPL version 3 or later
+  with the exceptions in its bundled `LICENSE`. Bundled-library notices remain
+  with the installed distribution.
+- [GeoAlchemy2 0.20.0](https://geoalchemy-2.readthedocs.io/): MIT. Required by the
+  stock pygeoapi PostgreSQL manager's SQL-provider imports; job storage does not
+  require a PostGIS extension.
+- [SQLAlchemy](https://www.sqlalchemy.org/): MIT. Already supplied through
+  pygeoapi and now explicitly declared for the application's transactional job
+  integration; the resolved version is recorded in `uv.lock`.
+
+The installed distributions retain their respective copyright/licence files.

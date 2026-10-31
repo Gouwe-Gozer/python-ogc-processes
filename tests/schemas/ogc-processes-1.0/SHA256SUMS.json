@@ -24,6 +24,8 @@
   "reference.yaml": "e649c7f6c5f640d47496eb7a8c09e44cdfac4d58d4e3fbe110721ff3e267f604",
   "results.yaml": "f31bff8d775cc5deb1720854da915c93703534b06f777d8bec7ed96c0028a2db",
   "schema.yaml": "f9c235e6fc6229bb9a5c78b560b6298ae55bd66263e759203be32f1f7fa165dd",
+  "statusCode.yaml": "7959ed400c7fa1783bf53d2081d52795c8187247db7301d89476c3b8d81ce09b",
+  "statusInfo.yaml": "a20d626564c2a558f9e784e32e95cb21b4e95191e59f6211a6f8d17e40634b53",
   "subscriber.yaml": "6aed74ad12901ee42ccb7b7ae569a38fa2eb14aec69124ce0115a134095f2421",
   "transmissionMode.yaml": "0bc29781d20eeae1e633eb76c4d2bf90e745a920efd17319a5157993bd55b23b"
 }

@@ -9,7 +9,14 @@ from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_, execute_from_flask
 from werkzeug.datastructures import Headers
 
 from geo_processes.datasets import SAMPLE_DATA_DIR
-from geo_processes.discovery import conformance, landing_links, list_processes, readonly_geojson_collections
+from geo_processes.discovery import (
+    conformance,
+    describe_process,
+    landing_links,
+    landing_page,
+    list_processes,
+    readonly_geojson_collections,
+)
 from geo_processes.documentation import configure_documentation_templates
 from geo_processes.errors import exception_document, install_exception_renderer
 from geo_processes.inputs import MAX_EXECUTION_BYTES
@@ -51,11 +58,35 @@ EXECUTION_PATHS = {
 }
 ALLOWED_EXECUTION_MEMBERS = {"inputs", "outputs", "response"}
 
+
+@APP.before_request
+def durable_job_routes():
+    if not getattr(api_.manager, "durable_async", False):
+        return None
+    if request.endpoint not in {"pygeoapi.get_jobs", "pygeoapi.get_job_result"}:
+        return None
+    identifier = (request.view_args or {}).get("job_id")
+    allowed = "GET, HEAD, OPTIONS" if identifier is not None else "OPTIONS"
+    if request.method == "OPTIONS":
+        return "", 204, {"Allow": allowed}
+    if identifier is None or request.method not in {"GET", "HEAD"}:
+        return (
+            jsonify(exception_document("NoApplicableCode", "job listing and dismissal are not supported", 405)),
+            405,
+            {"Allow": allowed},
+        )
+    from geo_processes.jobs import job_response
+
+    return job_response(api_, identifier, results=request.endpoint == "pygeoapi.get_job_result")
+
+
 _upstream_get_processes = APP.view_functions["pygeoapi.get_processes"]
 
 
 def get_processes(process_id=None):
     if process_id is not None:
+        if getattr(api_.manager, "durable_async", False):
+            return execute_from_flask(describe_process, request, process_id)
         return _upstream_get_processes(process_id)
     return execute_from_flask(list_processes, request)
 
@@ -68,6 +99,13 @@ def get_conformance():
 
 
 APP.view_functions["pygeoapi.conformance"] = get_conformance
+
+
+def get_landing_page():
+    return execute_from_flask(landing_page, request)
+
+
+APP.view_functions["pygeoapi.landing_page"] = get_landing_page
 
 
 def _invalid_request(description):
@@ -130,6 +168,12 @@ def apply_process_status(response):
     """pygeoapi 0.24.0 fixes successful executions at 200; honor explicit 204s."""
     # Upstream assigns a plain dict; restore case-insensitive media-type lookups.
     response.headers = Headers(response.headers)
+    if (
+        getattr(api_.manager, "durable_async", False)
+        and request.path.rstrip("/").endswith("/execution")
+        and response.status_code != 201
+    ):
+        response.headers.pop("Location", None)
     # The pinned feature handler uses the generic JSON media type even though
     # its item(s) payload is GeoJSON. Keep discovery and error JSON unchanged.
     if (

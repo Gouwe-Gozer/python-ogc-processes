@@ -1,0 +1,2 @@
+PASS synchronous execution and durable async information results agree
+PASS durable async warp, job status/results and independent GeoTIFF download

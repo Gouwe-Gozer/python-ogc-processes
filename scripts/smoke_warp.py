@@ -17,7 +17,7 @@ def _read(url, payload=None):
     request = urllib.request.Request(
         url,
         data=None if payload is None else json.dumps(payload).encode(),
-        headers={"Content-Type": "application/json", "Prefer": "respond-async"},
+        headers={"Content-Type": "application/json"},
     )
     # The operator selects this URL, and the server supplies the result URL.
     with urllib.request.urlopen(request, timeout=15) as response:  # nosec B310

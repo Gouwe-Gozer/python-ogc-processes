@@ -4,20 +4,20 @@ The goal is a ready-to-use API for **users' own rasters**, with a growing catalo
 of useful operations. HTTPS and inline base64 input, information/reprojection,
 sampling, reclassification, polygonization, downloadable results and the local-file example are implemented; see
 [README](../README.md), [inputs](inputs.md) and [results](results.md).
-The items below are proposals or unresolved decisions, not advertised capabilities.
+The implemented async milestone is recorded below; the remaining items are
+proposals or unresolved decisions, not advertised capabilities.
 
-## Next milestone: PostgreSQL-backed asynchronous jobs
+## Durable async milestone
 
-Add asynchronous submission, status tracking and result retrieval using
-pygeoapi's PostgreSQL manager, with execution in background threads inside
-the API worker processes. Keep synchronous requests available. Independent
-workers, a queue and automatic recovery of interrupted computation are outside
-this milestone.
+The default PostgreSQL-backed deployment supports asynchronous submission,
+status and results through a separate bounded worker. The previous in-API-thread
+proposal is superseded. See [implementation, limits and restart semantics](asynchronous-execution.md).
+Synchronous calls remain unretained and retain their existing response behavior.
+An explicit lightweight opt-out starts only the synchronous API.
 
-The [readiness review](async-readiness.md) identifies the required result/error
-integration, bounded admission, persistent job/output lifecycle and PostgreSQL
-tests. Address those within the milestone; no broad processor rewrite is needed.
-PostgreSQL stores job metadata; it does not make in-process work restartable.
+Follow-up work should be driven by usage: access control, operational monitoring,
+backup/retention policy and larger workloads. Automatic retries, distributed
+workers and broader infrastructure are not part of this slice.
 
 ## Raster operations and CRS coverage
 
@@ -55,14 +55,12 @@ An external conformance assessment remains separate from these regression tests.
 
 The audit documents why the existing TinyDB diagnostic is not a configuration-only
 replacement for raster execution, and which fixes already work with either
-manager. The same execution boundary applies to the PostgreSQL manager. Retaining
-synchronous jobs remains a decision for that integration; if retained, their
-responses need the standard's monitor links.
+manager. The same execution boundary applies to the PostgreSQL manager. Synchronous jobs are deliberately not retained; future retention would require
+the standard's monitor links.
 
 Before sharing a hosted service, choose users/access control, input/result
-visibility, TLS, logging and storage maintenance. Queuing, asynchronous workers,
-object storage and distributed coordination should follow measured workload
-needs. Current deployment boundaries are in [release deployment](release-image.md).
+visibility, TLS, logging and storage maintenance. Additional worker scaling, object storage and distributed coordination should
+follow measured workload needs. Current deployment boundaries are in [release deployment](release-image.md).
 
 Vector operations may introduce Shapely, Pyogrio or GeoPandas when a concrete
 operation requires them. Declare directly used dependencies explicitly and keep

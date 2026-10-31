@@ -25,7 +25,7 @@ CHECKER_TIMEOUT_SECONDS = 120
 DEFAULT_ATTEMPTS = 5
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_BASELINE = PROJECT_ROOT / "validation" / "geonovum" / "baseline.json"
+DEFAULT_BASELINE = PROJECT_ROOT / "validation" / "geonovum" / "combined-baseline.json"
 
 EXIT_BASELINE_MISMATCH = 1
 EXIT_OPERATIONAL_ERROR = 2
@@ -327,7 +327,7 @@ def describe_diagnostic(diagnostic: dict[str, Any]) -> str:
     return f"{diagnostic['code']} at {path} (source: {diagnostic['source']}): {diagnostic['message']}"
 
 
-def main() -> int:
+def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", default="http://127.0.0.1:5001/openapi?f=json", help="OpenAPI document URL")
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE, help="Diagnostic baseline JSON")
@@ -346,7 +346,7 @@ def main() -> int:
         action="store_true",
         help="Replace the baseline after a complete run; never use this option in CI",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.attempts < 1:
         parser.error("--attempts must be at least 1")

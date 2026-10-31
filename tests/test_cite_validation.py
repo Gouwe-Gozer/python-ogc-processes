@@ -11,9 +11,10 @@ from geo_processes.manager import OgcSynchronousManager
 from scripts import validate_cite as cite
 
 
-def test_cite_config_retains_real_processes_manager_and_adds_only_sync_fixture(tmp_path, service_config):
+def test_cite_config_uses_combined_manager_and_retains_real_processes(tmp_path, service_config):
     config = cite.prepare_config(tmp_path / "config.yml")
-    assert config["server"]["manager"] == service_config["server"]["manager"]
+    assert config["server"]["manager"]["name"] == "geo_processes.async_manager.DurableProcessManager"
+    assert config["server"]["manager"]["connection"].startswith("postgresql://geo:")
     assert set(config["resources"]) == set(service_config["resources"]) | {"cite-echo"}
     for name, resource in service_config["resources"].items():
         if resource["type"] == "process":
@@ -115,10 +116,11 @@ def test_missing_or_invalid_official_report_is_an_infrastructure_error(tmp_path,
 
 def test_cleanup_is_scoped_and_still_runs_when_log_collection_fails(tmp_path, monkeypatch):
     (tmp_path / "compose.cite.yml").write_text("test profile")
+    (tmp_path / "compose.base.yml").write_text("shared combined deployment")
     monkeypatch.setattr(cite, "ROOT", tmp_path)
     monkeypatch.setattr(cite, "source_fingerprint", lambda: "fingerprint")
 
-    def config(path):
+    def config(path, **_kwargs):
         data = {"server": {"manager": {"name": "real-manager"}}, "resources": {}}
         path.write_text(yaml.safe_dump(data))
         return data
@@ -142,3 +144,15 @@ def test_cleanup_is_scoped_and_still_runs_when_log_collection_fails(tmp_path, mo
     assert any(command[:3] == ["docker", "image", "rm"] for command in commands)
     projects = [command[command.index("--project-name") + 1] for command in commands if "--project-name" in command]
     assert projects and len(set(projects)) == 1 and projects[0].startswith("raster-cite-")
+
+
+def test_geonovum_config_has_only_real_processes_and_host_reachable_urls(tmp_path, service_config, monkeypatch):
+    monkeypatch.setenv("GEO_MANAGER_CLASS", "geo_processes.manager.OgcSynchronousManager")
+    config = cite.prepare_config(tmp_path / "config.yml", echo=False, public_url="http://127.0.0.1:59999")
+    assert set(config["resources"]) == set(service_config["resources"])
+    assert config["server"]["manager"]["name"] == "geo_processes.async_manager.DurableProcessManager"
+    assert config["server"]["url"] == "http://127.0.0.1:59999"
+    assert config["server"]["logo"].startswith("http://127.0.0.1:59999/")
+    assert all(
+        link["href"].startswith("http://127.0.0.1:59999/") for link in config["resources"]["sample-points"]["links"]
+    )

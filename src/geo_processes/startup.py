@@ -128,6 +128,13 @@ class RuntimeSettings:
 def validate_runtime(config):
     """Resolve and check settings, without executing processes or purging data."""
     url = public_url(config["server"]["url"])
+    if config["server"].get("manager", {}).get("name") == "geo_processes.async_manager.DurableProcessManager":
+        from geo_processes.async_manager import job_limits
+
+        try:
+            job_limits()
+        except ValueError as error:
+            raise ConfigurationError(f"GEO_JOB_* settings: {error}") from error
     input_dir = _directory("GEO_INPUT_TMPDIR", "runtime-data/inputs")
     output_dir = _directory("GEO_OUTPUT_DIR", "runtime-data/results")
     allowed_hosts = _allowed_hosts()

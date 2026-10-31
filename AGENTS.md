@@ -53,8 +53,10 @@ container checks in the development guide. Report checks that could not run and
 why. Never remove tests just to obtain a passing suite.
 
 `make test` runs these checks plus configuration/OpenAPI validation. `make validate`
-adds the locked Geonovum comparison against a running API. `make validate-cite`
-runs the separate official executable suite against an isolated application.
+adds the locked Geonovum comparison against an isolated API/PostgreSQL/worker
+stack. `make validate-cite` runs the official executable suite against the same
+combined deployment in a separate test project. Both workflows exercise async
+execution; neither touches an existing deployment.
 Keep reviewed baselines unchanged unless an explicit evidence-based update is
 part of the task; documented CITE failures must remain failures. See the
 [validation workflows](docs/validation.md#repeatable-commands).

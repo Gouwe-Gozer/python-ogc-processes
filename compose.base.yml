@@ -1,0 +1,96 @@
+# Shared deployment: API, PostgreSQL and one independent worker.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: raster-processes:0.1.0
+    environment: &runtime-environment
+      PYGEOAPI_SERVER_URL: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
+      PYGEOAPI_TERMS_OF_SERVICE: ${PYGEOAPI_TERMS_OF_SERVICE:-https://opensource.org/license/mit}
+      GEO_OUTPUT_DIR: /var/lib/geo/results
+      GEO_INPUT_TMPDIR: /tmp/geo-inputs
+      GEO_INPUT_ALLOWED_HOSTS: ${GEO_INPUT_ALLOWED_HOSTS:-}
+      GEO_RESULT_RETENTION_SECONDS: ${GEO_RESULT_RETENTION_SECONDS:-86400}
+      GEO_RESULT_MAX_BYTES: ${GEO_RESULT_MAX_BYTES:-67108864}
+      GEO_RESULT_MAX_COUNT: ${GEO_RESULT_MAX_COUNT:-256}
+      GEO_MANAGER_CLASS: ${GEO_MANAGER_CLASS:-geo_processes.async_manager.DurableProcessManager}
+      GEO_JOB_DSN: postgresql://geo:${GEO_JOB_PASSWORD:-raster-local-only}@db:5432/geo
+      GEO_JOB_MAX_COUNT: ${GEO_JOB_MAX_COUNT:-16}
+      GEO_JOB_MAX_BYTES: ${GEO_JOB_MAX_BYTES:-67108864}
+      GEO_JOB_TIMEOUT: ${GEO_JOB_TIMEOUT:-30}
+    volumes:
+    - results:/var/lib/geo/results
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    read_only: true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    healthcheck:
+      test:
+      - CMD
+      - /venv/bin/python3
+      - -c
+      - import urllib.request; urllib.request.urlopen('http://localhost:8080/conformance',
+        timeout=5)
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+  worker:
+    image: raster-processes:0.1.0
+    pull_policy: never
+    entrypoint:
+    - /venv/bin/python3
+    - -m
+    - geo_processes.worker
+    - --config
+    - /pygeoapi/local.config.yml
+    environment: *runtime-environment
+    volumes:
+    - results:/var/lib/geo/results
+    depends_on:
+      api:
+        condition: service_healthy
+    init: true
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    read_only: true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    restart: unless-stopped
+    stop_grace_period: 10s
+  db:
+    image: postgres:17@sha256:31ba9c94a03ada9988f2bb493a22a75eef3a185884533e5cdbcd498ea835b08f
+    environment:
+      POSTGRES_DB: geo
+      POSTGRES_USER: geo
+      POSTGRES_PASSWORD: ${GEO_JOB_PASSWORD:-raster-local-only}
+    volumes:
+    - jobs-db:/var/lib/postgresql/data
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U geo -d geo
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+    mem_limit: 256m
+volumes:
+  results: null
+  jobs-db: null

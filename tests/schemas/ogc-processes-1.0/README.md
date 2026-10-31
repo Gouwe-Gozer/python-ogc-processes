@@ -11,3 +11,6 @@ SHA256SUMS.json records this snapshot. Tests resolve references entirely offline
 These are the official OpenAPI 3.0 schemas (JSON Schema Draft 4 vocabulary),
 not the example JSON documents. OGC owns the upstream material; see the
 copyright and licence in https://docs.ogc.org/is/18-062r2/18-062r2.html.
+
+`statusInfo.yaml` and `statusCode.yaml` were added unchanged on 2026-10-30 for
+durable async status/acceptance regression tests.
