@@ -70,7 +70,8 @@ Regression tests retain the following corrections for pygeoapi 0.24.0:
   synchronous serializer substitutes HTML entities; a request-local API/manager
   copy captures the original formatted value and re-encodes it before Flask
   compression. Upstream still owns execution negotiation, headers and failures.
-  Stored async JSON uses the same encoder. Native file/text responses, HTML
+  Async persistence reuses pygeoapi's type conversion with `allow_nan=False`;
+  result retrieval uses the same HTML-safe encoder. Native file/text responses, HTML
   templates and upstream's global serializer are unchanged; parsed data remains
   untrusted and templates retain their normal escaping.
 - The manager corrects document wrapping, preserves typed failures, sanitizes

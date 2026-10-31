@@ -3,6 +3,7 @@
 import os
 from copy import deepcopy
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -15,7 +16,7 @@ from test_ogc_schemas import validate_official
 
 from geo_processes.async_manager import DurableProcessManager, job_limits
 from geo_processes.contracts.warp import DOCUMENT_SCHEMA
-from geo_processes.errors import InputBusyError
+from geo_processes.errors import InputBusyError, InvalidExecutionRequestError
 from geo_processes.openapi import generate_openapi
 
 ASYNC = RequestedProcessExecutionMode.respond_async
@@ -384,3 +385,72 @@ def test_sampling_properties_survive_sync_and_async_result_delivery(async_client
                 assert response.mimetype == "application/geo+json"
                 result = response.json
         assert result["features"][0]["properties"] == {**properties, "value": 1}
+
+
+@pytest.mark.parametrize("response_mode", ["raw", "document"])
+def test_pygeoapi_json_types_match_sync_and_persisted_async_http_results(async_client, durable, response_mode):
+    manager, _, definition = durable
+    registration = {"processor": {"name": "test_processes.json_types.JsonTypesProcessor"}}
+    manager.processes["json-types"] = registration
+    document = {"inputs": {}, "response": response_mode}
+    synchronous = async_client.post("/processes/json-types/execution", json=document)
+    assert synchronous.status_code == 200
+    submitted = async_client.post("/processes/json-types/execution", json=document, headers={"Prefer": "respond-async"})
+    assert submitted.status_code == 201
+    identifier = submitted.json["jobID"]
+    assert manager.claim() == identifier
+    manager.perform(identifier)
+    assert manager.get_job(identifier)["status"] == "successful"
+    # Recreate the storage manager before HTTP retrieval to verify the stored representation.
+    definition = {**definition, "processes": {**definition["processes"], "json-types": registration}}
+    restored = DurableProcessManager(definition)
+    try:
+        assert restored.response(identifier)["body"] == synchronous.json
+    finally:
+        restored._engine.dispose()
+    asynchronous = async_client.get(f"/jobs/{identifier}/results")
+    assert asynchronous.status_code == 200
+    assert asynchronous.headers["Content-Type"] == synchronous.headers["Content-Type"] == "application/json"
+    expected = {
+        "timestamp": "2026-10-31T12:34:56.123456+00:00",
+        "date": "2026-10-31",
+        "time": "12:34:56",
+        "amount": 1.25,
+        "counts": [7, 9007199254740993],
+        "nested": {"value": 1.25, "label": "Café </script><script> ' & <river>"},
+    }
+    if response_mode == "document":
+        expected = {"result": {"value": expected}}
+        validate_official(asynchronous.json, "results.yaml")
+    assert asynchronous.json == synchronous.json == expected
+    for response in (synchronous, asynchronous):
+        assert not any(character in response.data for character in (b"<", b">", b"&", b"'"))
+        assert b"\\u003c" in response.data
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf"), Decimal("NaN")])
+def test_result_persistence_remains_strict_about_nonfinite_numbers(async_client, durable, value):
+    manager = durable[0]
+    identifier = enqueue(async_client)
+    assert manager.claim() == identifier
+    with pytest.raises(ValueError, match="Out of range float"):
+        manager.finish(identifier, {"body": {"nested": [value]}})
+    assert manager.get_job(identifier)["status"] == "running"
+    assert manager.response(identifier) is None
+
+
+def test_result_persistence_still_rejects_unsupported_objects(async_client, durable):
+    manager = durable[0]
+    identifier = enqueue(async_client)
+    assert manager.claim() == identifier
+    with pytest.raises(TypeError, match="not serializable"):
+        manager.finish(identifier, {"body": object()})
+    assert manager.get_job(identifier)["status"] == "running"
+    assert manager.response(identifier) is None
+
+
+def test_result_type_conversions_do_not_broaden_job_request_inputs(durable):
+    manager = durable[0]
+    with pytest.raises(InvalidExecutionRequestError, match="finite JSON values"):
+        manager.execute_process("raster-info", {"source": datetime(2026, 10, 31, tzinfo=UTC)}, execution_mode=ASYNC)
+    assert manager.claim() is None
