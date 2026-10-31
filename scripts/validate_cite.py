@@ -176,6 +176,8 @@ def write_reports(directory, summary, metadata):
 def source_fingerprint():
     digest = hashlib.sha256()
     paths = [
+        ROOT / "pyproject.toml",
+        ROOT / "uv.lock",
         ROOT / "docker/Dockerfile",
         ROOT / "docker/entrypoint.sh",
         ROOT / "tests/fixtures/test_processes/cite_echo.py",

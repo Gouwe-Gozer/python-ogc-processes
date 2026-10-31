@@ -2,10 +2,18 @@
 
 `compose.release.yml` builds a self-contained image with application source,
 canonical configuration and licence notices. Its official pygeoapi 0.24.0 base
-is pinned by manifest digest in `docker/Dockerfile`. Rasterio and NumPy are
-explicitly installed into the same `/venv` used by Gunicorn; application pins
-are listed in [development](development.md). Transitive dependencies and bundled
-GDAL/PROJ resources may differ from the local uv environment.
+is pinned by manifest digest in `docker/Dockerfile`. The build installs production
+Python dependencies directly from `pyproject.toml` / `uv.lock` into the same `/venv`
+used by Gunicorn. A temporary, digest-pinned uv tool validates the lock and installs
+wheels without development groups or the project package; source/configuration
+packaging remains unchanged. API and worker use this same image.
+
+Docker BuildKit is required for the temporary build mounts (the default with
+modern Docker). Registry/Python package downloads are needed during uncached builds.
+The final image contains no uv binary or separately maintained dependency list.
+Inherited base-image tools such as Gunicorn are retained; their versions and OS
+components remain pinned by the base-image digest. Platform-specific GDAL/PROJ
+resources may differ from local development. See [dependency workflow](development.md).
 
 ## Run and inspect
 

@@ -18,10 +18,19 @@ remain unchanged.
 | Rasterio | 1.4.3 |
 | NumPy | 1.26.4 |
 
-`pyproject.toml` and `uv.lock` define local dependencies. The Dockerfile pins the
-official pygeoapi base by digest and uses its `/venv` interpreter. These three
-application library versions match; transitive packages and bundled GDAL/PROJ
-versions may differ. Check both environments when changing processing behavior.
+`pyproject.toml` declares dependencies; `uv.lock` fixes their resolved versions for
+both local installation and Docker. The image temporarily mounts a digest-pinned
+uv binary and runs `uv sync --locked --no-dev --no-install-project --inexact`
+against its existing `/venv`. Stale locks fail the build; no manual Docker package
+list or generated requirements file is maintained. The build accepts wheels only
+and never downloads another Python interpreter.
+
+`--inexact` preserves tools supplied by the digest-pinned pygeoapi base, including
+Gunicorn, that are outside the application dependency graph. Those inherited
+extras and OS/GDAL/PROJ components remain controlled by the base image/wheels.
+The uv binary is not included in the final image. API and worker use the same image;
+container tests compare every selected production requirement against the lock.
+Update the manifest and lock together, then rebuild both services.
 
 ```bash
 uv sync --locked --all-groups

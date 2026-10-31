@@ -5,7 +5,9 @@ Only uniquely named raster-async-test-* resources are created/restarted/removed.
 """
 
 import base64
+import json
 import os
+import shutil
 import socket
 import subprocess
 import time
@@ -318,3 +320,60 @@ def test_custom_process_errors_use_existing_http_and_job_contracts(deployment):
     asynchronous = requests.get(job + "/results", timeout=5)
     assert asynchronous.status_code == 400
     assert asynchronous.json() == synchronous.json()
+
+
+@pytest.mark.parametrize("deployment", [None, "custom-process"], indirect=True)
+def test_api_and_worker_dependencies_match_the_production_lock(deployment):
+    requirements = subprocess.run(
+        ["uv", "export", "--locked", "--no-dev", "--no-emit-project", "--no-hashes", "--no-header", "--no-annotate"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=60,
+    ).stdout
+    # Evaluate platform markers in the container, not on a potentially different host OS.
+    script = """
+import json, sys
+from importlib.metadata import version
+from packaging.requirements import Requirement
+import pygeoapi
+requirements = [Requirement(line) for line in sys.argv[1].splitlines() if line.strip()]
+selected = [item for item in requirements if item.marker is None or item.marker.evaluate()]
+versions = {item.name: version(item.name) for item in selected}
+for item in selected:
+    assert item.specifier.contains(versions[item.name]), (str(item), versions[item.name])
+assert pygeoapi.__version__ == versions['pygeoapi']
+assert version('gunicorn')
+print(json.dumps(versions, sort_keys=True))
+"""
+    versions = [
+        json.loads(deployment["docker"]("exec", "-T", service, "/venv/bin/python3", "-c", script, requirements))
+        for service in ("api", "worker")
+    ]
+    assert versions[0] == versions[1]
+    images = deployment["docker"]("images", "--quiet", "api", "worker").splitlines()
+    assert images and len(set(images)) == 1
+
+
+def test_image_build_rejects_an_outdated_lockfile(tmp_path):
+    # Keep the repository and its lock untouched; build only this disposable context.
+    for directory in ("docker", "src", "config"):
+        shutil.copytree(ROOT / directory, tmp_path / directory, ignore=shutil.ignore_patterns("__pycache__"))
+    for filename in ("pyproject.toml", "uv.lock", "LICENSE", "THIRD_PARTY_NOTICES.md"):
+        shutil.copy2(ROOT / filename, tmp_path / filename)
+    manifest = tmp_path / "pyproject.toml"
+    # This package is already transitively locked: only the root declaration becomes stale.
+    manifest.write_text(manifest.read_text().replace("dependencies = [", 'dependencies = [\n    "requests",', 1))
+    original_lock = (tmp_path / "uv.lock").read_bytes()
+    result = subprocess.run(
+        ["docker", "build", "-f", "docker/Dockerfile", "."],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+    (tmp_path / "stale-build.log").write_text(result.stdout + result.stderr)
+    assert result.returncode != 0
+    assert "needs to be updated" in result.stderr and "--locked" in result.stderr
+    assert (tmp_path / "uv.lock").read_bytes() == original_lock

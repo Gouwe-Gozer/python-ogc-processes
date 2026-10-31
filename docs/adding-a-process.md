@@ -76,12 +76,13 @@ The example needs no new dependencies. For a real dependency:
 
 1. Add a pinned dependency with `uv add 'PACKAGE==VERSION'`; retain intentional
    `pyproject.toml` and `uv.lock` changes together.
-2. Install it into the **same derived image** used by API and worker. The current
-   Docker image installs its Python dependencies explicitly, separately from uv's
-   host environment. In your derived Dockerfile, switch to `USER root`, use
-   `/venv/bin/python3 -m pip install --no-cache-dir 'PACKAGE==VERSION'`, then restore
-   `USER 10001:10001`. Use actual package names/versions and preserve licence notices.
-   Native dependencies may require a deliberate image/build review.
+2. Rebuild the base image used by **both API and worker**. Its Docker build reads
+   the same manifest/lock and installs production dependencies automatically;
+   no Docker dependency list needs updating. Rebuild any derived custom-process
+   image afterward, as shown in the example quickstart. Development groups are
+   not installed into the application image. Preserve dependency licence notices.
+   The current build expects registry wheels; dependencies requiring source
+   compilation or local path packages need deliberate build inputs/review.
 
 Under `resources` in your pygeoapi configuration, register the dotted class name:
 
