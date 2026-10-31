@@ -3,31 +3,50 @@
 Use the repository's private GitHub vulnerability reporting when available.
 Include the affected version, reproduction and likely impact without secrets.
 
-The public processes accept inline base64 GeoTIFFs and controlled HTTPS references.
-Dataset identifiers are not public inputs. Requests cannot select server paths, CLI arguments,
-callbacks or output filenames. HTTPS uses verified TLS, pinned public addresses,
-bounded downloads, redirect checks and no ambient proxies. An optional exact-host
-allowlist narrows destinations. Private/loopback/link-local addresses, URL
-credentials and alternate ports are rejected. GDAL receives private local files;
-sidecars/PAM are disabled, the driver is restricted to GTiff and PROJ networking
-is disabled. Invalid requests return controlled JSON client errors. Engine
-failures return sanitized server errors; detailed errors belong in server logs.
+## Input and processing boundary
 
-Warp requests select only an approved CRS and nearest/bilinear resampling.
-Request bodies are capped at 24 MiB; both info and warp inputs at 16 MiB and
-1,048,576 samples including bands. Output dimensions are fixed to the source.
-One writer per result volume runs at a time. Outputs have random IDs, bounded
-capacity, atomic publication and enforced expiry. Downloads cannot traverse
-paths or follow symlinks. A full store rejects new work without evicting
-unexpired results. See [result storage](docs/results.md) for lifecycle details.
+Public raster inputs are inline base64 or controlled public HTTPS references.
+Requests cannot select server paths, CLI arguments, callbacks or output filenames.
+HTTPS uses verified TLS, pinned public addresses, bounded downloads, redirect
+checks and no ambient proxies. An optional exact-host allowlist narrows destinations.
+Private/loopback/link-local addresses, credentials and alternate ports are rejected.
+GDAL receives staged local files; only GTiff reads are enabled, sidecars/PAM are
+disabled and PROJ networking is off. See [input policy](docs/inputs.md).
 
-Two locked, private temporary input slots bound staged files across workers.
-Handled requests remove them; slot reuse removes files left by killed workers.
-Release Compose places them in its bounded tmpfs, separately from persistent
-output retention; development Compose does not set that tmpfs bound. The
-[input policy](docs/inputs.md) describes limits and remaining deployment needs.
+Requests are capped at 24 MiB, rasters at 16 MiB and 1,048,576 samples including
+bands. Operation-specific bounds cover points, class intervals and polygonization;
+warp retains input grid dimensions. Two locked input slots apply per shared input
+directory. Compose gives API and worker separate `/tmp` filesystems, so these
+slots are per container, not a service-wide two-job quota.
 
-The release runs non-root, with a read-only root, bounded temporary filesystem,
-all capabilities dropped and privilege escalation disabled. The diagnostic
-TinyDB/async-echo configuration is for local standards testing only. Authentication,
-TLS termination and broader input/resource policies remain deployment decisions.
+One writer per shared result volume publishes atomically under random IDs.
+Quotas/expiry apply without evicting unexpired results. Downloads reject unsafe
+paths, symlinks and invalid IDs. Handled failures clean temporary inputs; slot
+reuse cleans inputs abandoned by killed processes. See [result storage](docs/results.md).
+
+## Jobs and deployment
+
+The default API/PostgreSQL/worker stack has bounded admission, payload retention
+and execution deadlines. Interrupted jobs fail explicitly rather than retrying
+automatically. Stored requests can contain input data and signed source URLs;
+protect the database and its backups accordingly. See [async lifecycle and
+limits](docs/asynchronous-execution.md).
+
+There is **no built-in authentication or per-user authorization**. Job IDs and
+status metadata are discoverable through `/jobs`; known job IDs expose their
+status/results, and published file links remain accessible until expiry. Protect
+all routes consistently if data or metadata must be private. Input SSRF protection
+does not provide user access control.
+
+Development and release API/worker services share non-root execution, a read-only
+root, bounded tmpfs/memory/CPU/processes, dropped capabilities and disabled
+privilege escalation. PostgreSQL uses a separate persistent volume and has no
+published host port. Replace the local-only default password before hosted use.
+Authentication, TLS termination, egress policy, backups and monitoring remain
+deployment responsibilities; see [release deployment](docs/release-image.md).
+
+Custom Python processors are **trusted installed code**. A worker process is not
+a sandbox for untrusted code uploads. Keep dataset handles and temporary files
+independent per execution, validate resource usage and sanitize unexpected errors.
+The TinyDB/async-echo configuration is an isolated compatibility diagnostic,
+not the default job deployment.

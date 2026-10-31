@@ -33,8 +33,8 @@ raster's native coordinate system. It is contained within the raster footprint
 and is published in WGS84 longitude/latitude. Tests verify all three points
 are inside the polygon and fall on valid raster pixels.
 
-The GeoTIFF is copied unchanged from the user-supplied
-`~/projects/AHN4_R5_117000_517000.TIF`:
+The packaged `AHN4_R5_117000_517000.TIF` was copied unchanged from the
+contributor-supplied file. Its measured properties are:
 
 | Property | Value |
 | --- | --- |
@@ -45,6 +45,23 @@ The GeoTIFF is copied unchanged from the user-supplied
 | Nodata | `-9999` |
 | File size | 139,824 bytes |
 | SHA-256 | `7401de276a5f08f9fe3b6003d0860159e4544c348d0747f01a865a5dcdcf7f33` |
+
+AHN4 is published under **Creative Commons CC0 1.0**, permitting redistribution
+without mandatory attribution. The dataset licence is separate from this
+application's MIT licence. Official sources:
+
+- [AHN download portal](https://basisdata.nl/hwh-portal/download/index.html).
+- [AHN DTM dataset registration, including CC0](https://data.overheid.nl/en/dataset/47567-actueel-hoogtebestand-nederland--ahn--dtm).
+- [AHN Dataroom](https://www.ahn.nl/dataroom), describing the 5-metre GeoTIFF
+  terrain model and its coordinate reference system.
+- [CC0 1.0 terms](https://creativecommons.org/publicdomain/zero/1.0/).
+
+The filename, 5-metre grid and CRS are consistent with AHN4 DTM data. The exact
+original download URL and upstream byte-for-byte identity of this particular
+file have **not been independently verified**. The checksum above identifies
+the bytes distributed here; it does not establish that missing provenance.
+The sample is retained under the documented AHN4 licence; absent attribution
+is not a licensing blocker. Record a verified original source if recovered.
 
 No source raster bytes or coordinates are rewritten. The polygon is generated
 for these sample locations. Packaged files live in
@@ -113,8 +130,8 @@ PY
 ```
 
 The sampled values are approximately **1.9285**, **3.2804** and **-2.1011** in
-point order. Keep client rendering observations in the
-[interoperability log](client-interoperability.md).
+point order. External client rendering remains a separate
+[interoperability check](validation.md#client-interoperability).
 
 For local commands, data paths default relative to the repository root. The
 image sets `GEO_SAMPLE_DATA_DIR` to its packaged sample directory. An operator

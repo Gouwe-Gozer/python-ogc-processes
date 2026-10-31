@@ -1,334 +1,153 @@
 # Validation and standards
 
 The normative reference is [OGC API – Processes Part 1: Core 1.0.0][processes-core]
-(18-062r2), including [Annex A][abstract-tests]. Use the official
-[schemas][official-schemas] to validate documents; the official
-[ProcessDescription.json][process-example] and [Execute.json][execute-example]
-illustrate representations and are not schemas. The unchanged
-[offline snapshot](../tests/schemas/ogc-processes-1.0/README.md) supports deterministic tests.
+(18-062r2), including [Annex A][abstract-tests]. Use the official [schemas][official-schemas]
+for validation. [ProcessDescription.json][process-example] and [Execute.json][execute-example]
+illustrate representations; they are not schemas. Tests use an unchanged,
+checksummed [offline snapshot](../tests/schemas/ogc-processes-1.0/README.md).
 
 ## Conformance claims and gaps
 
-`/conformance` advertises Processes Core, JSON, OpenAPI 3.0 and OGC Process
-Description and Job List in the durable deployment, plus inherited Common and
-read-only Features classes. It omits Callback and Dismiss. The synchronous opt-out
-does not advertise Job List. The [Core audit](core-conformance-audit.md) reviews
-Requirements 1–46 for the earlier synchronous profile. The default combined
-deployment now also has durable async HTTP, PostgreSQL and container lifecycle
-coverage; see [execution and limits](asynchronous-execution.md).
+The default durable deployment advertises Processes Core, JSON, OpenAPI 3.0,
+OGC Process Description and Job List, plus inherited Common/read-only Features
+classes. It implements sync execution, durable async submission/status/results
+and filtered/paginated job listing. Synchronous calls deliberately create no
+retained job (Permission 7). Callback and Dismiss are not advertised.
 
-Callback filtering is local to the API instance and follows its manager's native
-`supports_subscribing` capability, not `is_async`. Tests cover independent API
-instances and both capability values with sync/async managers in JSON and HTML.
-Manager construction leaves the upstream conformance list unchanged; the public
-manager's Callback claim remains absent.
+Conformance corrections are scoped to the API instance: Callback follows the
+manager's `supports_subscribing`, independently of `is_async`; Job List follows
+`supports_job_list`. Manager construction does not change upstream global claims.
+Read-only GeoJSON sample providers omit unsupported CRUD/CQL2 claims and query
+POSTs. CQL requests fail clearly instead of returning unfiltered data; native
+bbox, paging and individual-feature reads remain available.
 
-The pre-stabilization declarations are captured in the dated CITE proposal's
-[`discovery.json`](../validation/cite-teamengine/current/discovery.json).
-The Processes suite does not validate inherited Features/CQL2 classes.
-The service now excludes the unsupported Features `create-replace-delete` claim
-when no feature provider is editable. It also excludes Basic CQL2/CQL2 text when
-all configured providers are read-only GeoJSON: that provider ignores CQL filters.
-Such queries now return 400, and the generated OpenAPI omits their query POSTs.
-Native bbox, paging and feature-ID reads remain available. The historical CITE
-snapshot is unchanged; use the live `/conformance` for current declarations.
+The explicit synchronous opt-out retains no jobs or Job List claim. pygeoapi
+still registers its native `/jobs` route, returning an empty list, although that
+route is outside the synchronous OpenAPI contract. `respond-async` is ignored
+without an applied preference or job Location. Unknown job resources return the
+standard `no-such-job` exception; durable pending results use `result-not-ready`.
 
-The confirmed gaps are corrected: raster/scalar references use shared bounded
-HTTPS resolution, job errors expose the prescribed URI in JSON/HTML, existing
-job routes are described, and discovery has required relations and usable paging.
-Synchronous executions remain unretained. The default durable manager persists
-async requests, states and formatted results in PostgreSQL, executes them in a
-separate worker, and has restart/interruption tests. The explicit synchronous
-opt-out retains the earlier no-jobs behavior. Historical snapshots remain
-separate from the new combined-deployment evidence.
-Qualified GeoJSON object inputs are covered by the current audit. Reassess
-conditional requirements when adding new input types, repeated occurrences,
-multiple outputs or additional execution capabilities.
+Passing regressions or matching reviewed diagnostics is **not certification**.
+Current external evidence has these limits:
 
-The audit and regressions establish the recorded behavior, not a certificate.
-The [combined CITE observation](../validation/cite-teamengine/combined/README.md)
-records the earlier **45 passed / 4 failed / 5 skipped**. The subsequent
-[expanded echo observation](../validation/cite-teamengine/README.md#expanded-echo-coverage-2026-10-31)
-records **49 passed / 5 failed / 0 skipped**, including a newly exposed suite
-polling-counter limitation. All five former skips pass; historical snapshots and
-the published binary-schema overlap below remain unchanged.
-The subsequent Job List implementation passes both CITE Job List methods:
-**52 passed / 2 failed / 0 skipped** in run `raster-cite-71c76ab441cd`. The two
-remaining failures are the multipart JSON MIME-content checks described in the
-CITE notes. The previously timing-sensitive async raw-value method passed this
-run; this change does not claim to fix its polling behavior.
-Geonovum's missing-list finding is resolved. One new, independently reproduced
-checker limitation remains: 1.3.2 expects `maxDuration` to use `explode: true`,
-whereas Requirement 74 explicitly specifies `false`. The separate
-[`job-list-baseline.json`](../validation/geonovum/job-list-baseline.json) records
-that exact finding; the earlier combined and synchronous baselines are unchanged.
-See [the evidence and comparison](../validation/geonovum/README.md).
-Neither result establishes full conformance or certification.
+| Assessment | Recorded observation | Interpretation |
+| --- | --- | --- |
+| Geonovum 1.3.2 | One reviewed diagnostic in the default Job List deployment | `maxDuration` serialization check conflicts with Requirement 74; see [evidence and baseline](../validation/geonovum/README.md). |
+| CITE Processes ETS 1.3 / TEAM Engine 6.0.0-RC2 | 52 passed / 2 failed / 0 skipped, 2026-10-31 | Both remaining methods stop at JSON MIME-content checks; raw failures and response evidence remain [public](../validation/cite-teamengine/current/README.md). |
 
-The application `/results/<id>/output.tif` route is an output-reference target,
-not `/jobs/{jobID}/results`. A future reusable-upload endpoint would also be an
-extension, not evidence of Core conformance.
-
-### Inherited job routes in the synchronous profile
-
-pygeoapi 0.24.0 registers `GET /jobs` independently of manager capabilities.
-Its dummy manager (the base of our synchronous manager) returns an empty list,
-so the route returns HTTP 200 with `jobs: []` before and after execution.
-Upstream generates its OpenAPI entry only for an asynchronous manager. We retain
-that behavior and keep `/jobs` outside the advertised synchronous contract;
-Job List is an optional class, not claimed merely because this route responds.
-This is inherited discoverability behavior, not evidence of retained or async jobs.
-
-Unknown job status/results and `DELETE /jobs/{jobID}` return 404 with the
-`no-such-job` type. Dismiss is not advertised either. Regression tests cover the
-empty list, absent optional claims, sync preferences and these JSON/HTML errors.
-We do not add successful job operations, fake records or new conformance claims
-to reconcile the optional checker expectations. Client integrations should use
-`jobControlOptions` and `/conformance` when determining job support.
+These are dated observations tied to recorded versions/source state, not promised
+test counts for every revision. The CITE snapshot records a dirty development
+tree. Its async raw-value polling test passed that run, but a timing-sensitive
+suite failure has also occurred. Keep failures visible and inspect new reports
+method by method. Do not rewrite a baseline to obtain a green check.
 
 ## Repeatable commands
 
-Install user-managed uv, Python 3.12, GNU Make and Docker Compose v2, then run
-`uv sync --locked --all-groups`. External tool versions are pinned; network
-access is needed for registry/schema downloads. No host Node, Java or Maven
-installation is needed by the standard commands.
+Use Python 3.12, user-installed uv, GNU Make and Docker Compose 2.24+;
+run `uv sync --locked --all-groups` first. Registry/package/schema access is
+needed for uncached external tools; no host Node, Java or Maven is required.
 
-| Command | What it checks | API/report scope |
-| --- | --- | --- |
-| `make test` | Ruff, Bandit, pytest with coverage and configuration/OpenAPI validation | Our code and integration; XML reports in `runtime-data/validation/` |
-| `make validate-geonovum` | Geonovum 1.3.2 static Processes 1.0.0 analysis, exact reviewed-baseline comparison | Isolated combined stack and async smoke checks; reports in `runtime-data/geonovum/`. Explicit `GEONOVUM_INPUT` targets a running API. |
-| `make validate` | Both commands above; excludes CITE | Starts its own isolated combined validation stack |
-| `make validate-cite` | Official Processes ETS 1.3 with TEAM Engine 6.0.0-RC2 | Builds the default API/PostgreSQL/worker stack, verifies async execution; native reports, summaries and metadata in `runtime-data/cite/` |
+| Command | Checks and scope |
+| --- | --- |
+| `make test` | Ruff, Bandit, pytest/coverage and configuration/OpenAPI checks; reports under `runtime-data/validation/`. PostgreSQL/container tests are opt-in as described in [async verification](asynchronous-execution.md#scope-and-verification). |
+| `make validate-geonovum` | Isolated API/PostgreSQL/worker stack, sync/async raster smokes and exact reviewed-baseline comparison; reports under `runtime-data/geonovum/`. Explicit `GEONOVUM_INPUT` targets an existing API. |
+| `make validate` | `make test` plus Geonovum; excludes CITE. |
+| `make validate-cite` | Official pinned executable suite against an isolated combined stack with validation-only echo; reports under `runtime-data/cite/`. |
 
-Geonovum's one-finding Job List report can match its explicitly reviewed baseline
-and return success; that means no diagnostic regression, not full compliance.
-CITE remains strict: its two remaining recorded failures produce a failed command. Infrastructure errors
-are identified separately and never recorded as passing tests. Make itself wraps
-unsuccessful commands in a nonzero status; the Python runners distinguish
-conformance/baseline failure (1) from infrastructure failure (2).
+The isolated runners remove only their own containers, networks, volumes and
+application image tags; existing deployments are untouched. Geonovum returns
+success for an exact reviewed-baseline match, not a clean compliance report.
+CITE remains strict: recorded failures make the command fail. Python runners
+distinguish findings (1) from infrastructure errors (2); Make wraps failures in
+its own nonzero status. Neither workflow updates baselines automatically.
 
-Pull requests run the routine, release/runtime and Geonovum checks. CITE is an
-explicitly triggered separate CI workflow and can also run locally without GitHub.
-CI preserves reports even after failures. Neither runner automatically updates
-reviewed baselines; inspect the actual tests, requirements and applicability
-before proposing explicit tracked evidence changes.
+PR checks cover routine tests, release/runtime checks and Geonovum. CITE is a
+separate manually triggered CI workflow; reports are uploaded even on failure.
+For detailed tool options and review policy, use the [Geonovum](../validation/geonovum/README.md)
+and [CITE](../validation/cite-teamengine/README.md) READMEs.
 
-For CITE's official human-readable report, open
-`runtime-data/cite/raster-cite-<unique-id>/reports/testng/<run-id>/result/index.html`.
-The run's `official-report.zip` packages the unchanged HTML/assets for sharing,
-preserving their relative paths; TEAM Engine's original ZIP is also retained.
-Our run summaries link to the report and shareable ZIP; the checked-in `current/`
-directory remains a historical synchronous snapshot; `combined/` records the
-new default deployment.
-
-[CITE instructions](../validation/cite-teamengine/README.md) cover CLI/REST,
-manual browser fallback and cleanup. The [fresh baseline proposal](../validation/cite-teamengine/current/README.md)
-classifies every failure and skip. The unchanged predecessor baseline is
-historical. [Geonovum notes](../validation/geonovum/README.md) document the version,
-locked runtime, diagnostic fields and review policy.
+Fresh CITE runs include native XML/EARL, summaries, metadata/configuration/logs,
+and TEAM Engine's official HTML report at
+`runtime-data/cite/raster-cite-<id>/reports/testng/<run-id>/result/index.html`.
+Share `official-report.zip` to retain all relative assets. Generated run directories
+are ignored; they are not files a fresh clone is expected to contain. The
+[checked-in snapshot](../validation/cite-teamengine/current/README.md) preserves
+the latest reviewed observation and limitations, not a mandatory score.
 
 ## OGC review guide
 
-| Review area | Standard pointer | Evidence or limitation |
+| Area | Normative pointer | Public implementation/evidence |
 | --- | --- | --- |
-| Discovery and claims | Sections 7.4, 7.9–7.10 | HTTP and official-schema tests; scoped Core audit above |
-| Operation descriptions | Section 8, Requirements 49–51 | [Value/wire distinction](inputs.md#ogc-scope-and-deployment), independent contracts and `test_ogc_schemas.py` |
-| Input delivery/validation | Section 7.11.2, Requirements 18, 20, 22, 24 | [Input policy](inputs.md), raster/scalar/JSON references, qualified GeoJSON objects and inline tests |
-| Execution preferences/defaults | Section 7.11.2, Requirements 25–27 | Synchronous/async info and warp, acceptance/status/results, typed errors and restart tests |
-| Synchronous results | Section 7.11.4, Requirements 28, 30, 32 | [Four file-result response modes](results.md#http-contract), TIFF/GeoJSON documents and independent downloads |
-| Multiple raw outputs | Section 7.11.4, Requirements 29, 31 | Multipart delivery not implemented |
-| Job resources | Sections 7.12–7.13; Permission 7 | Durable async status/results; pending/unknown/failure responses; no retained synchronous jobs |
-| Job List | Section 11, Requirements 64–79 | PostgreSQL filters/pagination, official schema, mandatory processID, links and restart tests |
-| OpenAPI/exceptions | Section 10; Requirement 15 for unknown processes | [Catalogue](errors.md), generated definition and actual JSON exception/schema tests |
-| Conformance assessment | Annex A | Partial evidence; no current-service certification |
+| Landing, conformance and API definition | Sections 7.4–7.8 | Native discovery plus scoped corrections; HTTP/official-schema and OpenAPI tests |
+| Process discovery and descriptions | Sections 7.9–7.10; Requirements 49–51 | Explicit process contracts; [value/wire distinction](inputs.md#ogc-scope-and-deployment) |
+| Input delivery and validation | Requirements 18, 20, 22, 24 | Shared bounded HTTPS resolution, inline base64/qualified objects and actual raster decoding |
+| Execution preferences and defaults | Requirements 25–27, 34 | Sync default, async 201/Location, acceptance/status tests and explicit sync opt-out |
+| Output delivery | Requirements 28–32 | [Native, document and reference forms](results.md#http-contract); production processes have one output each |
+| Job resources and errors | Requirements 35–46; Permission 7 | Durable status/results, not-ready/unknown/failed jobs, restart/interruption tests; no retained sync jobs |
+| Job List | Section 11, Requirements 64–79 | Bound SQL filters, pagination, processID, official schema and restart coverage |
+| Exceptions and OpenAPI | Requirement 15; Section 10 | [Catalogue](errors.md), generated definition and actual error/schema tests |
 
-For contract changes, review the relevant clauses and official examples, then
-keep process descriptions, request validation, generated OpenAPI and executable
-examples consistent. Check pixels, CRS, transforms, nodata and allocation limits
-as well as HTTP statuses, headers and representations. Test reference acquisition
-and delivery independently, including policy failures, cleanup and expiry.
-Follow [adding a process](adding-a-process.md) and run the
-[development checks](development.md). Review checker changes before updating a
-baseline; preserve known schema limitations rather than modifying official fixtures.
+Reassess conditional requirements when adding repeated inputs, new types, multiple
+outputs or execution capabilities. The validation echo offers arrays, bbox,
+mixed types and multipart output specifically to exercise shared infrastructure;
+the five production processes need not expose those process-specific capabilities.
+No automatic multipart formatter is supplied for arbitrary custom processes.
+
+Keep metadata, runtime validation, generated OpenAPI and executable examples
+consistent. Check pixels/CRS/transforms/nodata and allocation limits for raster
+changes, as well as HTTP status, headers and representations. Test reference
+acquisition and result delivery independently. Use [adding a process](adding-a-process.md)
+and the [development checks](development.md).
 
 ## Published binary-schema limitation
 
-The unchanged `inputValueNoObject.yaml` uses `oneOf` with an unrestricted string
-and a byte-formatted string. Valid base64 matches both, so strict validation
-rejects inline binary values even with a base64 format checker. Tests record the
-overlap for requests/results. The official examples use base64 with `encoding`
-and `mediaType`, as our qualified inline representation does.
+The unchanged official `inputValueNoObject.yaml` uses `oneOf` with an unrestricted
+string and a byte-formatted string. Base64 matches both, so strict validation can
+reject valid inline binary values. The official examples use the base64/encoding/
+mediaType representation implemented here. Tests retain this overlap explicitly.
 
-Discovery, reference requests, exceptions and reference result documents are
-validated against the official snapshot. Inline binary requests/responses use
-application schemas plus actual GeoTIFF decoding. No official schema fixture is
-modified to hide the overlap; these checks do not establish complete conformance.
+Discovery, reference requests/results and exceptions validate against the official
+snapshot. Inline binary documents additionally use application schemas and actual
+TIFF decoding. Official fixtures are not modified to hide overlap; these checks
+do not establish complete conformance. The current two CITE failures concern a
+different, multipart JSON-decoding check; see the [CITE assessment](../validation/cite-teamengine/current/README.md).
 
 ## Test and checker coverage
 
-- Adapter tests inspect actual Rasterio pixels, metadata, masked statistics,
-  dimensions, transforms, nodata and bounds, including all offered warp choices.
-- HTTP/schema tests cover discovery, defaults, four warp modes, typed/sanitized
-  errors, unsupported requests and downloads. Input tests use local TLS to check
-  verified/pinned connections, redirects, limits, deadlines and cleanup.
-- Storage tests cover quota, expiry, locking, atomic delivery and safe paths.
-  Startup tests cover effective settings and preserve existing result data.
-- The local-file client has an end-to-end HTTP test plus checks for preserved
-  destinations and discarded failed downloads. These tests do not validate the
-  external browser client; track it in [the interoperability log](client-interoperability.md).
-- Release smoke checks run processing through Gunicorn, download/open results
-  from independent clients, inspect isolation and verify restart persistence.
-- [Geonovum](../validation/geonovum/README.md) evaluates the actual combined
-  deployment and matches one reviewed `maxDuration` serialization-check limitation.
-  The earlier one-finding combined and eight-finding synchronous baselines remain available explicitly.
-- [CITE/TEAM Engine](../validation/cite-teamengine/README.md) runs the default
-  durable manager and worker, exercising its echo through both execution modes.
-  The runner requests all-process testing, but the pinned suite's description
-  class does not apply that setting and checks only the echo. Our HTTP/schema
-  tests cover raster descriptions; actual raster smokes run separately. See the
-  [expanded echo observation](../validation/cite-teamengine/README.md#expanded-echo-coverage-2026-10-31)
-  and the Job List observation above for dated verdicts and checker limitations. The earlier
-  [combined observation](../validation/cite-teamengine/combined/README.md) is historical.
+- Raster/HTTP tests check all five contracts, basic output correctness, metadata,
+  four file-delivery modes, errors and independent downloads.
+- Local HTTP/TLS origins exercise HTTPS pinning, redirects, deadlines, limits and
+  cleanup without mutable public raster downloads. Official schemas are offline.
+- Storage/startup tests cover quotas, expiry, safe paths, locking, atomic publication
+  and configuration errors. Container tests cover real workers, persistence,
+  interruption/restarts and the independent custom-process installation.
+- CITE uses the validation echo through the actual durable manager/worker. Despite
+  the runner's all-process setting, the pinned suite's description class leaves
+  `testAllProcesses=false`; description checks therefore inspect echo. Separate
+  raster tests/smokes supply the production evidence. Echo has no binary input or
+  reference output, so passing names do not prove those transports were tested.
+- The local-file example has HTTP coverage; it does not verify external browser
+  client controls or map rendering.
 
-## Recorded checks
+## Client interoperability
 
-- Job List, **2026-10-31**: `make test` and `make validate` pass with the disposable
-  PostgreSQL tests enabled: **683 passed / 11 optional Docker tests skipped**,
-  **91.51% coverage**. Separately, the release API/database restart regression
-  passes for accepted/completed listings and retained results. Both CITE Job List
-  methods pass; the full run reports **52 passed / 2 failed / 0 skipped**, with
-  the known multipart JSON-content failures retained. Geonovum matches the new
-  one-finding `maxDuration` checker-limitation baseline; historical baselines are
-  unchanged. Evidence: `runtime-data/cite/raster-cite-71c76ab441cd/` and
-  `runtime-data/geonovum/raster-geonovum-ea52849a49ea/`. No existing deployment was
-  restarted.
+Service schema validation and useful client controls are separate concerns.
+Earlier testing observed a binary GeoTIFF input rendered as plain text, without
+file/URL controls, and map drawing interfering with pasted GeoJSON. The client
+name/build and exact exchanges were not captured; these are unverified client
+interoperability/UX observations, not established OGC compliance violations.
 
-- Default combined deployment, **2026-10-31**: `make test` passes with **569 passed /
-  22 optional tests skipped**, **82.54% coverage**, plus passing quality and
-  configuration/OpenAPI checks. Separately, **12 PostgreSQL/HTTP tests**, **10
-  release lifecycle tests** and **1 synchronous opt-out container test** pass.
-  Fresh development Compose startup also passes discovery, synchronous execution,
-  async information/warp and independent GeoTIFF download checks. Default
-  Geonovum now matches **one optional Job List finding** (seven removed, none
-  added), recorded in a separate reviewed combined baseline. CITE reports
-  **45 passed / 4 failed / 5 skipped**: two published binary-schema failures and
-  two optional Job List failures remain visible. Historical synchronous evidence
-  is unchanged. Disposable test projects are removed; the existing running API
-  is untouched. Evidence: `runtime-data/validation/default/`, the
-  [combined CITE snapshot](../validation/cite-teamengine/combined/README.md) and
-  [Geonovum baseline notes](../validation/geonovum/README.md).
+The service advertises binary values using the official Process Description
+conventions and accepts HTTPS/inline base64. Sampling now accepts Point,
+MultiPoint and point FeatureCollections. The earlier demo/`anyOf` alternative
+and FeatureCollection-only sampling restriction are removed and have regressions.
 
-- Durable async slice, **2026-10-30**: **12 PostgreSQL/HTTP tests** and **10 release-container
-  lifecycle tests** pass; a fresh final image also passes the four targeted
-  restart/worker smoke checks. All five processors execute through the worker.
-  `make test`: **568 passed / 21 skipped**, **82.68% coverage**;
-  database/container suites are opt-in and were run separately. Quality and
-  both configuration/OpenAPI checks pass. Synchronous Geonovum remains at eight
-  reviewed findings; CITE remains **36 passed / 5 failed / 13 skipped**, with every
-  case status unchanged. Baselines were not updated and this is not async
-  certification. The obsolete external-validator test has been removed; the
-  normal test command runs without exclusions. Evidence: `runtime-data/validation/async/`.
-
-These are dated observations, not permanently current test counts or guarantees:
-
-- pygeoapi boundary cleanup, **2026-10-25**: **562 tests passed**; final
-  `make validate` coverage **95.97%** (`make test`: **96.07%**, with the existing
-  HTTPS deadline-timer branch varying by timing). Both commands pass. Geonovum
-  still matches eight reviewed findings; CITE remains **36 passed / 5 failed /
-  13 skipped**, with every case status unchanged. Its discovery, conformance and
-  OpenAPI capture exactly matches the pre-refactor run. Release smoke checks
-  cover all five operations and result downloads. New regressions verify native
-  subscriber-capability handling, global-state/API-instance isolation and
-  preserved typed exception contracts; reviewed baselines are unchanged.
-
-- Independent execution review, **2026-10-25**: **548 tests passed**, **96.07%
-  coverage**. `make validate` (including `make test`) passes; Geonovum matches
-  all eight reviewed findings. CITE remains **36 passed / 5 failed / 13 skipped**,
-  with identical individual case statuses and no baseline changes. Local TLS
-  regressions reuse generated TIFF references and reject private DNS for the
-  service's own hostname. Fresh-process checks verify canonical HTTPS result
-  links with proxy and native route prefixes. The release passes all five
-  sample-raster operations and downloadable results. Public HTTPS, proxy routing
-  and worker capacity still require deployment-specific verification.
-
-- Demo stabilization, **2026-10-25**: **536 tests passed**, **95.85% coverage**
-  (integrated validation checkpoint: 528 tests). `make test` and `make validate`
-  pass; Geonovum still matches the eight reviewed findings. CITE remains strict
-  and reports the same **36 passes, 5 failures and 13 skips**, with identical
-  individual case statuses. Reviewed baselines are unchanged. The release
-  passes all five operation smoke checks with the packaged AHN4 raster,
-  TIFF/GeoJSON downloads, README commands and the point-sampling example.
-  Saved downloads survive a normal release stop/start. Swagger and ReDoc render
-  the live catalogue without JavaScript errors or empty Swagger tag sections.
-  Read-only sample discovery no longer claims CRUD/CQL2; all 26 OpenAPI paths
-  remain, with only the two unsupported CQL query POSTs removed.
-
-- Async readiness/OpenAPI review, **2026-10-25**: **519 tests passed**,
-  **95.72% coverage**. Swagger renders the retained operation groups without
-  unused generic tags in headless Chromium; all 26 OpenAPI paths and their
-  operation groupings match the pre-change definition. Quality/pre-commit,
-  public/integration configuration/OpenAPI and release smoke/isolation checks
-  pass. The reviewed eight-finding checker baseline is unchanged. PostgreSQL
-  execution was reviewed in source, not implemented or integration-tested;
-  see [the readiness review](async-readiness.md).
-
-- Public samples, **2026-10-25**: **517 tests passed**, **95.71% coverage**.
-  Native Features collection/item/paging responses validate against the official
-  offline schemas. The raster download matches the supplied file's checksum;
-  points sample valid pixels and the polygon contains the points inside the
-  raster footprint. Quality/pre-commit, configuration/OpenAPI and release
-  isolation checks pass. The packaged release serves all three datasets and
-  accepts its point Features response directly for sampling. The reviewed
-  eight-finding Processes checker baseline is unchanged.
-
-- Landing and API documentation, **2026-10-25**: **509 tests passed**, **95.49% coverage**.
-  ReDoc renders the live API catalogue in headless Chromium using pinned 2.5.3;
-  the moving `latest` bundle reproduces a classic-script syntax error. ReDoc
-  and Swagger HTML requests emit no false locale warnings, including on a cold
-  template cache. JSON-LD landing requests selected by query or Accept preserve
-  upstream response bytes and expose HTTP links without a server exception.
-  Quality, configuration/OpenAPI, release execution and
-  isolation checks pass. External CDN access remains required for the renderer.
-
-- Raster operations, **2026-10-24**: **493 tests passed**, **95.39% coverage**.
-  Sampling, classification and polygonization cover HTTPS/inline inputs, band
-  selection, CRS handling, Point/MultiPoint/FeatureCollection sampling, all four
-  TIFF/GeoJSON delivery modes, downloads,
-  limits and errors. Quality/pre-commit, configuration/OpenAPI and release
-  isolation checks pass. Host and separate client-container smoke checks pass;
-  stored TIFF and GeoJSON downloads survive restart. The eight-finding Geonovum baseline
-  adds only one conditional async expectation per new process. External client
-  GeoJSON UI behavior remains untested.
-  Logging regressions retain upstream descriptions/translation and normal
-  diagnostics; release startup/discovery/execution logs contain neither the
-  false metadata locale warnings nor the unused AsyncAPI file warning.
-
-- Core audit, **2026-10-24**: **401 tests passed**, **95.40% coverage**, including
-  real TLS scalar/raster references and compatibility with the existing async
-  manager. Quality, configuration/OpenAPI and release checks pass. The checker
-  baseline's exact two-finding replacement was reviewed; see [the audit](core-conformance-audit.md).
-
-- Documentation audit, **2026-10-24**, code at `e8c5dc3`: **360 tests passed**,
-  **95.15% application coverage**, against the existing 70% floor. The upstream
-  Pydantic class-configuration deprecation warning remains.
-- Service usability checkpoint `8efb5d5`, **2026-10-24**: quality and
-  public/integration configuration/OpenAPI checks passed. The self-contained
-  release passed startup, local-file processing, independent multiband input,
-  all warp modes and isolation. Invalid result-count/host settings stopped the
-  entrypoint before Gunicorn. Node 24/npm 11.6.0 retained the Geonovum baseline.
-- Earlier user-input validation, **2026-10-24**: host and separate-container
-  clients processed an independent two-band UInt16 raster; a public HTTPS check
-  used GDAL's `byte.tif` without redistributing it. Issued results survived service
-  recreation/restart, and input workspaces were removed after handled requests.
-- A recorded 512 by 512 Float32 DEM check produced a 910,778-byte input and
-  910,911-byte output. Local HTTP info/warp took about 0.043/0.063 seconds; the
-  container memory peak rose from about 297 to 304 MiB under its 512 MiB limit.
-  Pixels matched independent reprojection within tolerance. These single-machine
-  observations were not rerun for this documentation audit and are not worst-case
-  bounds or throughput claims.
-
-Use the development commands and CI for fresh results. Older backend checkpoints
-are summarized in [history](history.md); their full records remain in Git history.
+For a repeatable client check, record client/service versions and exact exchanges
+using [public samples](sample-data.md) and [operation requests](raster-operations.md).
+Verify file/URL entry, qualified GeoJSON input, async polling, native outputs,
+document/reference results, HTTP 204/Link downloads, expiry and [error details](errors.md).
+GeoTIFF map rendering is a client capability; downloading/processing rasters does
+not require the API to provide WPS or a tile service.
 
 [processes-core]: https://docs.ogc.org/is/18-062r2/18-062r2.html
 [abstract-tests]: https://docs.ogc.org/is/18-062r2/18-062r2.html#_abstract_test_suite

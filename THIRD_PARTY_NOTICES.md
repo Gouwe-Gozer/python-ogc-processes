@@ -137,3 +137,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   integration; the resolved version is recorded in `uv.lock`.
 
 The installed distributions retain their respective copyright/licence files.
+
+## Packaged sample data
+
+The AHN4 sample GeoTIFF is published as AHN data under CC0 1.0, separately from
+the software licences above. Source links, its checksum and the remaining
+file-level provenance uncertainty are recorded in [sample data](docs/sample-data.md).

@@ -4,8 +4,6 @@ This repository implements Raster Processes API, a Rasterio/GDAL-backed OGC API 
 Processes service built on pygeoapi. Code, configuration and tests define current
 behavior. Use [development](docs/development.md), [architecture](docs/architecture.md)
 and [validation](docs/validation.md) for maintained guidance.
-Historical background is in [history](docs/history.md). `CODEX_HANDOVER.md`
-is only a historical pointer, not an active task plan.
 The Python package remains `geo_processes` (distribution `geo-processes`);
 the public project/repository name is `raster-processes`.
 
@@ -25,7 +23,7 @@ the public project/repository name is `raster-processes`.
 
 - Keep additions operation-specific: independent OGC processors/contracts and
   small Python/Rasterio adapters. See [adding a process](docs/adding-a-process.md).
-- Reuse input validation, staging, result storage and synchronous execution.
+- Reuse input validation, staging, result storage and shared sync/async execution.
   Shared infrastructure must preserve per-operation output IDs, formats and
   transmission modes; do not assume one JSON output or value-only delivery.
 - Do not add a generalized engine plugin system or asynchronous job infrastructure
@@ -62,11 +60,15 @@ part of the task; documented CITE failures must remain failures. See the
 [validation workflows](docs/validation.md#repeatable-commands).
 
 ## pygeoapi-first architecture
+
 Prefer pygeoapi's existing APIs, managers, execution lifecycle and extension points.
 Before changing shared infrastructure, inspect the relevant upstream interfaces
 and justify why existing functionality is insufficient. Keep custom behavior
 narrowly scoped and documented; avoid coupling processors to a particular manager.
 
-
 ## Rasterio/GDAL concurrency
-Processing operations must not share open Rasterio/GDAL dataset handles across concurrent executions unless explicitly synchronized or supported by a documented thread-safe mechanism. Prefer opening datasets within each execution using context managers. Keep temporary files and output paths isolated per job. Preserve explicit concurrency and resource limits when introducing asynchronous execution.
+
+Do not share open Rasterio/GDAL datasets across concurrent executions unless
+explicitly synchronized or supported by a documented thread-safe mechanism.
+Open datasets within each execution using context managers. Keep temporary files
+and output paths isolated per job, and preserve concurrency/resource limits.

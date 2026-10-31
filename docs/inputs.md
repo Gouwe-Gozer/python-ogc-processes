@@ -223,13 +223,14 @@ time is deducted afterward. The release's 30-second worker timeout is the outer
 limit. Increase operating limits only after measuring representative workloads.
 
 `GEO_INPUT_TMPDIR` defaults locally to `runtime-data/inputs`; both Compose
-configurations use `/tmp/geo-inputs`. Only release Compose bounds `/tmp` with a
-64 MiB tmpfs; development Compose does not set that mount or memory limit.
+configurations use `/tmp/geo-inputs`. Both development and release Compose bound each API/worker container
+with a 64 MiB `/tmp` tmpfs and the same resource limits. API and worker have
+separate input directories: the two-slot bound applies within each container.
 Two file locks protect private workspaces. Completion and handled failures remove
 inputs. A killed worker
 releases its lock, and the next use of that slot removes the abandoned input.
-Idle abandoned files remain until slot reuse or storage removal; release tmpfs
-is recreated on container restart. They are bounded by the two slots, separately
+Idle abandoned files remain until slot reuse or storage removal; each container
+gets a fresh tmpfs on restart. They are bounded by the two slots, separately
 from the persistent result volume and its expiry.
 
 Only the GTiff driver opens staged files. VRTs, archives, subdatasets and complex
@@ -265,10 +266,6 @@ application schemas and TIFF decoding because of the
 
 The [conformance gaps](validation.md#conformance-claims-and-gaps) remain explicit.
 File-picker/URL controls are client UX choices; service schema validation does
-not verify the external client's behavior. See [client interoperability](client-interoperability.md).
+not verify the external client's behavior. See [client interoperability](validation.md#client-interoperability).
 
-## Milestone validation
-
-Dated user-input checks and measured workload observations are consolidated in
-[recorded validation](validation.md#recorded-checks). Run the
-[development checks](development.md) for current evidence.
+Run the [development checks](development.md) for current evidence.

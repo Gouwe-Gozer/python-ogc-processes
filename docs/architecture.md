@@ -3,7 +3,7 @@
 pygeoapi supplies discovery, Flask routes, configuration and process registration.
 Each public processor validates its operation's inputs/output choices, calls a
 small Rasterio/GDAL adapter and owns its result representations. NumPy supplies
-masked statistics; [raster metadata](raster-info.md) is an application-owned contract.
+masked statistics; [raster metadata](raster-operations.md#raster-information--raster-info) is an application-owned contract.
 
 ## Module boundaries
 
@@ -47,7 +47,9 @@ adding more CRSs or algorithms requires validation and meaningful raster tests.
 
 `OgcSynchronousManager` delegates `format_result()` to each processor and accepts
 `ProcessResponse` for native bytes or explicit headers/status. It does not assume
-particular output identifiers or counts. Multipart output is not implemented. Durable jobs use the same
+particular output identifiers or counts. The five production processes each have
+one output; custom processors can supply multipart through their formatter, as
+the validation-only echo does. There is no automatic multipart builder. Durable jobs use the same
 execution/formatting method in a separate worker; see [async execution](asynchronous-execution.md). File results are atomically published under opaque IDs;
 [storage](results.md) supplies expiry and cross-worker locking.
 
@@ -128,7 +130,7 @@ for successful feature responses. Native Features schemas validate these routes.
 See [sample data](sample-data.md) for provenance, paths and processing examples.
 
 Give each new operation its own adapter, processor and contract, following the
-[contribution recipe](adding-a-process.md). Warp and the three new operations
+[contribution recipe](adding-a-process.md). The four file-producing operations
 reuse a file formatter with explicit output ID, media type and transmission.
 Storage accepts only the two implemented extensions. Each file processor declares
 `result_extension` so its download route appears in OpenAPI even without warp.
@@ -143,6 +145,4 @@ job lifecycle. GeoJSON uses Rasterio/GDAL and the standard library; no vector
 processing library or driver plugin is introduced by these operations.
 
 `scripts/process_raster.py` is a user-facing example client. Smoke scripts cover
-all supported representations for developer checks. Historical implementation
-and naming decisions are summarized in [history](history.md), separate from
-these maintained module boundaries.
+all supported representations for developer checks. Keep dated investigations separate from maintained module boundaries.

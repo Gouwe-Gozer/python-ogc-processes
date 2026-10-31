@@ -3,6 +3,7 @@ server:
     host: 0.0.0.0
     port: 8080
   url: http://api:8080
+  logo: http://api:8080/assets/GouweGozerLogo.svg
   mimetype: application/json; charset=UTF-8
   encoding: utf-8
   gzip: false
@@ -18,8 +19,8 @@ server:
     attribution: '&copy; OpenStreetMap contributors'
   ogc_schemas_location: /schemas.opengis.net
   manager:
-    name: geo_processes.manager.OgcSynchronousManager
-    connection: unused
+    name: geo_processes.async_manager.DurableProcessManager
+    connection: postgresql://geo:c15de02e7352443dae687f3e075838f5@db:5432/geo
     output_dir: /tmp
 logging:
   level: INFO
@@ -30,13 +31,15 @@ metadata:
       \ by pygeoapi and rasterio/GDAL.\nDesigned around OGC API \u2013 Processes Part\
       \ 1: Core, it exposes operations through standardized, discoverable endpoints,\
       \ enabling clients to submit spatial data and retrieve processing results. The\
-      \ project currently supports synchronous execution, with asynchronous job management\
-      \ planned.\nRasterio/GDAL powers five bounded raster operations: information,\
-      \ reprojection, point sampling, reclassification and polygonization. Submit\
-      \ GeoTIFFs through controlled public HTTPS references or inline base64. Results\
-      \ are JSON, GeoTIFF or GeoJSON, delivered by value or, where supported, through\
-      \ expiring download references.\nIntended alignment with the [OGC standard](https://docs.ogc.org/is/18-062r2/18-062r2.html)\
-      \ and passing regression tests do not establish formal OGC certification."
+      \ default deployment supports synchronous execution and durable asynchronous\
+      \ jobs using PostgreSQL and a separate worker. A lightweight synchronous-only\
+      \ deployment is available explicitly.\nRasterio/GDAL powers five bounded raster\
+      \ operations: information, reprojection, point sampling, reclassification and\
+      \ polygonization. Submit GeoTIFFs through controlled public HTTPS references\
+      \ or inline base64. Results are JSON, GeoTIFF or GeoJSON, delivered by value\
+      \ or, where supported, through expiring download references.\nIntended alignment\
+      \ with the [OGC standard](https://docs.ogc.org/is/18-062r2/18-062r2.html) and\
+      \ passing regression tests do not establish formal OGC certification."
     keywords:
     - Rasterio
     - raster

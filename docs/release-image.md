@@ -52,7 +52,9 @@ and health-check configuration.
 Set `PYGEOAPI_SERVER_URL=https://raster.example.org/geo` before starting the API
 when that is the client-facing base. This explicit configuration controls
 discovery and result links; incoming `Host` and `X-Forwarded-*` headers do not
-replace it. Regenerate/restart the service after changing the URL.
+replace it. Recreate both API and worker after environment changes:
+`docker compose --file compose.release.yml up --detach`. Plain `restart` retains
+the existing environment; the API entrypoint regenerates OpenAPI on startup.
 
 The proxy can terminate trusted public TLS on port 443 and forward to internal
 HTTP port 8080 (or the host's published port). With `/geo` only in `server.url`,
@@ -71,7 +73,7 @@ trusted-proxy middleware or production hostname is provisioned by this image.
 
 ## Isolation and storage
 
-Release Compose sets:
+Both development and release Compose give each API/worker container:
 
 - UID/GID `10001:10001`, read-only root, dropped capabilities and `no-new-privileges`;
 - a 64 MiB `/tmp` tmpfs with `noexec,nosuid`, including private input workspaces;
@@ -80,19 +82,23 @@ Release Compose sets:
 
 The image initializes result-directory ownership before dropping privileges.
 No source/configuration bind mounts or runtime root initialization are required.
-These Compose restrictions do not apply automatically to the development stack
-or to an image launched with other options.
+Development inherits the same restrictions from `compose.base.yml` and adds
+read-only source/configuration mounts. A bare `docker run` needs equivalent
+explicit settings. PostgreSQL has its own `jobs-db` volume and memory limit.
 
 The [input policy](inputs.md) covers HTTPS restrictions, decoding and cleanup.
 The [result guide](results.md) owns retention, capacity, locking and maintenance
-settings. Result links are accessible to anyone who knows them until expiry.
+settings. There is no built-in authorization: job metadata is discoverable
+through `/jobs`, and job/file results are accessible until expiry. See the
+[security boundary](../SECURITY.md#jobs-and-deployment).
 
-A normal `docker compose --file compose.release.yml down` retains the result
-volume; adding `--volumes` deletes it. Keep the same Compose project name when
+A normal `docker compose --file compose.release.yml down` retains **both result
+and job-database volumes**. Adding `--volumes` deletes both; reserve it for an
+intentional reset of disposable data. Keep the same Compose project name when
 renaming a checkout or upgrading an existing installation, so Docker reuses the
 same volume. The current project is `raster-processes`, with result volume
 `raster-processes_results`. See [local reset instructions](development.md#container-and-integration-checks)
-when those disposable results should be discarded deliberately.
+when disposable job and result data should be discarded deliberately.
 
 Authentication, TLS termination, hosting, monitoring and access/egress policy
 remain deployment responsibilities; this repository supplies a bounded service

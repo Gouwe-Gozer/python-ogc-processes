@@ -54,8 +54,13 @@ they are not extra pygeoapi base classes:
 The example uses these hooks for one JSON output delivered by value. Return JSON
 values rather than pre-encoding them; shared HTTP handling preserves JSON/HTML
 safety. Native text/bytes and file delivery use the existing response helpers.
-All output values must be representable by the durable result serializer
-(JSON values, text or bytes; not live datasets, generators or custom objects).
+All output values must be representable by the durable result serializer.
+JSON uses pygeoapi's existing conversions, including date/time to strings,
+Decimal to numbers and NumPy integers to integers. Return finite JSON values;
+async persistence rejects NaN/Infinity. Native text/bytes preserve their media
+type and body. Live datasets, generators and arbitrary custom objects are not
+supported. Test actual HTTP results instead of assuming Python type identity
+survives JSON conversion.
 
 Set initial `jobControlOptions` to `sync-execute`. pygeoapi adds `async-execute`
 when the configured manager supports it. No processor-specific async method,
@@ -103,6 +108,7 @@ Use identical code, dependencies, configuration and required data in **both API
 and worker**. Rebuild/recreate both after image changes; restart both after
 bind-mounted code/configuration changes. The worker reads configuration at startup
 and spawns fresh children. Installing a module only in the API is insufficient.
+For a portable release, follow the example's [packaged deployment](../examples/custom-process/README.md#package-for-deployment).
 The example Compose override shares one image and config; normal source mounts
 cover only `geo_processes`, so an external development package needs an explicit
 mount in both services. Deploy trusted code; there are no runtime code uploads.
@@ -122,6 +128,12 @@ actual discovery, sync and async curl requests. Confirm:
   entrypoint regenerates OpenAPI on startup; a standalone host generator also
   needs your package on its Python import path.
 
+Use [test_custom_process.py](../tests/test_custom_process.py) as a small function,
+processor, error and contract test template. The `custom_process` HTTP tests in
+[test_async_containers.py](../tests/test_async_containers.py) verify the installed
+image/configuration through the real worker. Adapt these focused tests; do not
+copy worker internals or add a parallel test framework.
+
 Run `make test` plus the example's focused/container commands. The example's Python
 code is included in normal Ruff/Bandit checks; container tests are explicitly
 opt-in and reuse the existing lifecycle fixture. For your own operation, add small
@@ -134,7 +146,7 @@ Review [OGC guidance](validation.md#ogc-review-guide), the
 [ProcessDescription.json](https://schemas.opengis.net/ogcapi/processes/part1/1.0/examples/json/ProcessDescription.json)
 and [Execute.json](https://schemas.opengis.net/ogcapi/processes/part1/1.0/examples/json/Execute.json),
 and pygeoapi's [custom-process guidance](https://docs.pygeoapi.io/en/stable/plugins.html).
-Keep current guidance here and in operation docs; `CODEX_HANDOVER.md` is historical.
+Keep current guidance here and in operation docs.
 Adding a process does not establish OGC certification or change conformance baselines.
 
 ## Raster and file processes
