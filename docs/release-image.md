@@ -86,6 +86,33 @@ async workers need application work. Each async job gets a fresh child, includin
 initialization overhead; persistent model reuse and GPU execution are not
 demonstrated. Keep the existing security controls when assessing a new workload.
 
+## Service identity
+
+Python OGC Processes is the application/repository name. The default deployed API
+title is **Python Processing Service**. `metadata.identification.title` and
+`description` in `config/pygeoapi.yml` use pygeoapi's native YAML environment
+substitution with optional `PYGEOAPI_TITLE` / `PYGEOAPI_DESCRIPTION` overrides.
+When unset, the description is:
+
+> An extensible, standards-oriented OGC API – Processes application for integrating and executing custom Python workflows, built on pygeoapi.
+
+Compose forwards these optional variables to API and worker without duplicating
+defaults. Keep these placeholders as plain YAML scalars: pygeoapi does not expand
+quoted or block-string placeholders. When copying a config with Python, use
+`yaml.safe_dump(config, allow_unicode=True)` to preserve this form for the Unicode
+description. Set overrides in the host environment or `.env`, then recreate containers:
+
+```bash
+PYGEOAPI_TITLE='Municipal Processing Service' \
+PYGEOAPI_DESCRIPTION='Python workflows for municipal data.' \
+  docker compose --file compose.release.yml up --build --detach
+```
+
+The title/description appear in landing responses and generated OpenAPI. HTML
+templates retain their existing rendering/escaping behavior. Configuring metadata
+does not rename process IDs, change execution capabilities or establish OGC
+certification. As with other environment changes, plain `restart` keeps old values.
+
 ## Startup and public URL
 
 The owned entrypoint validates runtime settings and prints the effective public
@@ -154,8 +181,9 @@ A normal `docker compose --file compose.release.yml down` retains **both result
 and job-database volumes**. Adding `--volumes` deletes both; reserve it for an
 intentional reset of disposable data. Keep the same Compose project name when
 renaming a checkout or upgrading an existing installation, so Docker reuses the
-same volume. The current project is `raster-processes`, with result volume
-`raster-processes_results`. See [local reset instructions](development.md#container-and-integration-checks)
+same volumes. A new checkout named `python-ogc-processes` uses result volume
+`python-ogc-processes_results` and database volume `python-ogc-processes_jobs-db`.
+Older installations keep their existing names; see [migration](#repository-and-deployment-migration). See [local reset instructions](development.md#container-and-integration-checks)
 when disposable job and result data should be discarded deliberately.
 
 Authentication, TLS termination, hosting, monitoring and access/egress policy
@@ -174,3 +202,52 @@ not exposed on a host port.
 
 Apply `-f compose.sync.yml` after the release file to start the database-free,
 synchronous-only API. See [execution and deployment details](asynchronous-execution.md).
+
+## Repository and deployment migration
+
+The project/repository is now **Python OGC Processes** / `python-ogc-processes`,
+formerly Raster Processes API / `raster-processes`. The repository owner renames
+it on GitHub. After that change, update a local clone yourself:
+
+```bash
+git remote set-url origin https://github.com/Gouwe-Gozer/python-ogc-processes.git
+```
+
+This change does not update remotes or rename local directories automatically.
+GitHub redirects ordinary repository/Git URLs after a rename; do not reuse the
+old repository name while depending on those redirects. See [GitHub's migration guidance](https://docs.github.com/en/repositories/creating-and-managing-repositories/renaming-a-repository).
+
+| Identifier | Migration |
+| --- | --- |
+| Python distribution/imports | Keep `geo-processes` / `geo_processes`; no dependency/import migration. |
+| Release/development images | Rebuild as `python-ogc-processes:0.1.0` / `python-ogc-processes-dev:0.1.0`. Update external launchers or derived Dockerfiles using old tags. CI and the custom example use the new tags. |
+| Image licence notices | Stored at `/licenses/python-ogc-processes/`; update external tooling that reads the former image-internal directory. |
+| Compose project/volumes | Names still derive from the checkout directory. Renaming it changes the default project and therefore selects different volumes. Retain the old project explicitly to reuse existing data. |
+| Environment/configuration | Existing `GEO_*`, `PYGEOAPI_SERVER_URL`, storage paths, database/role and local-only password defaults remain unchanged. Title/description overrides are optional additions. |
+| HTTP contracts | Process IDs, routes and execution modes remain unchanged. Service-defined exception `type` URIs keep their legacy namespace; see [exceptions](errors.md). |
+| Reports and validation IDs | Dated native reports and existing `raster-cite-*`, `raster-geonovum-*`, `raster-async-test-*` namespaces are retained for traceability and operational continuity. |
+
+For an existing project actually named `raster-processes`, use the same explicit
+project argument for **all** deployment/inspection/stop commands after moving the
+checkout, for example:
+
+```bash
+docker compose --project-name raster-processes --file compose.release.yml up --build --detach
+```
+
+This reuses its job/result volumes. Stop the previous development/release services
+deliberately before switching deployment mode or project name; do not use
+`down --volumes` to migrate persistent data. Choosing a new project name while
+retaining data needs a deliberate backup/volume migration, not a naming-only edit.
+The custom example projects are now `python-ogc-custom-example` and
+`python-ogc-custom-release`, formerly `raster-custom-example` and
+`raster-custom-release`. These names select separate disposable volumes; retain
+the previous `-p` name if you need those results/jobs.
+
+Renaming the local checkout is optional. If you do, recreate its path-dependent
+virtual environment (`uv venv --clear`, then `uv sync --locked --all-groups`).
+Update personal scripts, bookmarks and deployment references. These workflows
+do not publish a reusable GitHub Action, a Pages site or registry images; external
+deployments/publications must update their own names separately. Python package
+metadata uses the new description/repository URL while retaining its distribution
+name; any published update follows the normal package release/versioning process.

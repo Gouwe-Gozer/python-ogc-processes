@@ -30,12 +30,12 @@ from pathlib import Path
 import yaml
 config = yaml.safe_load(Path("config/pygeoapi.yml").read_text())
 config["resources"].update(yaml.safe_load(Path("examples/custom-process/process.yml").read_text()))
-Path("runtime-data/custom-process/pygeoapi.yml").write_text(yaml.safe_dump(config, sort_keys=False))
+Path("runtime-data/custom-process/pygeoapi.yml").write_text(yaml.safe_dump(config, sort_keys=False, allow_unicode=True))
 PY
 
-docker build -f docker/Dockerfile -t raster-processes:0.1.0 .
+docker build -f docker/Dockerfile -t python-ogc-processes:0.1.0 .
 API_PORT=5002 PYGEOAPI_SERVER_URL=http://localhost:5002 \
-  docker compose -p raster-custom-example \
+  docker compose -p python-ogc-custom-example \
   -f compose.release.yml -f examples/custom-process/compose.yml \
   up --build --wait
 ```
@@ -90,7 +90,7 @@ uv run pytest tests/test_custom_process.py -v
 GEO_TEST_ASYNC_CONTAINERS=1 uv run pytest tests/test_async_containers.py -k custom_process -v
 # Stop this example only; its named job/result volumes remain:
 API_PORT=5002 PYGEOAPI_SERVER_URL=http://localhost:5002 \
-  docker compose -p raster-custom-example \
+  docker compose -p python-ogc-custom-example \
   -f compose.release.yml -f examples/custom-process/compose.yml down
 ```
 
@@ -119,7 +119,7 @@ the process registration and public sample/data paths before publishing it.
 Create `deploy/custom/Dockerfile`:
 
 ```dockerfile
-FROM raster-processes:0.1.0
+FROM python-ogc-processes:0.1.0
 COPY examples/custom-process/custom_processes /pygeoapi/custom_processes
 COPY deploy/custom/pygeoapi.yml /pygeoapi/local.config.yml
 ```
@@ -134,12 +134,12 @@ Create `deploy/custom/compose.yml`:
 ```yaml
 services:
   api:
-    image: raster-processes-custom:0.1.0
+    image: python-ogc-processes-custom:0.1.0
     build:
       context: .
       dockerfile: deploy/custom/Dockerfile
   worker:
-    image: raster-processes-custom:0.1.0
+    image: python-ogc-processes-custom:0.1.0
 ```
 
 Use this override **instead of** `examples/custom-process/compose.yml`, so the
@@ -148,7 +148,7 @@ image built as above, start a separate disposable deployment on a free port:
 
 ```bash
 API_PORT=5003 PYGEOAPI_SERVER_URL=http://localhost:5003 \
-  docker compose -p raster-custom-release \
+  docker compose -p python-ogc-custom-release \
   -f compose.release.yml -f deploy/custom/compose.yml up --build --wait
 ```
 

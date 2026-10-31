@@ -27,6 +27,10 @@ pytestmark = pytest.mark.skipif(
     os.environ.get("GEO_TEST_ASYNC_CONTAINERS") != "1", reason="opt-in Docker lifecycle tests"
 )
 ROOT = Path(__file__).resolve().parents[1]
+SERVICE_IDENTITY = {
+    "PYGEOAPI_TITLE": "Contributor Workflow Service",
+    "PYGEOAPI_DESCRIPTION": "A deployment-specific Python workflow service.",
+}
 
 
 def free_port():
@@ -50,6 +54,8 @@ def deployment(tmp_path_factory, request):
         "PYGEOAPI_SERVER_URL": f"http://127.0.0.1:{port}",
         "GEO_JOB_TIMEOUT": "5",
     }
+    if getattr(request, "param", None) == "service-identity":
+        environment.update(SERVICE_IDENTITY)
     config = yaml.safe_load((ROOT / "config/pygeoapi.yml").read_text())
     config["resources"]["worker-probe"] = {
         "type": "process",
@@ -58,7 +64,7 @@ def deployment(tmp_path_factory, request):
     if custom_example:
         config["resources"].update(yaml.safe_load((example / "process.yml").read_text()))
         environment["CUSTOM_PROCESS_BASE_IMAGE"] = project + ":base"
-    (directory / "config.yml").write_text(yaml.safe_dump(config))
+    (directory / "config.yml").write_text(yaml.safe_dump(config, allow_unicode=True))
     volumes = [
         f"{directory / 'config.yml'}:/pygeoapi/local.config.yml:ro",
         f"{ROOT / 'tests/fixtures/test_processes'}:/pygeoapi/test_processes:ro",
@@ -274,6 +280,34 @@ def test_other_advertised_processors_reuse_the_same_worker(deployment, process):
         assert downloaded.headers["Content-Type"] == "image/tiff"
     else:
         assert downloaded.json()["type"] == "FeatureCollection"
+
+
+@pytest.mark.parametrize("deployment", ["service-identity"], indirect=True)
+def test_release_service_metadata_overrides_preserve_execution(deployment):
+    base = deployment["url"]
+    landing = requests.get(base + "/?f=json", timeout=5).json()
+    definition = requests.get(base + "/openapi?f=json", timeout=5).json()
+    assert landing["title"] == definition["info"]["title"] == SERVICE_IDENTITY["PYGEOAPI_TITLE"]
+    assert landing["description"] == definition["info"]["description"] == SERVICE_IDENTITY["PYGEOAPI_DESCRIPTION"]
+    code = """
+import json, os
+from pygeoapi.util import yaml_load
+with open(os.environ['PYGEOAPI_CONFIG']) as stream:
+    print(json.dumps(yaml_load(stream)['metadata']['identification']))
+"""
+    worker_identity = json.loads(deployment["docker"]("exec", "-T", "worker", "/venv/bin/python3", "-c", code))
+    assert worker_identity["title"] == SERVICE_IDENTITY["PYGEOAPI_TITLE"]
+    assert worker_identity["description"] == SERVICE_IDENTITY["PYGEOAPI_DESCRIPTION"]
+    notice = deployment["docker"]("exec", "-T", "api", "cat", "/licenses/python-ogc-processes/LICENSE")
+    assert notice == (ROOT / "LICENSE").read_text()
+    synchronous = requests.post(
+        base + "/processes/raster-info/execution", json={"inputs": {"source": DEMO_SOURCE}}, timeout=10
+    )
+    assert synchronous.status_code == 200
+    job = submit(deployment)
+    assert poll(job)["status"] == "successful"
+    asynchronous = requests.get(job + "/results", timeout=5)
+    assert asynchronous.status_code == 200 and asynchronous.json() == synchronous.json()
 
 
 @pytest.mark.parametrize("deployment", ["custom-process"], indirect=True)

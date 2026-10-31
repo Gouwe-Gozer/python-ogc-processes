@@ -28,29 +28,12 @@ logging:
   level: INFO
 metadata:
   identification:
-    title: Raster Processes API
-    description: >-
-      An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL.
-
-      Designed around OGC API – Processes Part 1: Core, it exposes operations through
-      standardized, discoverable endpoints, enabling clients to submit spatial
-      data and retrieve processing results. The default deployment supports synchronous
-      execution and durable asynchronous jobs using PostgreSQL and a separate worker.
-      A lightweight synchronous-only deployment is available explicitly.
-
-      Rasterio/GDAL powers five bounded raster operations: information,
-      reprojection, point sampling, reclassification and polygonization.
-      Submit GeoTIFFs through controlled public HTTPS references or inline
-      base64. Results are JSON, GeoTIFF or GeoJSON, delivered by value or,
-      where supported, through expiring download references.
-
-      Intended alignment with the
-      [OGC standard](https://docs.ogc.org/is/18-062r2/18-062r2.html)
-      and passing regression tests do not establish formal OGC certification.
+    # Native environment substitution requires plain scalars, not YAML block strings.
+    title: ${PYGEOAPI_TITLE:-Python Processing Service}
+    description: ${PYGEOAPI_DESCRIPTION:-An extensible, standards-oriented OGC API – Processes application for integrating and executing custom Python workflows, built on pygeoapi.}
     keywords:
-    - Rasterio
-    - raster
-    - GeoTIFF
+    - Python
+    - pygeoapi
     - OGC API Processes
     keywords_type: theme
     terms_of_service: ${PYGEOAPI_TERMS_OF_SERVICE:-https://opensource.org/license/mit}

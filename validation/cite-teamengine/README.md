@@ -1,7 +1,7 @@
 # OGC CITE / TEAM Engine
 
 `make validate-cite` runs the official Processes 1.0 ETS against an isolated
-Raster Processes API/PostgreSQL/worker stack. It uses the real application,
+Python OGC Processes/PostgreSQL/worker stack. It uses the real application,
 processors and result handling plus a validation-only echo. Shared wiring comes
 from `compose.base.yml`; there is no parallel API implementation.
 

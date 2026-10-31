@@ -2,6 +2,10 @@
 
 ## 0.1.0 — Unreleased
 
+- Adopt Python OGC Processes / `python-ogc-processes` branding, retaining existing
+  Python imports, process IDs and execution contracts. Make the default service
+  title/description configurable and document image/checkout/volume migration.
+
 - Expose five Rasterio/GDAL processes through pygeoapi 0.24.0: raster information,
   reprojection, point sampling, range reclassification and categorical polygonization.
 - Accept users' GeoTIFFs through bounded public HTTPS references or inline base64;
@@ -31,7 +35,8 @@
 - Consolidate public user, contributor and operator guidance; archive historical
   investigations and obsolete report snapshots separately.
 
-The public name is Raster Processes API and the repository is `raster-processes`;
-Python distribution/import names remain `geo-processes` / `geo_processes`.
+The project is Python OGC Processes, previously Raster Processes API
+(`raster-processes`). Python distribution/import names remain `geo-processes` /
+`geo_processes`; the default deployed API title is Python Processing Service.
 Origin attribution and original MIT terms are retained in [README](README.md),
 [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md).

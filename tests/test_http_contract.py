@@ -130,7 +130,7 @@ def test_preferences_remain_synchronous(http_client, preference):
 def test_discovery_links_descriptions_and_capabilities_agree(http_client, process_catalogue, service_config):
     landing = http_client.get("/?f=json")
     assert landing.status_code == 200
-    assert landing.get_json()["title"] == "Raster Processes API"
+    assert landing.get_json()["title"] == "Python Processing Service"
     listing = http_client.get("/processes?f=json").get_json()
     default_limit = service_config["server"]["limits"]["default_items"]
     assert [process["id"] for process in listing["processes"]] == list(process_catalogue[:default_limit])

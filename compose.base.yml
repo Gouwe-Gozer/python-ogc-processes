@@ -4,8 +4,11 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
-    image: raster-processes:0.1.0
+    image: python-ogc-processes:0.1.0
     environment: &runtime-environment
+      # Forward optional metadata overrides; defaults live in config/pygeoapi.yml.
+      PYGEOAPI_TITLE:
+      PYGEOAPI_DESCRIPTION:
       PYGEOAPI_SERVER_URL: ${PYGEOAPI_SERVER_URL:-http://localhost:5001}
       PYGEOAPI_TERMS_OF_SERVICE: ${PYGEOAPI_TERMS_OF_SERVICE:-https://opensource.org/license/mit}
       GEO_OUTPUT_DIR: /var/lib/geo/results
@@ -47,7 +50,7 @@ services:
       db:
         condition: service_healthy
   worker:
-    image: raster-processes:0.1.0
+    image: python-ogc-processes:0.1.0
     pull_policy: never
     entrypoint:
     - /venv/bin/python3

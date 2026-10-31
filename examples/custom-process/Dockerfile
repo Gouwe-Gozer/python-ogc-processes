@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=raster-processes:0.1.0
+ARG BASE_IMAGE=python-ogc-processes:0.1.0
 FROM ${BASE_IMAGE}
 
 # The base image puts /pygeoapi on PYTHONPATH for both the API and worker.

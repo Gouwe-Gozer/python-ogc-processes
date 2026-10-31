@@ -4,9 +4,11 @@ import os
 import subprocess
 import sys
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 import yaml
+from pygeoapi.util import yaml_load
 
 from geo_processes.openapi import generate_openapi
 from geo_processes.startup import ConfigurationError, public_url, validate_runtime
@@ -157,6 +159,55 @@ for mode in ('document', 'raw'):
             else response.headers['Link'].split('>', 1)[0][1:])
     assert href.startswith(expected_base + '/results/'), href
     assert client.get(href.removeprefix('https://public.example.test/proxy')).status_code == 200
+"""
+    result = subprocess.run([sys.executable, "-c", check], capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("custom", [False, True], ids=["default-identity", "deployer-identity"])
+def test_service_metadata_defaults_and_overrides_reach_landing_and_openapi(runtime_environment, monkeypatch, custom):
+    title = "Planning Workflows: local service" if custom else "Python Processing Service"
+    description = (
+        "Custom Python workflows for local planning."
+        if custom
+        else "An extensible, standards-oriented OGC API – Processes application for integrating "
+        "and executing custom Python workflows, built on pygeoapi."
+    )
+    for name, value in (("PYGEOAPI_TITLE", title), ("PYGEOAPI_DESCRIPTION", description)):
+        if custom:
+            monkeypatch.setenv(name, value)
+        else:
+            monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("GEO_MANAGER_CLASS", "geo_processes.manager.OgcSynchronousManager")
+    monkeypatch.setenv("PYGEOAPI_SERVER_URL", "http://example.test")
+    with Path("config/pygeoapi.yml").open() as stream:
+        config = yaml_load(stream)
+    # The schema directory exists in the image; host HTTP tests use its URL.
+    config["server"]["ogc_schemas_location"] = "https://schemas.opengis.net"
+    identity = config["metadata"]["identification"]
+    assert identity["title"] == title and identity["description"] == description
+    config_path = runtime_environment / "identity-config.yml"
+    definition_path = runtime_environment / "identity-openapi.yml"
+    config_path.write_text(yaml.safe_dump(config))
+    definition_path.write_text(yaml.safe_dump(generate_openapi(config)))
+    monkeypatch.setenv("PYGEOAPI_CONFIG", str(config_path))
+    monkeypatch.setenv("PYGEOAPI_OPENAPI", str(definition_path))
+    check = """
+from geo_processes.app import APP
+from pygeoapi.flask_app import api_
+
+client = APP.test_client()
+identity = api_.config['metadata']['identification']
+landing = client.get('/?f=json').get_json()
+assert landing['title'] == identity['title']
+assert landing['description'] == identity['description']
+assert client.get('/?f=jsonld').get_json()['name'] == identity['title']
+html = client.get('/?f=html')
+assert html.status_code == 200
+assert identity['title'] in html.text and identity['description'] in html.text
+definition = client.get('/openapi?f=json').get_json()
+assert definition['info']['title'] == identity['title']
+assert definition['info']['description'] == identity['description']
 """
     result = subprocess.run([sys.executable, "-c", check], capture_output=True, text=True, check=False)
     assert result.returncode == 0, result.stdout + result.stderr

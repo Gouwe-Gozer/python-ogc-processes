@@ -68,7 +68,7 @@ def prepare_config(destination, *, password="cite-test-only", echo=True, public_
     config["server"]["manager"]["connection"] = f"postgresql://geo:{password}@db:5432/geo"
     if echo:
         config["resources"]["cite-echo"] = {"type": "process", "processor": {"name": CLASS_NAME}}
-    destination.write_text(yaml.safe_dump(config, sort_keys=False))
+    destination.write_text(yaml.safe_dump(config, sort_keys=False, allow_unicode=True))
     return config
 
 
