@@ -16,6 +16,9 @@ indexes every case; [discovery.json](discovery.json), [api-config.yml](api-confi
 [async smoke](async-smoke.log) retain the observed contract and test setup.
 Original metadata paths describe the generated run directory, not this relocated
 snapshot. No runner writes this directory automatically.
+Its recorded Raster Processes API branding predates the Python OGC Processes
+rename. Native reports/configuration are preserved byte-for-byte; they are not
+current deployment metadata.
 
 ## Remaining failures and coverage limits
 

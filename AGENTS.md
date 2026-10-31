@@ -1,12 +1,12 @@
 # Development instructions
 
-This repository implements Raster Processes API, an extensible OGC API – Processes
+This repository implements Python OGC Processes, an extensible OGC API – Processes
 application built on pygeoapi for custom Python workflows. Bundled Rasterio/GDAL
 operations demonstrate the integration. Code, configuration and tests define
 current behavior. Use [development](docs/development.md), [architecture](docs/architecture.md)
 and [validation](docs/validation.md) for maintained guidance.
 The Python package remains `geo_processes` (distribution `geo-processes`);
-the public project/repository name is `raster-processes`.
+the public project/repository name is `python-ogc-processes`.
 
 ## Environment and workflow
 

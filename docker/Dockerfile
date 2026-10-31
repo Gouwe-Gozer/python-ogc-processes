@@ -2,8 +2,9 @@ FROM ghcr.io/astral-sh/uv:0.13.5@sha256:32a7bb39b496babbd997b0a39a4d66c126bdaf56
 
 FROM geopython/pygeoapi:0.24.0@sha256:a62895f2585ef1fcd1fc97ec35bf13177becc1334a622172a2c5c4d2145b8f0a
 
-LABEL org.opencontainers.image.title="Raster Processes API" \
-      org.opencontainers.image.description="An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL." \
+LABEL org.opencontainers.image.title="Python OGC Processes" \
+      org.opencontainers.image.description="An extensible, standards-oriented OGC API – Processes application for integrating and executing custom Python workflows, built on pygeoapi." \
+      org.opencontainers.image.source="https://github.com/Gouwe-Gozer/python-ogc-processes" \
       org.opencontainers.image.version="0.1.0" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="Gouwe-Gozer" \
@@ -20,7 +21,7 @@ ENV CONTAINER_PORT=8080 \
 
 COPY config/pygeoapi.yml /pygeoapi/local.config.yml
 COPY src/geo_processes /pygeoapi/geo_processes
-COPY LICENSE THIRD_PARTY_NOTICES.md /licenses/raster-processes/
+COPY LICENSE THIRD_PARTY_NOTICES.md /licenses/python-ogc-processes/
 
 COPY docker/entrypoint.sh /geo-entrypoint.sh
 

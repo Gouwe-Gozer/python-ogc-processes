@@ -112,7 +112,7 @@ class RuntimeSettings:
     def summary(self):
         return "\n".join(
             [
-                "Raster Processes API startup configuration:",
+                "Python OGC Processes startup configuration:",
                 f"  Public URL: {self.url}",
                 f"  Processes: {', '.join(self.processes) or '(none)'}",
                 f"  Gunicorn: port {self.port}, {self.workers} sync workers, timeout {self.timeout}s",

@@ -8,6 +8,7 @@ from zipfile import ZipFile
 
 import pytest
 import yaml
+from pygeoapi.util import yaml_load
 
 from scripts import validate_cite as cite
 
@@ -289,3 +290,14 @@ def test_geonovum_config_has_only_real_processes_and_host_reachable_urls(tmp_pat
     assert all(
         link["href"].startswith("http://127.0.0.1:59999/") for link in config["resources"]["sample-points"]["links"]
     )
+
+
+def test_generated_validation_config_retains_metadata_environment_substitution(tmp_path, monkeypatch):
+    monkeypatch.setenv("PYGEOAPI_TITLE", "Validation Workflow Service")
+    monkeypatch.setenv("PYGEOAPI_DESCRIPTION", "Deployer description for validation.")
+    path = tmp_path / "config.yml"
+    cite.prepare_config(path)
+    with path.open() as stream:
+        effective = yaml_load(stream)
+    assert effective["metadata"]["identification"]["title"] == "Validation Workflow Service"
+    assert effective["metadata"]["identification"]["description"] == "Deployer description for validation."

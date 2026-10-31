@@ -1,7 +1,7 @@
 [project]
 name = "geo-processes"
 version = "0.1.0"
-description = "An OGC API – Processes service for raster operations, powered by pygeoapi and rasterio/GDAL."
+description = "An extensible, standards-oriented OGC API – Processes application for integrating and executing custom Python workflows, built on pygeoapi."
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Minnert Wijnands (Gouwe-Gozer)" }]
@@ -14,6 +14,9 @@ dependencies = [
     "geoalchemy2==0.20.0",
     "sqlalchemy>=2,<3",
 ]
+
+[project.urls]
+Repository = "https://github.com/Gouwe-Gozer/python-ogc-processes"
 
 [build-system]
 requires = ["hatchling"]

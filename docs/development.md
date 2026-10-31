@@ -7,7 +7,9 @@ tests and the explicit database-free synchronous opt-out.
 Run commands from the repository root with user-installed `uv` and a local
 `.venv`. No host system packages or global Python installs are needed.
 
-The service is **Raster Processes API**, with repository name `raster-processes`.
+The project is **Python OGC Processes**, with repository name `python-ogc-processes`.
+Its default deployed API title is **Python Processing Service**; [service metadata](release-image.md#service-identity)
+can be customized independently of the project name.
 Its existing Python package `geo_processes` and distribution `geo-processes`
 remain unchanged.
 
@@ -118,8 +120,10 @@ Update the relevant maintained guide when behavior changes.
 
 ## Container and integration checks
 
-Compose derives the project name `raster-processes` from the checkout directory.
-Both supplied API stacks use that project and port 5001 by default; run one at
+Compose derives its project name from the checkout directory; new checkouts named
+`python-ogc-processes` use that project name. Keep an existing deployment's project
+name explicit if renaming the directory; see [migration](release-image.md#repository-and-deployment-migration).
+Both supplied API stacks use the same project and port 5001 by default; run one at
 a time. Check `docker compose ls --all` when another container occupies the port.
 An exported `COMPOSE_PROJECT_NAME`, `COMPOSE_FILE` or local `.env` setting can
 override defaults; remove stale values rather than launching another copy.

@@ -15,6 +15,8 @@ from geo_processes.openapi import generate_openapi
 def service_config():
     with pytest.MonkeyPatch.context() as environment:
         environment.setenv("PYGEOAPI_SERVER_URL", "http://example.test")
+        environment.delenv("PYGEOAPI_TITLE", raising=False)
+        environment.delenv("PYGEOAPI_DESCRIPTION", raising=False)
         # Unit HTTP contracts use the explicit lightweight profile without a live database.
         environment.setenv("GEO_MANAGER_CLASS", "geo_processes.manager.OgcSynchronousManager")
         environment.setenv("GEO_SAMPLE_DATA_DIR", str(SAMPLE_DATA_DIR))

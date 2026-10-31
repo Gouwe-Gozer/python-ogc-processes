@@ -69,7 +69,7 @@ def test_jsonld_landing_preserves_upstream_catalog_and_adds_http_links(app, http
     assert response.mimetype == "application/ld+json"
     assert response.data == upstream.data
     document = response.get_json()
-    assert document["@type"] == "DataCatalog" and document["name"] == "Raster Processes API"
+    assert document["@type"] == "DataCatalog" and document["name"] == "Python Processing Service"
     assert "links" not in document
     link_headers = ", ".join(response.headers.getlist("Link"))
     assert f'rel="{CONFORMANCE_REL}"' in link_headers

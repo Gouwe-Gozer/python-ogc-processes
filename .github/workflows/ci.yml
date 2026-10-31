@@ -97,14 +97,14 @@ jobs:
           docker run --rm --network host \
             --entrypoint /venv/bin/python3 \
             --mount type=bind,src="${{ github.workspace }}/scripts/smoke_warp.py",dst=/tmp/smoke_warp.py,readonly \
-            raster-processes:0.1.0 /tmp/smoke_warp.py --base-url http://127.0.0.1:5001
+            python-ogc-processes:0.1.0 /tmp/smoke_warp.py --base-url http://127.0.0.1:5001
 
       - name: Submit a user raster from a separate client container
         run: |
           docker run --rm --network host \
             --entrypoint /venv/bin/python3 --env PYTHONPATH=/tmp \
             --mount type=bind,src="${{ github.workspace }}/scripts",dst=/tmp/scripts,readonly \
-            raster-processes:0.1.0 /tmp/scripts/smoke_inputs.py --base-url http://127.0.0.1:5001
+            python-ogc-processes:0.1.0 /tmp/scripts/smoke_inputs.py --base-url http://127.0.0.1:5001
 
       - name: Verify results survive a service restart
         run: |

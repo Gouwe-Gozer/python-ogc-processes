@@ -1,7 +1,7 @@
-# Raster Processes API
+# Python OGC Processes
 
-An extensible, standards-oriented OGC API – Processes application built on
-pygeoapi for integrating custom Python workflows.
+An extensible, standards-oriented OGC API – Processes application for integrating
+and executing custom Python workflows, built on pygeoapi.
 
 Wrap an importable Python function with pygeoapi's `BaseProcessor`, describe its
 inputs/outputs and register it explicitly. The existing API and durable worker
@@ -48,11 +48,16 @@ Set both the published port and client-facing URL when using another address:
 API_PORT=5002 PYGEOAPI_SERVER_URL=http://localhost:5002 docker compose --file compose.release.yml up --build --detach
 ```
 
+The default API title is **Python Processing Service**. Set `PYGEOAPI_TITLE` and
+`PYGEOAPI_DESCRIPTION` in the environment or `.env` to customize the displayed
+metadata; see [service identity](docs/release-image.md#service-identity).
 Result references use `PYGEOAPI_SERVER_URL`; choose an address clients can reach.
 See [deployment](docs/release-image.md) for storage and operating settings,
 or [development](docs/development.md) for the bind-mounted development stack.
 
-The Compose project is `raster-processes`, derived from the checkout directory.
+Compose derives its project name from the checkout directory: a checkout named
+`python-ogc-processes` uses that name. Existing deployments should retain their
+project name when reusing stored jobs/results; see [migration](docs/release-image.md#repository-and-deployment-migration).
 Plain `docker compose up --detach` selects the development configuration;
 keep `--file compose.release.yml` for the self-contained release. Both start
 `api`, `db` and `worker`, sharing the definitions in `compose.base.yml`.
@@ -158,6 +163,8 @@ remaining implementation gaps are documented in [validation](docs/validation.md)
   and [future work](docs/roadmap.md).
 
 ## License and origins
+
+Source: [Gouwe-Gozer/python-ogc-processes](https://github.com/Gouwe-Gozer/python-ogc-processes).
 
 Maintained by **Minnert Wijnands (Gouwe-Gozer)** under the [MIT License](LICENSE).
 This project reuses pygeoapi integration, testing and deployment infrastructure

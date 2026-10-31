@@ -1,14 +1,14 @@
 # Use after compose.release.yml; paths are relative to that first Compose file.
 services:
   api:
-    image: raster-processes-custom-example:0.1.0
+    image: python-ogc-processes-custom-example:0.1.0
     build:
       dockerfile: examples/custom-process/Dockerfile
       args:
-        BASE_IMAGE: ${CUSTOM_PROCESS_BASE_IMAGE:-raster-processes:0.1.0}
+        BASE_IMAGE: ${CUSTOM_PROCESS_BASE_IMAGE:-python-ogc-processes:0.1.0}
     volumes:
       - ${CUSTOM_PROCESS_CONFIG:-./runtime-data/custom-process/pygeoapi.yml}:/pygeoapi/local.config.yml:ro
   worker:
-    image: raster-processes-custom-example:0.1.0
+    image: python-ogc-processes-custom-example:0.1.0
     volumes:
       - ${CUSTOM_PROCESS_CONFIG:-./runtime-data/custom-process/pygeoapi.yml}:/pygeoapi/local.config.yml:ro

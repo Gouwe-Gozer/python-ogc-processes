@@ -1,5 +1,5 @@
 {
-  "name": "raster-processes-geonovum-validation",
+  "name": "python-ogc-processes-geonovum-validation",
   "private": true,
   "dependencies": {
     "@geonovum/ogc-checker": "1.3.2"

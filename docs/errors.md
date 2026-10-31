@@ -24,8 +24,13 @@ application download errors return JSON.
 | `NoSuchResult` | 404 | [No such result](#no-such-result) |
 | `NoApplicableCode` | 500 | [Processing failed](#processing-failed) |
 
-Each service-defined URI is the full URL of its section in this document, under
-`https://github.com/Gouwe-Gozer/raster-processes/blob/main/docs/errors.md`.
+Service-defined `type` URIs retain the legacy
+`https://github.com/Gouwe-Gozer/raster-processes/blob/main/docs/errors.md` namespace
+so clients comparing identifiers continue to work. The maintained
+[catalogue](https://github.com/Gouwe-Gozer/python-ogc-processes/blob/main/docs/errors.md)
+moves with the repository; GitHub's rename redirect resolves the old links.
+Keep that redirect intact. These legacy identifiers are intentional, not current
+repository branding.
 
 For example, a malformed execution request returns HTTP 400, `application/json`:
 

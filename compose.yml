@@ -5,7 +5,7 @@ services:
       service: api
     ports:
     - ${API_PORT:-5001}:8080
-    image: raster-processes-dev:0.1.0
+    image: python-ogc-processes-dev:0.1.0
     volumes:
     - ./config/pygeoapi.yml:/pygeoapi/local.config.yml:ro
     - ./src/geo_processes:/pygeoapi/geo_processes:ro
@@ -14,7 +14,7 @@ services:
     extends:
       file: compose.base.yml
       service: worker
-    image: raster-processes-dev:0.1.0
+    image: python-ogc-processes-dev:0.1.0
     volumes:
     - ./config/pygeoapi.yml:/pygeoapi/local.config.yml:ro
     - ./src/geo_processes:/pygeoapi/geo_processes:ro

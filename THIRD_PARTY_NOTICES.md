@@ -1,6 +1,6 @@
 # Third-party notices
 
-Raster Processes API is maintained by Minnert Wijnands (Gouwe-Gozer) and is
+Python OGC Processes is maintained by Minnert Wijnands (Gouwe-Gozer) and is
 MIT-licensed. The following notices identify reused application code and
 dependencies, whose licences also apply to their respective software.
 

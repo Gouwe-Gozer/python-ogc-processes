@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pygeoapi.process.base import ProcessorExecuteError
 
 OGC_EXCEPTIONS = "http://www.opengis.net/def/exceptions/ogcapi-processes-1/1.0"
+# Stable public exception identifiers retain the pre-rename namespace for clients.
 SERVICE_EXCEPTIONS = "https://github.com/Gouwe-Gozer/raster-processes/blob/main/docs/errors.md"
 
 

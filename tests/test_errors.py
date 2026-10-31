@@ -90,3 +90,11 @@ def test_openapi_advertises_exception_uris_and_schemas(http_client):
             assert content["schema"]["$ref"].endswith("/exception.yaml")
             validate_official(content["example"], "exception.yaml")
             assert content["example"]["status"] == int(status)
+
+
+def test_service_exception_type_identifiers_survive_repository_rename(http_client):
+    response = http_client.post("/processes/raster-info/execution", json={"inputs": {}})
+    assert response.status_code == 400
+    assert response.get_json()["type"] == (
+        "https://github.com/Gouwe-Gozer/raster-processes/blob/main/docs/errors.md#invalid-parameter-value"
+    )
