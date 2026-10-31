@@ -74,6 +74,26 @@ def enqueue(client, process="raster-info", **options):
     return response.json["jobID"]
 
 
+@pytest.mark.parametrize("response_mode", ["raw", "document"])
+def test_cite_echo_sync_and_async_results_contain_the_same_message(async_client, durable, response_mode):
+    manager = durable[0]
+    manager.processes["cite-echo"] = {"processor": {"name": "test_processes.cite_echo.CiteEchoProcessor"}}
+    message = "teststring"
+    document = {"inputs": {"message": message}, "response": response_mode}
+    synchronous = async_client.post("/processes/cite-echo/execution", json=document)
+    assert synchronous.status_code == 200
+    submitted = async_client.post("/processes/cite-echo/execution", json=document, headers={"Prefer": "respond-async"})
+    assert submitted.status_code == 201
+    identifier = submitted.json["jobID"]
+    assert manager.claim() == identifier
+    manager.perform(identifier)
+    asynchronous = async_client.get(f"/jobs/{identifier}/results")
+    assert asynchronous.status_code == 200
+    assert asynchronous.headers["Content-Type"] == synchronous.headers["Content-Type"] == "application/json"
+    expected = message if response_mode == "raw" else {"message": {"value": message}}
+    assert asynchronous.json == synchronous.json == expected
+
+
 @pytest.mark.parametrize(
     "media_type,value",
     [

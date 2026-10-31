@@ -43,6 +43,9 @@ The runner:
 The echo fixture has matching input/output identifiers required by the suite,
 uses the ordinary processor/formatter interfaces, and the durable manager
 advertises both execution modes. Async requests run through the actual worker.
+The echo returns Python values so the HTTP boundary serializes JSON once.
+HTTP regressions check raw/document output in both execution modes and preserve
+quoted, Unicode and escaped string content.
 All five raster process descriptions are also selected. Execution tests primarily
 exercise the echo; the raster smoke tests are separate integration evidence.
 

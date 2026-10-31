@@ -6,8 +6,6 @@ from zipfile import ZipFile
 import pytest
 import yaml
 
-from geo_processes.errors import InvalidExecutionRequestError
-from geo_processes.manager import OgcSynchronousManager
 from scripts import validate_cite as cite
 
 
@@ -31,19 +29,19 @@ def test_cite_cli_includes_the_engine_html_resources_on_its_classpath():
 
 
 @pytest.mark.parametrize("mode", ["raw", "document"])
-def test_cite_echo_executes_through_the_real_synchronous_manager(mode):
-    manager = OgcSynchronousManager(
-        {"name": "test", "processes": {"cite-echo": {"processor": {"name": cite.CLASS_NAME}}}}
+def test_cite_echo_http_response_contains_the_original_message(http_client, monkeypatch, mode):
+    from pygeoapi.flask_app import api_
+
+    monkeypatch.setitem(api_.manager.processes, "cite-echo", {"processor": {"name": cite.CLASS_NAME}})
+    message = 'Café "quoted" text\nwith a backslash: \\'
+    response = http_client.post(
+        "/processes/cite-echo/execution", json={"inputs": {"message": message}, "response": mode}
     )
-    processor = manager.get_processor("cite-echo")
-    assert processor.metadata["jobControlOptions"] == ["sync-execute"]
-    _, media, result, status, _ = manager.execute_process("cite-echo", {"message": "hello"}, requested_response=mode)
-    assert media == "application/json" and status.value == "successful"
-    assert (json.loads(result) if mode == "raw" else result) == (
-        "hello" if mode == "raw" else {"message": {"value": "hello"}}
-    )
-    with pytest.raises(InvalidExecutionRequestError):
-        manager.execute_process("cite-echo", {"message": 12})
+    assert response.status_code == 200
+    assert response.mimetype == "application/json"
+    assert response.json == (message if mode == "raw" else {"message": {"value": message}})
+    invalid = http_client.post("/processes/cite-echo/execution", json={"inputs": {"message": 12}, "response": mode})
+    assert invalid.status_code == 400 and invalid.json["code"] == "InvalidParameterValue"
 
 
 def report(tmp_path, *, fail="bad <input>", passed=1):

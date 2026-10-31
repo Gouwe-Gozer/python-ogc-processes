@@ -1,6 +1,5 @@
 """Test-only echo using the public application's processor interface."""
 
-import json
 from copy import deepcopy
 
 from pygeoapi.process.base import BaseProcessor
@@ -10,7 +9,6 @@ from geo_processes.delivery import output_transmission
 from geo_processes.errors import InvalidExecutionRequestError
 from geo_processes.inputs import resolve_json
 from geo_processes.processes.common import processing_errors, validate_inputs
-from geo_processes.responses import ProcessResponse
 
 PROCESS_METADATA = {
     "version": "1.0.0",
@@ -50,7 +48,7 @@ class CiteEchoProcessor(BaseProcessor):
     def format_result(value, response):
         if response == "document":
             return {"message": {"value": value}}
-        return ProcessResponse(json.dumps(value).encode(), "application/json")
+        return value
 
     @staticmethod
     def openapi_execution():
