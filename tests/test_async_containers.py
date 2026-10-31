@@ -34,9 +34,11 @@ def free_port():
 
 
 @pytest.fixture(scope="module")
-def deployment(tmp_path_factory):
+def deployment(tmp_path_factory, request):
     directory = tmp_path_factory.mktemp("async-containers")
     project = "raster-async-test-" + uuid4().hex[:10]
+    custom_example = getattr(request, "param", None) == "custom-process"
+    example = ROOT / "examples/custom-process"
     port = free_port()
     db_port = free_port()
     environment = {
@@ -51,6 +53,9 @@ def deployment(tmp_path_factory):
         "type": "process",
         "processor": {"name": "test_processes.worker_probe.WorkerProbe"},
     }
+    if custom_example:
+        config["resources"].update(yaml.safe_load((example / "process.yml").read_text()))
+        environment["CUSTOM_PROCESS_BASE_IMAGE"] = project + ":base"
     (directory / "config.yml").write_text(yaml.safe_dump(config))
     volumes = [
         f"{directory / 'config.yml'}:/pygeoapi/local.config.yml:ro",
@@ -71,6 +76,7 @@ def deployment(tmp_path_factory):
         project,
         "-f",
         str(ROOT / "compose.release.yml"),
+        *(["-f", str(example / "compose.yml")] if custom_example else []),
         "-f",
         str(directory / "compose.yml"),
     ]
@@ -85,6 +91,17 @@ def deployment(tmp_path_factory):
         return result.stdout
 
     try:
+        if custom_example:
+            # Build the same base/derived images as the contributor quickstart.
+            build = subprocess.run(
+                ["docker", "build", "-f", "docker/Dockerfile", "-t", project + ":base", "."],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+            (directory / "base-build.log").write_text(build.stdout + build.stderr)
+            build.check_returncode()
         docker("up", "--build", "--wait", "--wait-timeout", "120")
         yield {
             "url": environment["PYGEOAPI_SERVER_URL"],
@@ -96,7 +113,8 @@ def deployment(tmp_path_factory):
             docker("logs", "--no-color")
         finally:
             docker("down", "--volumes", "--remove-orphans")
-            subprocess.run(["docker", "image", "rm", "--no-prune", project + ":test"], check=False, capture_output=True)
+            images = [project + ":test", *([project + ":base"] if custom_example else [])]
+            subprocess.run(["docker", "image", "rm", "--no-prune", *images], check=False, capture_output=True)
 
 
 def wait_ready(deployment):
@@ -254,3 +272,49 @@ def test_other_advertised_processors_reuse_the_same_worker(deployment, process):
         assert downloaded.headers["Content-Type"] == "image/tiff"
     else:
         assert downloaded.json()["type"] == "FeatureCollection"
+
+
+@pytest.mark.parametrize("deployment", ["custom-process"], indirect=True)
+@pytest.mark.parametrize("response", ["raw", "document"])
+def test_custom_process_example_uses_api_and_worker(deployment, response):
+    base = deployment["url"]
+    description = requests.get(base + "/processes/text-statistics?f=json", timeout=5)
+    assert description.status_code == 200
+    validate_official(description.json(), "process.yaml")
+    assert description.json()["jobControlOptions"] == ["sync-execute", "async-execute"]
+    listing = requests.get(base + "/processes?f=json", timeout=5).json()
+    assert "text-statistics" in {item["id"] for item in listing["processes"]}
+    specification = requests.get(base + "/openapi?f=json", timeout=5).json()
+    operation = specification["paths"]["/processes/text-statistics/execution"]["post"]
+    assert {"200", "201", "400", "503"} <= set(operation["responses"])
+    inputs = {"text": "Bring your own Python!"}
+    document = {"inputs": inputs, "response": response}
+    synchronous = requests.post(base + "/processes/text-statistics/execution", json=document, timeout=10)
+    assert synchronous.status_code == 200 and "Location" not in synchronous.headers
+    expected = {"characters": 22, "words": 4}
+    if response == "document":
+        expected = {"statistics": {"value": expected}}
+        validate_official(synchronous.json(), "results.yaml")
+    assert synchronous.json() == expected
+    job = submit(deployment, "text-statistics", inputs=inputs, response=response)
+    assert poll(job)["status"] == "successful"
+    asynchronous = requests.get(job + "/results", timeout=5)
+    assert asynchronous.status_code == 200
+    assert asynchronous.headers["Content-Type"] == synchronous.headers["Content-Type"]
+    assert asynchronous.json() == synchronous.json()
+    Draft4Validator(operation["responses"]["200"]["content"]["application/json"]["schema"]).validate(expected)
+
+
+@pytest.mark.parametrize("deployment", ["custom-process"], indirect=True)
+def test_custom_process_errors_use_existing_http_and_job_contracts(deployment):
+    inputs = {"text": 42}
+    synchronous = requests.post(
+        deployment["url"] + "/processes/text-statistics/execution", json={"inputs": inputs}, timeout=10
+    )
+    assert synchronous.status_code == 400 and synchronous.json()["code"] == "InvalidParameterValue"
+    validate_official(synchronous.json(), "exception.yaml")
+    job = submit(deployment, "text-statistics", inputs=inputs)
+    assert poll(job)["status"] == "failed"
+    asynchronous = requests.get(job + "/results", timeout=5)
+    assert asynchronous.status_code == 400
+    assert asynchronous.json() == synchronous.json()

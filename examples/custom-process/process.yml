@@ -1,0 +1,5 @@
+# Add this mapping under resources in your pygeoapi configuration.
+text-statistics:
+  type: process
+  processor:
+    name: custom_processes.processor.TextStatisticsProcessor

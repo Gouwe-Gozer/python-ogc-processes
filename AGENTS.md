@@ -41,9 +41,9 @@ the public project/repository name is `raster-processes`.
 Preserve Ruff, Bandit, pytest/coverage, pre-commit and CI. Run applicable checks:
 
 ```bash
-uv run ruff format --check src tests scripts
-uv run ruff check src tests scripts
-uv run bandit -r src scripts -c pyproject.toml
+uv run ruff format --check src tests scripts examples/custom-process
+uv run ruff check src tests scripts examples/custom-process
+uv run bandit -r src scripts examples/custom-process -c pyproject.toml
 uv run pytest --cov=geo_processes --cov-report=term-missing --cov-fail-under=70
 ```
 
