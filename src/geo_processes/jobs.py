@@ -21,7 +21,10 @@ def job_response(api, identifier, *, results=False):
             if stored is None:
                 return jsonify(exception_document("NoApplicableCode", "stored job response is unavailable", 500)), 500
             body = base64.b64decode(stored["body"]) if stored["binary"] else stored["body"]
-            response = make_response(jsonify(body) if not stored["binary"] else body, stored["status"])
+            # Match synchronous rendering: native strings pass through; JSON values are encoded.
+            if not stored["binary"] and (stored["media_type"] == "application/json" or not isinstance(body, str)):
+                body = jsonify(body)
+            response = make_response(body, stored["status"])
             response.headers.update(stored["headers"])
             if stored["status"] == 204:
                 response.headers.pop("Content-Type", None)
@@ -50,9 +53,7 @@ def job_response(api, identifier, *, results=False):
                     "href": f"{api.base_url}/jobs/{identifier}/results",
                 }
             )
-        response = jsonify(document)
-        response.headers["Cache-Control"] = "no-store"
-        return response
+        return jsonify(document)
     except JobNotFoundError:
         return jsonify(exception_document("NoSuchJob", "job not found or expired", 404)), 404
     except SQLAlchemyError:

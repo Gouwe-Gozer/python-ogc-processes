@@ -168,6 +168,12 @@ def apply_process_status(response):
     """pygeoapi 0.24.0 fixes successful executions at 200; honor explicit 204s."""
     # Upstream assigns a plain dict; restore case-insensitive media-type lookups.
     response.headers = Headers(response.headers)
+    # Job state and errors are dynamic, including early returns from route guards.
+    if getattr(api_.manager, "durable_async", False) and request.endpoint in {
+        "pygeoapi.get_jobs",
+        "pygeoapi.get_job_result",
+    }:
+        response.headers["Cache-Control"] = "no-store"
     if (
         getattr(api_.manager, "durable_async", False)
         and request.path.rstrip("/").endswith("/execution")

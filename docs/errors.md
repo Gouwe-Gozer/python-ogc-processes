@@ -1,7 +1,7 @@
 # Exception catalogue
 
-JSON errors from process discovery, execution and result downloads use `type`,
-`title`, `status` and `detail`. The existing `code` and `description` remain for
+JSON errors from process discovery, execution, job resources and result
+downloads use `type`, `title`, `status` and `detail`. The existing `code` and `description` remain for
 clients already using them; `description` equals `detail`. Clients should branch on `type` or
 `code`, rather than matching human-readable messages.
 
@@ -9,8 +9,9 @@ The [official exception schema](https://schemas.opengis.net/ogcapi/processes/par
 permits these fields and additional properties. [OGC Part 1](https://docs.ogc.org/is/18-062r2/18-062r2.html)
 specifies `no-such-process` (Requirement 15), `no-such-job` (37/44) and
 `result-not-ready` (45). Other URIs are **service-defined** policy/failure types.
-The API-instance renderer exposes the same type and escaped details in HTML
-process/job errors. Boundary guards and application download errors return JSON.
+The API-instance renderer exposes the same type and escaped details in
+framework-rendered HTML errors. Boundary guards, durable job routes and
+application download errors return JSON.
 
 | Legacy `code` | HTTP | `type` |
 | --- | --- | --- |
@@ -53,8 +54,9 @@ with the same data will not help. See [input limits](inputs.md).
 
 ## Server busy
 
-Input staging slots, the result writer or result capacity are unavailable.
-Retry later; a full result store may require expiry or operator maintenance.
+Input staging slots, the result writer, retained-job/result capacity or the job
+database are unavailable. Retry later; full stores may require expiry or operator
+maintenance. See [job limits](asynchronous-execution.md#bounds-and-lifetime).
 No automatic retry loop or guaranteed retry time is advertised.
 
 ## No such result
@@ -71,7 +73,18 @@ returned to clients. Configuration failures should instead stop startup; see
 
 The OpenAPI document includes the official exception schema and representative
 catalogue examples. HTTP tests validate actual error documents against the
-unchanged official schema. Public execution creates no retained jobs, so job
-identifiers return `NoSuchJob`. `ResultNotReady` is verified with the existing
-integration-only async manager, not advertised as public async support.
-See the [Core audit](core-conformance-audit.md) for applicability and evidence.
+unchanged official schema.
+
+The default deployment retains asynchronous jobs in PostgreSQL and executes them
+in a separate worker. Unknown or expired job IDs return `NoSuchJob` (404).
+Retrieving results while a job is accepted or running returns `ResultNotReady`
+(404). Failed jobs retain their cause-specific error for result retrieval.
+Job status/results and their error responses use `Cache-Control: no-store`.
+See [asynchronous execution](asynchronous-execution.md) for lifetime and
+interruption behavior.
+
+Ordinary synchronous requests create no retained jobs. The explicit
+synchronous-only deployment retains none either: job identifiers return
+`NoSuchJob`, and `Prefer: respond-async` still executes synchronously.
+See [validation](validation.md) for current evidence and the earlier
+[Core audit](core-conformance-audit.md) for the synchronous profile.

@@ -75,6 +75,39 @@ def enqueue(client, process="raster-info", **options):
 
 
 @pytest.mark.parametrize(
+    "media_type,value",
+    [
+        ("text/plain", 'Native "text" & punctuation\n'),
+        ("text/plain; charset=utf-8", "Café\n"),
+        ("application/xml", '<result value="1">native</result>\n'),
+        ("text/xml", "<result>native</result>"),
+        ("image/svg+xml", '<svg xmlns="http://www.w3.org/2000/svg"/>'),
+        ("application/json", 'A JSON string with "quotes"'),
+    ],
+)
+def test_native_string_results_match_synchronous_execution(async_client, durable, media_type, value):
+    manager = durable[0]
+    manager.processes["native-text"] = {"processor": {"name": "test_processes.native_text.NativeTextProcessor"}}
+    document = {"inputs": {"media_type": media_type, "value": value}}
+    synchronous = async_client.post("/processes/native-text/execution", json=document)
+    assert synchronous.status_code == 200
+    submitted = async_client.post(
+        "/processes/native-text/execution", json=document, headers={"Prefer": "respond-async"}
+    )
+    assert submitted.status_code == 201
+    identifier = submitted.json["jobID"]
+    assert manager.claim() == identifier
+    manager.perform(identifier)
+    asynchronous = async_client.get(f"/jobs/{identifier}/results")
+    assert asynchronous.status_code == 200
+    assert asynchronous.headers["Content-Type"] == synchronous.headers["Content-Type"] == media_type
+    if media_type == "application/json":
+        assert asynchronous.json == synchronous.json == value
+    else:
+        assert asynchronous.data == synchronous.data == value.encode("utf-8")
+
+
+@pytest.mark.parametrize(
     "process,response,transmission",
     [
         ("raster-info", "raw", "value"),
@@ -91,10 +124,17 @@ def test_stored_representations_survive_manager_recreation(async_client, durable
     identifier = enqueue(async_client, process, response=response, **({"outputs": outputs} if outputs else {}))
     pending = async_client.get(f"/jobs/{identifier}/results")
     assert pending.status_code == 404 and pending.json["code"] == "ResultNotReady"
-    pending_status = async_client.get(f"/jobs/{identifier}").json
-    assert any(link["rel"] == "monitor" for link in pending_status["links"])
+    assert pending.headers["Cache-Control"] == "no-store"
+    pending_status = async_client.get(f"/jobs/{identifier}")
+    assert pending_status.headers["Cache-Control"] == "no-store"
+    assert any(link["rel"] == "monitor" for link in pending_status.json["links"])
     assert manager.claim() == identifier
-    assert async_client.get(f"/jobs/{identifier}").json["status"] == "running"
+    running_status = async_client.get(f"/jobs/{identifier}")
+    assert running_status.json["status"] == "running"
+    assert running_status.headers["Cache-Control"] == "no-store"
+    running_results = async_client.get(f"/jobs/{identifier}/results")
+    assert running_results.status_code == 404 and running_results.json["code"] == "ResultNotReady"
+    assert running_results.headers["Cache-Control"] == "no-store"
     manager.perform(identifier)
     restored = DurableProcessManager(definition)
     try:
@@ -107,9 +147,11 @@ def test_stored_representations_survive_manager_recreation(async_client, durable
     finally:
         restored._engine.dispose()
     status = async_client.get(f"/jobs/{identifier}")
+    assert status.headers["Cache-Control"] == "no-store"
     validate_official(status.json, "statusInfo.yaml")
     assert "progress" not in status.json
     result = async_client.get(f"/jobs/{identifier}/results")
+    assert result.headers["Cache-Control"] == "no-store"
     if response == "raw" and transmission == "reference":
         assert result.status_code == 204 and not result.data and "Content-Type" not in result.headers
         assert "/results/" in result.headers["Link"]
@@ -139,6 +181,7 @@ def test_failures_interruption_and_unknown_jobs_have_specific_contracts(async_cl
     manager.perform(identifier)
     failed = async_client.get(f"/jobs/{identifier}/results")
     assert failed.status_code == 400 and failed.json["code"] == "InvalidParameterValue"
+    assert failed.headers["Cache-Control"] == "no-store"
     interrupted = enqueue(async_client)
     manager.claim()
     manager.fail_interrupted()
@@ -150,6 +193,17 @@ def test_failures_interruption_and_unknown_jobs_have_specific_contracts(async_cl
     for suffix in ("", "/results"):
         unknown = async_client.get("/jobs/unknown" + suffix)
         assert unknown.status_code == 404 and unknown.json["code"] == "NoSuchJob"
+        assert unknown.headers["Cache-Control"] == "no-store"
+
+
+def test_unavailable_stored_response_is_not_cacheable(async_client, durable):
+    manager = durable[0]
+    identifier = enqueue(async_client)
+    assert manager.claim() == identifier
+    assert manager.update_job(identifier, {"status": "successful"})
+    response = async_client.get(f"/jobs/{identifier}/results")
+    assert response.status_code == 500 and response.json["code"] == "NoApplicableCode"
+    assert response.headers["Cache-Control"] == "no-store"
 
 
 def test_default_remains_synchronous_and_optional_capabilities_are_not_advertised(async_client, durable):
