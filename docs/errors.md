@@ -88,5 +88,5 @@ interruption behavior.
 Ordinary synchronous requests create no retained jobs. The explicit
 synchronous-only deployment retains none either: job identifiers return
 `NoSuchJob`, and `Prefer: respond-async` still executes synchronously.
-See [validation](validation.md) for current evidence and the earlier
-[Core audit](core-conformance-audit.md) for the synchronous profile.
+See [validation](validation.md) for current evidence and the distinction between
+the default durable deployment and the synchronous-only profile.

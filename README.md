@@ -91,7 +91,7 @@ curl --fail-with-body http://localhost:5001/processes/raster-info/execution \
 This requests a document response: HTTP 200 JSON containing `info.value`.
 See [input examples](docs/inputs.md) for HTTPS references and manual local-file
 requests, and [result formats](docs/results.md#http-contract) for all warp modes.
-See [sampling, reclassification and polygonization](docs/raster-operations.md)
+See [operation contracts](docs/raster-operations.md)
 for parameters, executable local-file examples and GeoJSON delivery.
 For output-to-input reuse, see [raster chaining](docs/inputs.md#chain-raster-operations):
 generated references need public HTTPS deployment to meet the input policy.
@@ -122,8 +122,10 @@ the matching raster footprint. Feature data follows OGC API – Features convent
 - Stored results expire after **24 hours** by default. Capacity defaults to
   **64 MiB / 256 files**; busy/full processing returns 503. See [result lifecycle](docs/results.md).
 - Dataset identifiers, server paths, reusable uploads and callbacks are unsupported.
-  The synchronous-only opt-out does not retain jobs. The service has no built-in authentication; result links are
-  accessible to anyone who knows them until expiry.
+  The synchronous-only opt-out does not retain jobs. There is no built-in
+  authentication: job IDs/status metadata are discoverable through `/jobs`, and
+  job results and file links are accessible without per-user authorization until
+  expiry. Protect the API at deployment when processing private data.
 
 Passing tests is not OGC certification. The advertised conformance classes and
 remaining implementation gaps are documented in [validation](docs/validation.md).
@@ -132,12 +134,11 @@ remaining implementation gaps are documented in [validation](docs/validation.md)
 
 - [Repeatable validation commands](docs/validation.md#repeatable-commands):
   `make test`, `make validate-geonovum`, `make validate` and `make validate-cite`.
-- [Raster metadata](docs/raster-info.md) and [JSON exceptions](docs/errors.md).
-- [Sampling, reclassification and polygonization](docs/raster-operations.md).
+- [Raster operation contracts](docs/raster-operations.md) and [JSON exceptions](docs/errors.md).
 - [Development and checks](docs/development.md), [architecture](docs/architecture.md)
   and [adding a process](docs/adding-a-process.md), including the
   [independent Python example](examples/custom-process/README.md).
-- [Release deployment](docs/release-image.md), [client interoperability](docs/client-interoperability.md)
+- [Release deployment](docs/release-image.md), [client interoperability](docs/validation.md#client-interoperability)
   and [future work](docs/roadmap.md).
 
 ## License and origins

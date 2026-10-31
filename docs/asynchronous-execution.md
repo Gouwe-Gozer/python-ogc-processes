@@ -6,42 +6,17 @@ result-store limits are unchanged. No PostGIS extension is required.
 
 ## Start
 
-From the repository root:
+Use [release deployment](release-image.md#run-and-inspect) for a self-contained
+image or [development](development.md#container-and-integration-checks) for source
+mounts. Both start API, PostgreSQL and worker. Apply `compose.sync.yml` after the
+chosen Compose file for the explicit database-free opt-out; see [README](../README.md#run-the-service).
 
-```bash
-docker compose up --build -d
-# Or use the self-contained release:
-docker compose -f compose.release.yml up --build -d
-```
-
-Both start the same combined service. They differ only in development source
-mounts and the image tag. `compose.base.yml` holds shared wiring and resource
-limits. The private database has a local-development password by default; set a
-persistent, URL-safe `GEO_JOB_PASSWORD` for hosted deployments. PostgreSQL has no
-published host port. Use a separate project/port if another deployment is running.
-
-Explicitly opt out of durable jobs with:
-
-```bash
-docker compose -f compose.yml -f compose.sync.yml up --build -d
-# Release equivalent:
-docker compose -f compose.release.yml -f compose.sync.yml up --build -d
-```
-
-The opt-out starts only the API with `OgcSynchronousManager`. It needs no database
-or worker, retains no jobs, and continues to ignore `Prefer: respond-async`.
-Compose 2.24+ is required for the small `!reset` opt-out override. When switching
-an existing combined project to this profile, stop it with its original Compose
-file first (`down` without `--volumes`); selecting a profile does not stop
-services that are already running.
-
-Keep a hosted deployment's password in its environment/secret configuration: an
-existing database volume retains its original credentials. Use a URL-safe
-password (for example, `python3 -c 'import secrets; print(secrets.token_hex(24))'` generates one); `GEO_JOB_DSN` is a PostgreSQL connection
-URL. The database is not published on a host port. PostgreSQL and the shared
-result directory have named volumes. Restarting/recreating containers preserves
-them; `down --volumes` deletes them and must only be used for disposable data.
-The worker has the same bounded memory/CPU/tmpfs/security policy as the API.
+Both result and database volumes survive normal `down`; `down --volumes` removes
+both. Use one image/configuration for API and worker and a persistent, URL-safe
+`GEO_JOB_PASSWORD` for hosted use. Compose supplies `GEO_JOB_DSN` from its
+PostgreSQL credentials; host runs/tests need a reachable PostgreSQL DSN.
+Job persistence details and access boundaries
+are below; deployment/proxy settings belong in the release guide.
 
 ## Submit, poll and retrieve
 
@@ -81,9 +56,10 @@ transmission choices: JSON/TIFF/GeoJSON by value, document references, or an emp
 public URL. The API does not render rasters, resolve internal artifact shortcuts,
 or relax HTTPS/private-network restrictions for chaining.
 
-All five existing processors use the same execution/formatting path. Initial
-container lifecycle tests focus on information and warp; the manager tests also
-check failure contracts, capacity and expiry. No processor was modified for async.
+All five processors use the same execution/formatting path and have container
+coverage, alongside the independent custom-process example. Lifecycle tests cover
+restart/interruption, failure contracts, capacity and expiry. Processors do not
+implement their own async methods.
 
 ## List retained jobs
 
@@ -163,7 +139,7 @@ A second worker is rejected rather than creating unbounded concurrency.
 | `GEO_JOB_TIMEOUT` | 30 seconds | Maximum child lifetime, including startup and processing |
 | `GEO_RESULT_RETENTION_SECONDS` | 86400 | Also bounds job lifetime from acceptance |
 
-Expired job rows are removed during admission/polling. They are never exposed
+Expired job rows are removed during admission and worker queue polling. They are never exposed
 after expiry. Jobs are not retained longer than their referenced raster files;
 file publication occurs after acceptance and uses the same retention duration.
 Increasing file retention or job settings requires appropriate disk/memory
@@ -203,5 +179,5 @@ retrieval/downloads after restart, worker SIGKILL recovery, deadlines and retain
 input-security checks. The fixture's slow process exists only in test config.
 Default Geonovum and CITE workflows now start isolated copies of this combined
 deployment, run synchronous and async raster smoke checks, and then execute the
-official validators. Historical synchronous snapshots remain separate. See
-[validation](validation.md) for the combined findings and their applicability.
+official validators. See [validation](validation.md) for current findings and
+coverage limits.

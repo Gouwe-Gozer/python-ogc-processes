@@ -1,207 +1,127 @@
 # OGC CITE / TEAM Engine
 
-`make validate-cite` runs the official OGC API – Processes 1.0 ETS against an
-isolated instance of **Raster Processes API**. It uses the same application,
-pygeoapi 0.24.0, durable PostgreSQL manager, separate worker, processors and result
-handling as the normal deployment, plus one test-only echo process. Shared service
-wiring is extended from `compose.base.yml`; there is no parallel API implementation.
+`make validate-cite` runs the official Processes 1.0 ETS against an isolated
+Raster Processes API/PostgreSQL/worker stack. It uses the real application,
+processors and result handling plus a validation-only echo. Shared wiring comes
+from `compose.base.yml`; there is no parallel API implementation.
 
-## Prerequisites and one-command execution
+## Run
 
-Install Docker with Compose 2.24+, GNU Make, user-installed
-`uv` and Python 3.12. Then run from the repository root:
+Install Docker with Compose 2.24+, GNU Make, user-installed uv and Python 3.12.
+From the repository root:
 
 ```bash
 uv sync --locked --all-groups
 make validate-cite
 ```
 
-No host Java, Maven or TEAM Engine installation is needed. Docker pulls the
-official image in [`runner.json`](runner.json), pinned by digest: suite **1.3**,
-TEAM Engine **6.0.0-RC2**. The engine version is the one shipped by OGC's latest
-published Processes-suite image, not a claim about the latest standalone engine.
-Image/registry access and external schema downloads require network connectivity.
-The published suite image is for Linux/amd64; other architectures need Docker emulation.
+No host Java, Maven or TEAM Engine installation is needed. [runner.json](runner.json)
+pins the official image by digest: Processes ETS **1.3**, TEAM Engine
+**6.0.0-RC2**, suite source commit `7ec421d9fc23718953c7ab973d3f6cc23b33e76e`.
+These are the workflow's versions, not claims about the latest upstream releases.
+Registry/schema downloads need network access. The suite image is Linux/amd64;
+other architectures require Docker emulation.
 
-The runner:
+The Python runner:
 
-1. Creates a unique `raster-cite-*` Compose project and effective config copied
-   from the canonical public config. It adds only internal network paths and
-   the `cite-echo` fixture.
-2. Builds/starts the real API, PostgreSQL and worker, using fresh named volumes
-   and a randomly allocated loopback-only API port.
-3. Runs independent synchronous raster checks and async info/warp/status/results/
-   download checks before invoking the official suite.
-4. Invokes the official suite's supported `TestNGController` Java CLI from the
-   unmodified image, using the engine libraries already installed there.
-5. Requests the engine's official HTML report/ZIP alongside native TestNG XML
-   and EARL; collects JSON/HTML/Markdown summaries, versions,
-   image identities, application commit/dirty state, configuration and logs.
-6. Removes its own temporary containers, network, result/database volumes and application
-   image tag, retaining the reports. It never stops the ordinary API or other projects.
+1. Creates a unique `raster-cite-*` project from the canonical configuration,
+   changing internal URL/data paths and registering `cite-echo`.
+2. Builds/starts API, PostgreSQL and worker with fresh volumes and a random
+   loopback-only API port.
+3. Checks the five raster operations and sync/async info/warp/status/results/downloads.
+4. Invokes the unmodified image's supported `TestNGController` Java CLI.
+5. Collects official HTML/ZIP, TestNG XML/EARL, summaries, exact configuration,
+   versions, image/source fingerprints, dirty-tree status and logs.
+6. Removes only its own containers/network/volumes/application image tag, retaining
+   reports. It does not stop an ordinary deployment or another Docker project.
 
-The echo fixture has matching input/output identifiers required by the suite,
-uses the ordinary processor/formatter interfaces, and the durable manager
-advertises both execution modes. Async requests run through the actual worker.
-The echo returns Python values so the HTTP boundary serializes JSON once.
-It accepts a required string plus optional integer array (up to 16 items),
-4/6-coordinate bounding box, mixed string/integer/qualified-object value and
-`pause` (0–5 seconds). Omitted values have defaults; pause is not an output.
-Strings are limited to 4,096 characters and integers to ±1,000,000. Bounding boxes
-are echoed structurally, without interpreting their coordinates.
+## Coverage and limitations
 
-Matching outputs support value transmission: a single raw JSON value, a result
-document, or `multipart/related` for multiple raw outputs. This MIME formatter is
-validation-only. HTTP/PostgreSQL regressions check values, schemas, output selection,
-invalid inputs and sync/async parity; CITE exercises the real worker and pending
-result retrieval. Public raster contracts and production processes are unchanged.
+Echo is a direct processor using the same execution/formatter interfaces and
+durable worker as production. Matching input/output IDs satisfy the suite's
+echo contract. It offers a bounded string, integer array, 4/6-coordinate bbox,
+mixed value and bounded pause; output selection supports raw JSON, output-keyed
+documents and `multipart/related` for multiple raw outputs. The MIME formatter
+is fixture-specific, not an automatic formatter for arbitrary processors.
 
-The pinned suite flattens array item types into input types and can consequently
-send a scalar for a string-array input. The fixture uses integer arrays with strict
-validation instead. Its mixed application-object choice precedes bbox because the
-suite's generic object generator otherwise supplies a qualified string to bbox.
-Neither accommodation accepts values outside the advertised schemas.
-The runner requests all-process testing, but the pinned suite's process-description
-class inherits `testAllProcesses=false` without assigning the supplied setting.
-Those methods therefore inspect the echo, not every raster description. Our
-HTTP/schema tests cover the raster descriptions; separate raster smoke tests
-exercise actual operations. Method names alone do not establish that every
-transport or transmission mode was tested.
+Fixture choices accommodate two pinned-suite generation limitations: integer
+arrays avoid its scalar string-array generation, and the mixed application-object
+choice precedes bbox to avoid a generated qualified string being treated as bbox.
+The fixture still rejects values outside its advertised schemas; no production
+raster contract is changed for the validator.
+
+The runner requests all-process testing, but the suite's description class does
+not assign that setting and inspects echo only. Echo has no binary input or
+reference output; passing method names do not prove those delivery modes were
+tested. HTTP/schema/security regressions and raster/container smokes cover them
+separately. See [CommonFixture](https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/CommonFixture.java)
+and [OGCProcessDescription](https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/ogcprocessdescription/OGCProcessDescription.java).
+
+The [reviewed public snapshot](current/README.md) records **52 passed / 2 failed /
+0 skipped**, including passing Job List tests. The two failures stop at a MIME
+JSON-content check; native reports retain responses containing the expected value.
+Async raw-value polling has also shown timing-sensitive suite failure. These
+assessments, scope limits and supporting reports stay public. No failed verdict
+is changed to pass or skip. See the broader [validation guide](../../docs/validation.md)
+for the separate official binary-schema overlap and current service claims.
 
 ## Reports and exit behavior
 
-Reports are in `runtime-data/cite/raster-cite-<unique-id>/`. Open the **official
-TEAM Engine report** at `reports/testng/<run-id>/result/index.html`, or share
-`official-report.zip` in the run's root directory. Keep the complete
-`result/` directory together when copying the unpacked report.
+Fresh reports are in `runtime-data/cite/raster-cite-<id>/`. Open the official
+report at `reports/testng/<run-id>/result/index.html` or share `official-report.zip`.
+Keep all relative HTML/assets together. The engine's original `result.zip` is
+also retained; its ZIP writer flattens asset directories, so the runner packages
+the unchanged official HTML/assets again with their directory structure intact.
+Some test-source/Javadoc links need the engine web application and will not work
+offline; result details and presentation assets remain local.
 
-The pinned engine's original `reports/testng/<run-id>/result.zip` is retained
-unchanged. Its ZIP writer flattens asset directories, so our runner also packages
-the unchanged official HTML/assets as `official-report.zip`, preserving their
-relative paths. The report itself is generated entirely by TEAM Engine. Some
-test-source/Javadoc links target its web application and are unavailable offline;
-test results, request/response details and presentation assets remain local.
+`summary.html`/`summary.md` link to official reports; `summary.json` indexes every
+case. `metadata.json` records versions, report paths and source identity. Native
+XML/EARL, exact config/test parameters and application/CLI/cleanup logs remain
+alongside them. CI uploads the complete run directory even after failures.
 
-Our lightweight `summary.html` and `summary.md` link to those official reports;
-they remain separate from TEAM Engine's presentation. `summary.json` indexes
-individual cases and `metadata.json` records versions and report paths. Native
-XML/EARL remain under `reports/testng/<run-id>/`. CLI/application/startup/cleanup
-logs and the exact effective config are retained beside them. GitHub Actions
-uploads the complete run directory, including the official HTML and ZIP.
+The runner returns **0** for complete runs without failures, **1** for test
+failures and **2** for infrastructure/report/cleanup errors. Make wraps failures
+in its own nonzero status; distinguish `FAIL` from `INFRASTRUCTURE ERROR` in logs.
+Missing or inconsistent reports, including missing official HTML/ZIP, never pass.
+Generated runs are ignored. The tracked `current/` snapshot is deliberately
+reviewed evidence, not an automatically updated threshold.
 
-The Python runner returns **0** for a complete run without failures, **1** for
-reported test failures and **2** for infrastructure/report/cleanup errors.
-GNU Make wraps unsuccessful recipes in its own nonzero status; read the
-`FAIL` versus `INFRASTRUCTURE ERROR` output and retained logs to distinguish them.
-Missing reports (including official HTML/ZIP) or malformed/inconsistent totals
-never count as a pass.
+## CLI, REST and browser diagnosis
 
-The [combined-deployment observation](combined/README.md) records **45 passed,
-4 failed, 5 skipped**, with explicit classifications. The expanded echo result
-below is a subsequent observation; historical snapshots are unchanged.
-Reported failures still make `make validate-cite` fail; CITE is not a mandatory
-PR gate. The earlier
-[synchronous observation](current/README.md) (**36/5/13**) and
-[predecessor snapshot](baseline/README.md) remain historical, unchanged records.
+The default Java CLI writes native files without starting Tomcat or authenticating.
+Its `acceptMediaType=application/zip` requests the engine's official report
+generation, using the same generator as REST's ZIP representation. Official
+references: [TEAM Engine user guide](https://opengeospatial.github.io/teamengine/users.html),
+[suite CLI controller](https://github.com/opengeospatial/ets-ogcapi-processes10/blob/1.3/src/main/java/org/opengis/cite/ogcapiprocesses10/TestNGController.java)
+and [report executor](https://github.com/opengeospatial/teamengine/blob/6.0.0-RC2/teamengine-spi/src/main/java/com/occamlab/te/spi/executors/testng/TestNGExecutor.java).
 
-## Expanded echo coverage (2026-10-31)
-
-Run `raster-cite-968ddd0eac91`: **49 passed / 5 failed / 0 skipped**, compared with
-the historical combined **45 / 4 / 5**. All 54 official verdicts remain unmodified;
-the command still exits nonzero. All five former skips now pass: array input,
-bounding-box input, mixed input/output descriptions, and not-ready results.
-The same fixture passes HTTP/PostgreSQL regression tests for sync/async results.
-
-| Remaining method(s) | Assessment and follow-up |
-| --- | --- |
-| `testJobCreationInputRef`, `testJobCreationInputValidation` | The suite now takes its multipart branch and cannot find `teststring`, although independently decoded JSON parts contain it. Its `validateMultipartResponse` calls Java MIME `getContent().toString()` rather than decoding JSON bytes. Assessed checker limitation; retain correct JSON part types and failed verdicts. The initial-valid-response check still prevents the intended invalid-input check. |
-| `testJobResultsAsyncRawValueOne` | Newly fails as a suite polling limitation. The retained report contains a successful job completed about 10 seconds after submission, but says “20 seconds.” `loopOverStatus` uses an instance-wide `attempts` counter without resetting it between tests and checks the counter before examining the successful status. The pause test adds real queue pressure. Keep actual async parity/pending-result regressions; do not shorten the requested pause or manufacture immediate completion. |
-| `testJobList`, `testJobListSuccess` | Unchanged optional Job List expectations; unsupported/unadvertised, returning 405. |
-
-These classifications follow the pinned [Jobs implementation][echo-jobs-source].
-The mixed-schema checks examine only the echo because of the unassigned
-`testAllProcesses` field in [CommonFixture][echo-common-source] and its use in
-[OGCProcessDescription][echo-description-source]. An exploratory run with
-`testallprocesses=off` produced the same verdicts; no new scope option is retained.
-
-Coverage limits remain explicit: the echo has no binary input or reference
-outputs. Several passing method names therefore do not prove binary, referenced-input
-or reference-transmission coverage; inspect their requests. Raster smoke tests
-and our HTTP/security tests supply separate evidence. The earlier string/binary
-`oneOf` schema overlap is unchanged: the two affected methods now follow the
-legitimate multipart path because the fixture has multiple outputs, rather than
-reaching that bundled response-schema check.
-
-The complete official report is retained under
-`runtime-data/cite/raster-cite-968ddd0eac91/`; no reviewed baseline was replaced.
-Geonovum independently still matches the **one-diagnostic** combined baseline.
-
-[echo-jobs-source]: https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/jobs/Jobs.java
-[echo-common-source]: https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/CommonFixture.java
-[echo-description-source]: https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/ogcprocessdescription/OGCProcessDescription.java
-
-## Job List observation (2026-10-31)
-
-Run `raster-cite-71c76ab441cd`: **52 passed / 2 failed / 0 skipped**.
-`testJobList` and `testJobListSuccess` now pass against the real durable manager.
-The two remaining failures are `testJobCreationInputRef` and
-`testJobCreationInputValidation`, with the JSON MIME-content issue described above.
-`testJobResultsAsyncRawValueOne` passes this run; its timing-sensitive polling
-failure is not treated as an application fix or a guarantee for later runs.
-The polling method checks its attempt limit before examining a fetched terminal
-status; earlier claims about counter carry-over and pause-test queue pressure were
-not established by the retained evidence.
-
-The unchanged official report and verdicts are under
-`runtime-data/cite/raster-cite-71c76ab441cd/`. Historical snapshots remain unchanged.
-New PostgreSQL/HTTP tests additionally cover all required Job List filters,
-empty lists, pagination, safe metadata, configured public links and error headers.
-A real API/database restart test confirms queued and completed listings survive.
-
-## Supported CLI, REST and browser fallback
-
-Both the official Java CLI and the authenticated REST interface were exercised.
-CLI is used by default because it writes native files directly, needs no Tomcat
-startup/login, and avoids ZIP extraction or browser automation. The engine's
-`acceptMediaType=application/zip` test-run property requests its own HTML/ZIP
-generation without rerunning tests or replacing the XML/EARL. The pinned
-[official executor](https://github.com/opengeospatial/teamengine/blob/6.0.0-RC2/teamengine-spi/src/main/java/com/occamlab/te/spi/executors/testng/TestNGExecutor.java)
-uses the same report generator as REST's `Accept: application/zip`. The official
-[TEAM Engine guide](https://opengeospatial.github.io/teamengine/users.html)
-documents CLI, REST and browser operation; the suite's controller documents its
-[programmatic entry point](https://github.com/opengeospatial/ets-ogcapi-processes10/blob/1.3/src/main/java/org/opengis/cite/ogcapiprocesses10/TestNGController.java).
-
-For manual diagnosis:
+For manual investigation:
 
 ```bash
 make validate-cite CITE_ARGS=--browser
 ```
 
-This explicitly leaves the isolated API/database/worker and TEAM Engine web
-instance running. It does not alter an existing deployment. The
-command prints a randomly allocated loopback-only URL and exact cleanup commands;
-these are also in its `metadata.json`. Wait for Tomcat startup if the page is
-initially unavailable. Log in with the image's local test account **ogctest / ogctest**.
-Create a session for Processes 1.0, set the landing page to `http://api:8080`,
-echo ID to `cite-echo`, select **Test all processes**, and start the run.
-Use the printed cleanup commands when finished. Browser mode itself claims no test result.
+This leaves only the generated stack and engine web instance running and claims
+no test result. Use the printed loopback URL and exact cleanup commands, also
+recorded in `metadata.json`. Wait for Tomcat if initially unavailable. The image's
+local test login is **ogctest / ogctest**. Create a Processes 1.0 session with
+landing URL `http://api:8080`, echo ID `cite-echo` and **Test all processes**.
+Apply the scope limitation above even when that setting is selected.
 
-The authenticated REST listing is `/teamengine/rest/suites`; the installed
-controller is `/teamengine/rest/suites/ogcapi-processes-1.0/run`. It accepts
-`iut`, `echoprocessid`, `testallprocesses=on` and `processtestlimit=0`, with Basic
-authentication and `Accept: application/xml` for direct XML results.
-Use the image's advertised endpoints; version path conventions differ between engine versions.
+The authenticated REST listing is `/teamengine/rest/suites`; the pinned suite's
+run endpoint is `/teamengine/rest/suites/ogcapi-processes-1.0/run`. Parameters are
+`iut`, `echoprocessid`, `testallprocesses=on`, `processtestlimit=0`, with Basic auth
+and `Accept: application/xml` for direct XML. Other engine versions may use
+different paths; follow their advertised interface.
 
-## Baseline policy and CI
+## Review policy and CI
 
-The runner writes only ignored run directories, never reviewed evidence. Compare
-new reports method by method, review applicability and requirements, and propose
-baseline updates explicitly as tracked file changes. Include native XML/EARL,
-metadata/configuration, a result summary and a classification/action for every failure.
-A matching pass count alone is insufficient. Do not alter production behavior,
-filter test failures, advertise unsupported capabilities or enable another job
-manager to improve the score.
+The runner never rewrites tracked evidence. Compare methods, captured exchanges,
+requirements and applicability before explicitly updating a snapshot. Preserve
+native verdicts, metadata and classifications of every failure/skip; matching
+totals alone are insufficient. Do not change correct service behavior, filter
+failures or advertise unsupported capabilities to improve a score.
 
-The **OGC CITE validation** GitHub Actions workflow is manually triggered only.
-It preserves complete run reports as artifacts even when tests fail. It is
-independent of normal PR checks; local execution does not need GitHub or secrets.
+The **OGC CITE validation** GitHub workflow is manually triggered, independent of
+normal PR checks. Local execution needs no GitHub account or secrets.

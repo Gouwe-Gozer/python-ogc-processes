@@ -1,10 +1,65 @@
-# Sampling, reclassification and polygonization
+# Raster operation contracts
 
-All three synchronous processes reuse the [GeoTIFF input policy](inputs.md),
-pygeoapi registration and [result lifecycle](results.md). Each has one `result`
-output. `band` is a one-based integer, default **1**. Unsupported inputs, formats,
+All five processes support synchronous and durable asynchronous execution. They
+reuse the [GeoTIFF input policy](inputs.md), pygeoapi registration and
+[result lifecycle](results.md). Information has one `info` output; the other
+operations have one `result` output. For sampling, reclassification and polygonization, `band` is a one-based
+integer, default **1**. Unsupported inputs, formats,
 bands or operation limits return an OGC exception with HTTP 400; input byte
 limits return 413, unavailable capacity 503 and internal failures sanitized 500.
+
+## Raster information — `raster-info`
+
+`raster-info` returns application-defined JSON backed by Rasterio/GDAL and
+NumPy. It does not expose a library's native metadata dictionary. The executable
+schema is [contracts/info.py](../src/geo_processes/contracts/info.py).
+
+The test fixture at `src/geo_processes/data/demo-dem.tif` is a one-band Float32,
+4 by 3 GeoTIFF in EPSG:28992 with 10-metre pixels, origin (155000, 463000), nodata
+-9999 and row-major values 1 through 12. Tests and examples submit its bytes
+through the ordinary user-input contract; its filename is not an API identifier.
+
+| Field | Meaning |
+| --- | --- |
+| `type`, `driver` | `raster` and `GTiff`, the supported input driver |
+| `size`, `band_count` | Width/height in pixels and number of bands |
+| `geo_transform` | Six coefficients in GDAL order: origin X, pixel X, rotation X, origin Y, rotation Y, pixel Y |
+| `crs` | Object containing `epsg` and `wkt`, or null if no CRS is present; `epsg` can be null for a custom CRS |
+| `extent` | `[left, bottom, right, top]` in source coordinates |
+| `wgs84_extent` | Densified transformed bounds in longitude/latitude, or null without a CRS |
+| `bands` | One object per band, with 1-based index, Rasterio/NumPy dtype name, nodata and statistics |
+| `metadata` | Default-namespace dataset tags as a string-to-string object |
+
+Nodata is a JSON number when finite, null when unset, or the string `NaN`,
+`Infinity` or `-Infinity` for those non-finite nodata markers. Statistics exclude
+masked/nodata pixels and all NaN/infinite samples. `valid_count` counts the
+remaining finite samples. `min`, `max`, `mean` and population `std_dev` are
+numbers, or null when no samples remain. JSON never contains non-standard
+numeric NaN or infinity tokens. Complex rasters are unsupported.
+
+All five raster operations enforce 16 MiB per input and 1,048,576 samples
+including bands. Info reads one band at a time for exact statistics. It can
+inspect a raster without a CRS; warp rejects that raster. All five accept
+[user GeoTIFFs](inputs.md) through HTTPS references or inline base64. Source files are validated
+and staged privately; metadata and all statistics refer to the supplied file.
+
+Raw execution returns this object directly. Document execution returns
+`{"info":{"value":{...metadata...}}}`. See the [README](../README.md) and
+[OGC review guide](validation.md#ogc-review-guide) for HTTP and standards context.
+
+## Raster reprojection — `raster-warp`
+
+Required inputs: `source` and `target_crs`. Targets are **EPSG:28992**,
+**EPSG:4326** and **EPSG:3857**. Optional `resampling` is **bilinear** (default)
+or **nearest**. The source requires a CRS. Rasterio/GDAL reprojects each band,
+retaining source width/height and choosing the transform from the transformed
+extent. Clients cannot specify target resolution, dimensions or extent.
+
+Output is a GeoTIFF retaining band count/dtypes and nodata where applicable.
+Use nearest-neighbour resampling for categorical data. Scalar choices support
+[literal, qualified and HTTPS forms](inputs.md#scalar-input-references).
+See [the result contract](results.md#http-contract) for value/reference delivery
+and [the local-file client](inputs.md#process-a-local-file) for a working example.
 
 ## Sample points — `raster-sample-points`
 
@@ -104,7 +159,7 @@ with `mediaType: application/geo+json`. Document/reference returns `result.href`
 and `type`; raw/reference returns HTTP 204 with a `Link`. Download URLs end in
 `output.tif` or `output.geojson` and share quotas and expiry. GeoJSON is not a
 Shapefile archive. Its rendering in the external client still needs testing;
-see the [interoperability log](client-interoperability.md).
+see [client interoperability](validation.md#client-interoperability).
 
 ## Run a local-file request
 

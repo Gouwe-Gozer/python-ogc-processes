@@ -98,7 +98,9 @@ Invalid settings stop startup with a named configuration error. Checks cover:
 
 Worker/bind overrides apply when supplied to the container environment; Compose's
 external `API_PORT` and `PYGEOAPI_SERVER_URL` remain separate settings. Change
-operational settings by restarting the service. The preflight is a configuration
+environment settings by recreating the affected containers with `docker compose
+up --detach` (include `--file compose.release.yml` for release). A plain restart
+keeps the old container environment. The preflight is a configuration
 check, rather than a storage capacity reservation or a memory/workload guarantee.
 
 ## Extending the service
@@ -109,8 +111,7 @@ shared API/worker installation and meaningful HTTP tests. Keep processors/contra
 independent and reuse the [input](inputs.md), [result](results.md) and
 [exception](errors.md) lifecycles. Architectural boundaries are in
 [architecture](architecture.md); proposed capabilities belong in the [roadmap](roadmap.md).
-Current implementation changes should update maintained documentation, not the
-historical handover.
+Update the relevant maintained guide when behavior changes.
 
 ## Container and integration checks
 
@@ -147,10 +148,9 @@ The discovery test executes `raster-info`; the warp test exercises all four
 response/transmission combinations and opens the resulting GeoTIFFs. The saved
 reference verifies persistence across a service restart. `compose.yml` mounts
 source and configuration read-only for development; restart after changing them.
-Both stacks use a named result volume. Normal `down` retains it; adding
-`--volumes` deletes it and all stored results.
-
-For a deliberate reset of disposable local results:
+Both stacks retain named volumes for results and the PostgreSQL job database.
+Normal `down` keeps both. For a deliberate reset of **all disposable local job
+and result data** (never a database or results you need to keep):
 
 ```bash
 docker compose --file compose.release.yml down --volumes --remove-orphans
@@ -162,10 +162,11 @@ Keep cleanup scoped to this Compose project; do not use global Docker prune.
 the public URL and supported result/input settings. All existing `GEO_*`
 defaults and limits remain unchanged.
 
-The public manager's `connection` and `output_dir` fields are required by
-pygeoapi's configuration schema, although this synchronous manager does not use
-them. Actual result storage uses `GEO_OUTPUT_DIR`; keep the placeholders until
-the configured manager or upstream schema changes.
+The default manager uses `connection` (`GEO_JOB_DSN`) for durable PostgreSQL
+jobs. Native `output_dir` remains in the pygeoapi configuration; application
+file results use `GEO_OUTPUT_DIR`, while formatted async payloads live in the
+database. Only the explicit synchronous manager ignores these native job-store
+settings. See [job persistence](asynchronous-execution.md#persistence-and-interruption).
 
 The input smoke check creates a two-band raster independently of the bundled
 demo, submits it inline, checks info and all four warp modes, then downloads
@@ -185,10 +186,7 @@ The official schema snapshots are offline and checksummed. Optional live
 `--source-href` checks should use a full upstream commit SHA and record the
 raster checksum, comparing with the same local `--input-raster`. The project's
 `blob/main/docs/errors.md` URLs identify maintained exception documentation;
-they are not raster fixtures. For the separate `ogc-processes-tests` project,
-pin its successful GeoTIFF URL to an exact commit and checksum, or package an
-appropriately licensed fixture there; no changes to that repository are required
-to run this project's checks.
+they are not raster fixtures.
 
 The local storage lock uses Linux `flock`; use Linux or Docker for this service.
 See [result storage](results.md) for settings and maintenance commands.
@@ -234,37 +232,28 @@ their order are preserved. The shared service description comes from
 `metadata.identification.description` in `config/pygeoapi.yml`; it describes
 intended OGC alignment without claiming certification.
 
-The inherited CITE echo fixture remains separate from the public service:
+The separate upstream-manager diagnostic is checked by `make test`:
 
 ```bash
 mkdir -p runtime-data
 PYTHONPATH=tests/fixtures uv run pygeoapi config validate --config config/pygeoapi.integration.yml
 PYTHONPATH=tests/fixtures uv run pygeoapi openapi generate --format yaml --output-file runtime-data/integration-openapi.yml config/pygeoapi.integration.yml
 uv run pygeoapi openapi validate runtime-data/integration-openapi.yml
-docker compose -f compose.yml -f compose.integration.yml up --build --detach
 ```
 
-That diagnostic configuration uses upstream TinyDB and `async-echo`; it is not
-evidence that the public service implements asynchronous jobs. It replaces the
-public configuration when using the Compose override, so run the stacks separately.
+This TinyDB/`async-echo` configuration tests compatibility with upstream manager
+behavior and native OpenAPI generation. It does not represent the default
+deployment and is not the current CITE runner's configuration. Do not substitute
+it for the combined stack when assessing this service.
 
 ## External validation and CI
 
-With the ordinary API running, `make validate-geonovum` compares its OpenAPI
-with the reviewed static baseline. `make validate` combines that with `make test`.
-`make validate-cite` separately starts and removes an isolated API and the official
-executable suite; it does not need the ordinary API running and never changes it.
-Docker supplies the pinned external validators, so host Node, Java and Maven
-are unnecessary for these commands.
+Use [validation](validation.md#repeatable-commands) for `make validate-geonovum`,
+`make validate` and `make validate-cite`, CI scope and report interpretation.
+Both external workflows normally start isolated API/PostgreSQL/worker stacks;
+neither needs or changes the ordinary deployment. An explicit `GEONOVUM_INPUT`
+override targets an existing API. Docker supplies Node/Java/TEAM Engine.
 
-Pull requests run routine checks, release/runtime tests and Geonovum. Main
-pushes run the existing routine/release checks; CITE runs only through the
-separate manual **OGC CITE validation** workflow. Reports are retained as CI
-artifacts. CITE's currently recorded failures intentionally make that manual
-workflow fail; it is not a mandatory PR gate.
-
-See [validation](validation.md#repeatable-commands) for commands and evidence
-boundaries, [Geonovum](../validation/geonovum/README.md) for its reviewed findings,
-and [CITE](../validation/cite-teamengine/README.md) for unattended execution,
-report interpretation and the browser fallback. The old TinyDB diagnostic above
-is independent of this new CITE workflow; it does not validate public async support.
+Tool-specific instructions live with [Geonovum](../validation/geonovum/README.md)
+and [CITE](../validation/cite-teamengine/README.md). Keep exact reviewed baselines
+and raw failures intact; investigate changed diagnostics before proposing updates.

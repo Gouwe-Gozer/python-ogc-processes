@@ -60,7 +60,9 @@ Development and release Compose mount the named volume `results` at
 `/var/lib/geo/results`. New volumes inherit UID/GID 10001 ownership from the
 image. No runtime root process is needed, and the rest of the release root
 filesystem remains read-only. Files survive container restart and recreation;
-a normal Compose `down` retains the volume. `down --volumes` deletes all results.
+a normal Compose `down` retains the volume. `down --volumes` deletes results
+and, in the default combined stack, the PostgreSQL job database as well. Use it
+only for a deliberate reset of disposable data.
 
 The initial retention period is **86,400 seconds (24 hours)** after successful
 publication. Download checks enforce expiry on every request. A restart does
@@ -71,7 +73,7 @@ remove files before their normal expiry.
 Expired files and abandoned workspaces are physically removed before the next
 file-producing operation or during explicit cleanup. This is lazy cleanup: files may remain on disk
 while the service is idle, but expired download URLs already return 404. There
-is no background job system. To clean the running release volume explicitly:
+is no scheduled file-cleanup task; this is independent of async job execution. To clean the running release volume explicitly:
 
 ```bash
 docker compose --file compose.release.yml exec -T api \
@@ -111,8 +113,8 @@ Each output is written in a private per-request workspace, checked against a
 16 MiB file limit and the store quota, then atomically renamed to an opaque
 UUID filename. Failed writes clean their workspaces. The next writer cleans
 workspaces left by interrupted workers. Readers refuse symlinks, special files
-and invalid IDs; publication is serialized across the two Gunicorn workers
-sharing this local volume. Downloads can proceed during another warp.
+and invalid IDs; publication is serialized across API processes and the async worker sharing
+this local volume. Downloads can proceed during another file-producing operation.
 
 Warp retains source width and height, bounding the target sample count; clients
 cannot choose resolution, dimensions or extents. Input budgets and temporary

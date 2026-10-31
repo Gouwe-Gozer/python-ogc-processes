@@ -96,3 +96,85 @@ actual discovery, OpenAPI, synchronous/async results and typed failures. They
 create/remove only their unique `raster-async-test-*` resources. See
 [adding a process](../../docs/adding-a-process.md) to adapt the example to your code,
 install dependencies and deploy changes to both services.
+
+
+## Package for deployment
+
+The quickstart mounts its generated config from `runtime-data`; that mount must
+be present on its host. To make a portable image, keep a reviewed configuration
+inside your build context and copy it into the derived image. After generating
+the example configuration above, prepare your own deployment files:
+
+```bash
+mkdir -p deploy/custom
+cp runtime-data/custom-process/pygeoapi.yml deploy/custom/pygeoapi.yml
+```
+
+Keep `${GEO_*}`/`${PYGEOAPI_*}` environment placeholders in that configuration;
+do not bake real passwords, signed URLs or other secrets into the image. Review
+the process registration and public sample/data paths before publishing it.
+Create `deploy/custom/Dockerfile`:
+
+```dockerfile
+FROM raster-processes:0.1.0
+COPY examples/custom-process/custom_processes /pygeoapi/custom_processes
+COPY deploy/custom/pygeoapi.yml /pygeoapi/local.config.yml
+```
+
+This preserves the base non-root user, entrypoint and Python path. For your own
+process, replace the copied package and dotted configuration class together.
+Install dependencies through the [shared manifest/lock workflow](../../docs/adding-a-process.md#3-install-and-register-explicitly),
+then rebuild the base image before building this derived image.
+
+Create `deploy/custom/compose.yml`:
+
+```yaml
+services:
+  api:
+    image: raster-processes-custom:0.1.0
+    build:
+      context: .
+      dockerfile: deploy/custom/Dockerfile
+  worker:
+    image: raster-processes-custom:0.1.0
+```
+
+Use this override **instead of** `examples/custom-process/compose.yml`, so the
+configuration is packaged and no example config mount is needed. With the base
+image built as above, start a separate disposable deployment on a free port:
+
+```bash
+API_PORT=5003 PYGEOAPI_SERVER_URL=http://localhost:5003 \
+  docker compose -p raster-custom-release \
+  -f compose.release.yml -f deploy/custom/compose.yml up --build --wait
+```
+
+Use port 5003 for the discovery/execution checks above. Use the same project name
+and file arguments for `logs` and `down`; normal `down` keeps its database/results.
+Before hosted use, choose a persistent `GEO_JOB_PASSWORD`, public URL and access
+policy as described in [release deployment](../../docs/release-image.md).
+
+## Troubleshooting and adapting tests
+
+- **Missing process:** confirm registration is under `resources`, the metadata ID
+  matches it, and the dotted class imports in both images. Configuration is read
+  at startup; a host-only `PYTHONPATH` does not install code inside containers.
+- **Sync works but async fails:** inspect `logs worker` as well as `logs api` with
+  the same Compose arguments. Both services need identical code, dependencies,
+  config and data. Worker-side validation errors are retrieved from the failed
+  job's results; submission itself can return 201.
+- **Changes do not appear:** rebuild/recreate both services after image changes.
+  Restart both after bind-mounted code/config edits; recreate them with `up`
+  after environment changes. The entrypoint regenerates OpenAPI at startup.
+- **Capacity exhausted:** completed and failed jobs count toward the default
+  16-job limit until expiry. See [job limits](../../docs/asynchronous-execution.md#bounds-and-lifetime).
+  Only for this disposable example project, `down --volumes` resets **both** jobs
+  and results; never use it against persistent data you need to retain.
+
+Adapt [test_custom_process.py](../../tests/test_custom_process.py) for the function,
+processor, output choices, errors and contract/OpenAPI assertions. Adapt the
+`custom_process` tests in [test_async_containers.py](../../tests/test_async_containers.py)
+for real HTTP discovery, native/document results, async parity and failed jobs.
+Use tiny deterministic inputs and assert your operation's result; no API/worker
+internals or new testing framework are needed. Run the focused commands above
+and `make test` after adapting the example.

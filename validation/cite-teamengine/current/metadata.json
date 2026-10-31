@@ -5,20 +5,22 @@
   "image": "ogccite/ets-ogcapi-processes10:1.3-teamengine-6.0.0-RC2@sha256:8879e2d608e654d1f68aa94a2fd3b9bb1376f400737a2732ed32915a8e5211e8",
   "sourceTag": "1.3",
   "sourceCommit": "7ec421d9fc23718953c7ab973d3f6cc23b33e76e",
-  "project": "raster-cite-b7045c0567cd",
-  "started": "2026-10-25T11:28:53.608858+00:00",
+  "project": "raster-cite-71c76ab441cd",
+  "started": "2026-10-31T14:06:02.076110+00:00",
   "parameters": {
     "iut": "http://api:8080",
     "echoprocessid": "cite-echo",
     "testallprocesses": "on",
-    "processtestlimit": "0"
+    "processtestlimit": "0",
+    "acceptMediaType": "application/zip"
   },
-  "applicationCommit": "de8890c66b94cc106c8643b874d809677327ddd0",
+  "applicationCommit": "da1e0779efb631dd9010ee697ef6d063063d42c7",
   "workingTreeDirty": true,
-  "applicationSourceSha256": "4ffa796a02e666b10751535358adf7e38332ae7d911337c225a8f264c644fa58",
-  "configurationSha256": "13290b76b8c7a6c418ac8c3aa176a073afb29eb854312f8ec882c32f4531a9ce",
-  "composeSha256": "e62d5b57b101e93e40f7e997910f0b5e02844b3c64bcf4121f5131e14f034c9a",
-  "manager": "geo_processes.manager.OgcSynchronousManager",
+  "applicationSourceSha256": "949c0a8f0cd62e7dd0c843d70dea790b2d78b9573cf1e752eee0feddcf17c8b1",
+  "configurationSha256": "1bdf9a2efb0b416bbda02ff47e7e4d7eec4c6b3a962fbdfb19c47438bbfac243",
+  "composeSha256": "aaa376089236e1de4669f9366ed43f90e764ec90b8d36041379c6baafd9140f6",
+  "composeBaseSha256": "9e7a8d1eeab81efefa0f8ff56fe8162b0237c4dfca18180a441a1ab36e83b8f3",
+  "manager": "geo_processes.async_manager.DurableProcessManager",
   "processes": [
     "raster-info",
     "raster-warp",
@@ -28,11 +30,10 @@
     "cite-echo"
   ],
   "composeVersion": "5.6.1",
-  "mode": "cli",
-  "applicationImage": "sha256:000ed5389ed7ad282503ef37e4ed2a0d8b88e99891365cfe7072321e3cca8a64",
+  "mode": "cite",
+  "deployment": "combined",
+  "applicationImage": "sha256:96fd1fd514af63464b8c92c8236a1812dcaf16e7f806837f8d3eb2c89ab76eb7",
   "advertisedConformance": [
-    "http://www.opengis.net/spec/cql2/1.0/conf/basic-cql2",
-    "http://www.opengis.net/spec/cql2/1.0/conf/cql2-text",
     "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core",
     "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/html",
     "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/json",
@@ -48,12 +49,17 @@
     "http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs",
     "http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/queryables",
     "http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/queryables-query-parameters",
-    "http://www.opengis.net/spec/ogcapi-features-4/1.0/conf/create-replace-delete",
     "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/core",
     "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/json",
     "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/oas30",
-    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/ogc-process-description"
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/ogc-process-description",
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/job-list"
   ],
+  "asyncSmokePassed": true,
   "validatorImage": "sha256:8879e2d608e654d1f68aa94a2fd3b9bb1376f400737a2732ed32915a8e5211e8",
-  "finished": "2026-10-25T11:29:05.202861+00:00"
+  "officialHtmlReport": "reports/testng/33be4405-481a-4616-9d2d-7f48129f4897/result/index.html",
+  "nativeHtmlArchive": "reports/testng/33be4405-481a-4616-9d2d-7f48129f4897/result.zip",
+  "officialHtmlArchive": "official-report.zip",
+  "finished": "2026-10-31T14:06:47.028295+00:00",
+  "exitCode": 1
 }
