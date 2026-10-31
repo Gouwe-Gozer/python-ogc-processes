@@ -230,7 +230,10 @@ dependencies = [
     { name = "numpy" },
     { name = "psycopg2-binary" },
     { name = "pygeoapi" },
+    { name = "pyproj" },
     { name = "rasterio" },
+    { name = "requests" },
+    { name = "shapely" },
     { name = "sqlalchemy" },
 ]
 
@@ -250,7 +253,10 @@ requires-dist = [
     { name = "numpy", specifier = "==1.26.4" },
     { name = "psycopg2-binary", specifier = "==2.9.11" },
     { name = "pygeoapi", specifier = "==0.24.0" },
+    { name = "pyproj", specifier = "==3.7.2" },
     { name = "rasterio", specifier = "==1.4.3" },
+    { name = "requests", specifier = "==2.34.2" },
+    { name = "shapely", specifier = "==2.1.2" },
     { name = "sqlalchemy", specifier = ">=2,<3" },
 ]
 

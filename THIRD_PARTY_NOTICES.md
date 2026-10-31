@@ -138,6 +138,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 The installed distributions retain their respective copyright/licence files.
 
+## Opt-in contributor experience integrations
+
+The disposable integration experiment declares existing locked packages directly:
+
+- Shapely 2.1.2: BSD-3-Clause; its installed distribution retains `LICENSE.txt`
+  and the bundled GEOS notice `LICENSE_GEOS`.
+- PyProj 3.7.2: MIT; its installed distribution retains `LICENSE` and
+  the bundled PROJ notice `LICENSE_proj`.
+- Requests 2.34.2: Apache-2.0; its installed distribution retains `LICENSE`
+  and `NOTICE`.
+
+`src/geo_processes/operations/terrain.py` extracts only terrain analysis from
+the user-supplied `bird-detections-main/ingestion/sync_terrain.py`. No copyright
+or licence notice was present in that supplied script. The associated Alkmaar
+boundary is copied unchanged. No new licence is asserted for these supplied
+materials; their provenance and checksums are recorded in the experiment
+[report](examples/contributor-experience/REPORT.md). They are not registered in
+the default catalogue.
+
 ## Packaged sample data
 
 The AHN4 sample GeoTIFF is published as AHN data under CC0 1.0, separately from

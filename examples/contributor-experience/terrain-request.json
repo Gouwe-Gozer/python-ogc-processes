@@ -1,0 +1,9 @@
+{
+  "inputs": {
+    "lat": 52.63,
+    "lon": 4.75,
+    "buffer_300m": 30,
+    "buffer_500m": 50
+  },
+  "response": "document"
+}

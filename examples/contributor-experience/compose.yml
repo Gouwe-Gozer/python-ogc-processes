@@ -1,0 +1,15 @@
+# Use after compose.release.yml with the prepared disposable configuration.
+services:
+  api:
+    image: raster-contributor-experience:local
+    volumes:
+      - ./runtime-data/contributor-experience/pygeoapi.yml:/pygeoapi/local.config.yml:ro
+    environment:
+      WSGI_WORKER_TIMEOUT: "300"
+      GEO_JOB_TIMEOUT: "300"
+  worker:
+    image: raster-contributor-experience:local
+    volumes:
+      - ./runtime-data/contributor-experience/pygeoapi.yml:/pygeoapi/local.config.yml:ro
+    environment:
+      GEO_JOB_TIMEOUT: "300"

@@ -40,6 +40,8 @@ def deployment(tmp_path_factory, request):
     directory = tmp_path_factory.mktemp("async-containers")
     project = "raster-async-test-" + uuid4().hex[:10]
     custom_example = getattr(request, "param", None) == "custom-process"
+    contributor_example = getattr(request, "param", None) in {"contributor-experience", "contributor-live"}
+    mocked_pdok = getattr(request, "param", None) == "contributor-experience"
     example = ROOT / "examples/custom-process"
     port = free_port()
     db_port = free_port()
@@ -58,6 +60,10 @@ def deployment(tmp_path_factory, request):
     if custom_example:
         config["resources"].update(yaml.safe_load((example / "process.yml").read_text()))
         environment["CUSTOM_PROCESS_BASE_IMAGE"] = project + ":base"
+    if contributor_example:
+        config["resources"].update(yaml.safe_load((ROOT / "examples/contributor-experience/processes.yml").read_text()))
+        environment["GEO_JOB_TIMEOUT"] = "300"
+        environment["GEO_JOB_MAX_COUNT"] = "64"
     (directory / "config.yml").write_text(yaml.safe_dump(config))
     volumes = [
         f"{directory / 'config.yml'}:/pygeoapi/local.config.yml:ro",
@@ -70,6 +76,18 @@ def deployment(tmp_path_factory, request):
             "db": {"ports": [f"127.0.0.1:{db_port}:5432"]},
         }
     }
+    if contributor_example:
+        for service in ("api", "worker"):
+            override["services"][service]["environment"] = {"WSGI_WORKER_TIMEOUT": "300"}
+            if mocked_pdok:
+                override["services"][service]["volumes"] = [
+                    *volumes,
+                    f"{ROOT / 'tests/fixtures/pdok_startup'}:/pygeoapi/test-startup:ro",
+                    f"{ROOT / 'tests/fixtures/terrain_pdok.py'}:/pygeoapi/test-fixtures/terrain_pdok.py:ro",
+                ]
+                override["services"][service]["environment"]["PYTHONPATH"] = (
+                    "/pygeoapi/test-startup:/pygeoapi/test-fixtures:/pygeoapi"
+                )
     (directory / "compose.yml").write_text(yaml.safe_dump(override))
     compose = [
         "docker",

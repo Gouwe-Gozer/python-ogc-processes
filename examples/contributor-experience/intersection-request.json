@@ -1,0 +1,25 @@
+{
+  "inputs": {
+    "left": {
+      "value": {
+        "type": "Point",
+        "coordinates": [
+          4.75,
+          52.63
+        ]
+      },
+      "mediaType": "application/geo+json"
+    },
+    "right": {
+      "value": {
+        "type": "Point",
+        "coordinates": [
+          4.75,
+          52.63
+        ]
+      },
+      "mediaType": "application/geo+json"
+    }
+  },
+  "response": "document"
+}

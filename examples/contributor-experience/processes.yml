@@ -1,0 +1,13 @@
+# Merge under resources in a disposable copy of config/pygeoapi.yml.
+geometry-intersection:
+  type: process
+  processor:
+    name: geo_processes.processes.intersection.GeometryIntersectionProcessor
+raster-convert-dtype:
+  type: process
+  processor:
+    name: geo_processes.processes.convert_dtype.RasterConvertDtypeProcessor
+terrain-analysis:
+  type: process
+  processor:
+    name: geo_processes.processes.terrain.TerrainAnalysisProcessor
