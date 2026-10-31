@@ -56,13 +56,6 @@ application's MIT licence. Official sources:
   terrain model and its coordinate reference system.
 - [CC0 1.0 terms](https://creativecommons.org/publicdomain/zero/1.0/).
 
-The filename, 5-metre grid and CRS are consistent with AHN4 DTM data. The exact
-original download URL and upstream byte-for-byte identity of this particular
-file have **not been independently verified**. The checksum above identifies
-the bytes distributed here; it does not establish that missing provenance.
-The sample is retained under the documented AHN4 licence; absent attribution
-is not a licensing blocker. Record a verified original source if recovered.
-
 No source raster bytes or coordinates are rewritten. The polygon is generated
 for these sample locations. Packaged files live in
 `src/geo_processes/data/samples/`. These public sample files have stable URLs;

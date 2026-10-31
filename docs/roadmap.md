@@ -21,9 +21,7 @@ a completed backlog here. These are proposals, not advertised capabilities.
 - **Input reuse:** add reusable uploads only if users need them, with access,
   expiry and combined storage budgets. Current public HTTPS references and
   inline inputs already support users' own rasters.
-- **Sample provenance:** recover the packaged AHN4 file's exact original source
-  if possible; the [CC0 licence and remaining uncertainty](sample-data.md#geometry-and-raster-alignment)
-  are documented separately.
+
 
 Review conditional OGC requirements when adding input types, multiple outputs or
 execution capabilities. Keep current [conformance limitations](validation.md)
