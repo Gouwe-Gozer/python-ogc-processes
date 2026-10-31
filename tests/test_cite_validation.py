@@ -1,6 +1,9 @@
 """Test validation orchestration/report semantics, not the external algorithms."""
 
 import json
+import time
+from email import policy
+from email.parser import BytesParser
 from zipfile import ZipFile
 
 import pytest
@@ -28,6 +31,96 @@ def test_cite_cli_includes_the_engine_html_resources_on_its_classpath():
     assert "/usr/local/tomcat/webapps/teamengine/WEB-INF/classes" in classpath
 
 
+@pytest.fixture()
+def echo_client(http_client, monkeypatch):
+    from pygeoapi.flask_app import api_
+
+    monkeypatch.setitem(api_.manager.processes, "cite-echo", {"processor": {"name": cite.CLASS_NAME}})
+    return http_client
+
+
+def test_cite_echo_accepts_the_bounded_pause_requested_by_cite(echo_client, monkeypatch):
+    pauses = []
+    monkeypatch.setattr(time, "sleep", pauses.append)
+    response = echo_client.post(
+        "/processes/cite-echo/execution",
+        json={"inputs": {"message": "wait", "pause": 5}, "outputs": {"message": {}}},
+    )
+    assert response.status_code == 200
+    assert response.json == "wait"
+    assert pauses == [5]
+
+
+@pytest.mark.parametrize("pause", [-1, 6, 1.5, True, None, "5", float("inf")])
+def test_cite_echo_rejects_invalid_pause_without_sleeping(echo_client, monkeypatch, pause):
+    pauses = []
+    monkeypatch.setattr(time, "sleep", pauses.append)
+    response = echo_client.post("/processes/cite-echo/execution", json={"inputs": {"message": "wait", "pause": pause}})
+    assert response.status_code == 400 and response.json["code"] == "InvalidParameterValue"
+    assert not pauses
+
+
+@pytest.mark.parametrize("mode", ["raw", "document"])
+@pytest.mark.parametrize(
+    "name,value,qualified",
+    [
+        ("array", [1, 2, 3], False),
+        ("array", [], True),
+        ("bbox", {"bbox": [4, 52, 5, 53]}, False),
+        ("bbox", {"bbox": [4, 52, 0, 5, 53, 10], "crs": "http://www.opengis.net/def/crs/OGC/0/CRS84h"}, True),
+        ("mixed", "text", False),
+        ("mixed", 7, True),
+        ("mixed", {"label": "Café"}, True),
+    ],
+)
+def test_cite_echo_preserves_extended_values_and_their_schemas(echo_client, mode, name, value, qualified):
+    from jsonschema import Draft7Validator
+    from test_ogc_schemas import validate_official
+
+    wire = {"value": value, "mediaType": "application/json"} if qualified else value
+    response = echo_client.post(
+        "/processes/cite-echo/execution",
+        json={"inputs": {"message": "hello", name: wire}, "outputs": {name: {}}, "response": mode},
+    )
+    assert response.status_code == 200
+    assert response.mimetype == "application/json"
+    assert response.json == (value if mode == "raw" else {name: {"value": value}})
+    from test_processes.cite_echo import CiteEchoProcessor
+
+    wire_schema = CiteEchoProcessor.openapi_execution()["requestBody"]["content"]["application/json"]["schema"]
+    Draft7Validator(wire_schema).validate(
+        {"inputs": {"message": "hello", name: wire}, "outputs": {name: {}}, "response": mode}
+    )
+    description = echo_client.get("/processes/cite-echo?f=json").json
+    validate_official(description, "process.yaml")
+    Draft7Validator(description["inputs"][name]["schema"]).validate(value)
+    Draft7Validator(description["outputs"][name]["schema"]).validate(value)
+
+
+@pytest.mark.parametrize(
+    "name,value",
+    [
+        ("array", "not an array"),
+        ("array", ["one", "two"]),
+        ("array", [0] * 17),
+        ("bbox", {"bbox": [0, 1, 2]}),
+        ("bbox", {"bbox": [0, 1, 2, 3], "crs": "unsupported"}),
+        ("mixed", True),
+        ("mixed", 1.5),
+        ("mixed", {"label": "unqualified application object"}),
+        ("mixed", {"value": {"label": 7}}),
+    ],
+)
+def test_cite_echo_validates_extended_inputs_before_pausing(echo_client, monkeypatch, name, value):
+    pauses = []
+    monkeypatch.setattr(time, "sleep", pauses.append)
+    response = echo_client.post(
+        "/processes/cite-echo/execution", json={"inputs": {"message": "hello", name: value, "pause": 5}}
+    )
+    assert response.status_code == 400 and response.json["code"] == "InvalidParameterValue"
+    assert not pauses
+
+
 @pytest.mark.parametrize("mode", ["raw", "document"])
 def test_cite_echo_http_response_contains_the_original_message(http_client, monkeypatch, mode):
     from pygeoapi.flask_app import api_
@@ -35,13 +128,54 @@ def test_cite_echo_http_response_contains_the_original_message(http_client, monk
     monkeypatch.setitem(api_.manager.processes, "cite-echo", {"processor": {"name": cite.CLASS_NAME}})
     message = 'Café "quoted" text\nwith a backslash: \\'
     response = http_client.post(
-        "/processes/cite-echo/execution", json={"inputs": {"message": message}, "response": mode}
+        "/processes/cite-echo/execution",
+        json={"inputs": {"message": message}, "outputs": {"message": {}}, "response": mode},
     )
     assert response.status_code == 200
     assert response.mimetype == "application/json"
     assert response.json == (message if mode == "raw" else {"message": {"value": message}})
     invalid = http_client.post("/processes/cite-echo/execution", json={"inputs": {"message": 12}, "response": mode})
     assert invalid.status_code == 400 and invalid.json["code"] == "InvalidParameterValue"
+
+
+def multipart_json(response):
+    wire = b"Content-Type: " + response.headers["Content-Type"].encode() + b"\r\n\r\n" + response.data
+    message = BytesParser(policy=policy.default).parsebytes(wire)
+    assert message.is_multipart()
+    assert all(part.get_content_type() == "application/json" for part in message.iter_parts())
+    return {part["Content-ID"]: json.loads(part.get_payload(decode=True)) for part in message.iter_parts()}
+
+
+@pytest.mark.parametrize("mode", ["raw", "document"])
+def test_cite_echo_returns_all_defined_outputs_by_default(echo_client, mode):
+    response = echo_client.post(
+        "/processes/cite-echo/execution", json={"inputs": {"message": "hello"}, "response": mode}
+    )
+    expected = {"message": "hello", "array": [], "bbox": {"bbox": [0, 0, 0, 0]}, "mixed": ""}
+    assert response.status_code == 200
+    if mode == "raw":
+        assert response.mimetype == "multipart/related"
+        assert multipart_json(response) == expected
+    else:
+        assert response.json == {name: {"value": value} for name, value in expected.items()}
+
+
+@pytest.mark.parametrize(
+    "outputs",
+    [
+        {"unknown": {}},
+        {"message": {"transmissionMode": "reference"}},
+        {"message": {"format": {"mediaType": "image/tiff"}}},
+    ],
+)
+def test_cite_echo_rejects_unsupported_outputs_before_pausing(echo_client, monkeypatch, outputs):
+    pauses = []
+    monkeypatch.setattr(time, "sleep", pauses.append)
+    response = echo_client.post(
+        "/processes/cite-echo/execution", json={"inputs": {"message": "hello", "pause": 5}, "outputs": outputs}
+    )
+    assert response.status_code == 400 and response.json["code"] == "InvalidParameterValue"
+    assert not pauses
 
 
 def report(tmp_path, *, fail="bad <input>", passed=1):
@@ -136,6 +270,7 @@ def test_cleanup_is_scoped_and_still_runs_when_log_collection_fails(tmp_path, mo
     assert cite.run() == 2
     properties = next(tmp_path.glob("runtime-data/cite/*/test-run-props.xml")).read_text()
     assert '<entry key="acceptMediaType">application/zip</entry>' in properties
+    assert '<entry key="testallprocesses">on</entry>' in properties
     assert any("down" in command for command in commands)
     teardown = next(command for command in commands if "down" in command)
     assert teardown[teardown.index("--profile") + 1] == "browser"

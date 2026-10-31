@@ -79,7 +79,7 @@ def test_cite_echo_sync_and_async_results_contain_the_same_message(async_client,
     manager = durable[0]
     manager.processes["cite-echo"] = {"processor": {"name": "test_processes.cite_echo.CiteEchoProcessor"}}
     message = "teststring"
-    document = {"inputs": {"message": message}, "response": response_mode}
+    document = {"inputs": {"message": message}, "outputs": {"message": {}}, "response": response_mode}
     synchronous = async_client.post("/processes/cite-echo/execution", json=document)
     assert synchronous.status_code == 200
     submitted = async_client.post("/processes/cite-echo/execution", json=document, headers={"Prefer": "respond-async"})
@@ -94,6 +94,36 @@ def test_cite_echo_sync_and_async_results_contain_the_same_message(async_client,
     assert asynchronous.json == synchronous.json == expected
 
 
+@pytest.mark.parametrize("response_mode", ["raw", "document"])
+def test_cite_echo_extended_results_match_across_execution_modes(async_client, durable, response_mode):
+    from test_cite_validation import multipart_json
+
+    manager = durable[0]
+    manager.processes["cite-echo"] = {"processor": {"name": "test_processes.cite_echo.CiteEchoProcessor"}}
+    values = {
+        "message": "hello",
+        "array": [1, 2, 3],
+        "bbox": {"bbox": [4, 52, 5, 53]},
+        "mixed": {"value": {"label": "Café"}},
+    }
+    document = {"inputs": values, "response": response_mode}
+    expected = {**values, "mixed": values["mixed"]["value"]}
+    synchronous = async_client.post("/processes/cite-echo/execution", json=document)
+    assert synchronous.status_code == 200
+    submitted = async_client.post("/processes/cite-echo/execution", json=document, headers={"Prefer": "respond-async"})
+    assert submitted.status_code == 201
+    identifier = submitted.json["jobID"]
+    assert manager.claim() == identifier
+    manager.perform(identifier)
+    asynchronous = async_client.get(f"/jobs/{identifier}/results")
+    assert asynchronous.status_code == 200
+    assert asynchronous.mimetype == synchronous.mimetype
+    if response_mode == "raw":
+        assert multipart_json(asynchronous) == multipart_json(synchronous) == expected
+    else:
+        assert asynchronous.json == synchronous.json == {name: {"value": value} for name, value in expected.items()}
+
+
 @pytest.mark.parametrize(
     "media_type,value",
     [
@@ -102,7 +132,7 @@ def test_cite_echo_sync_and_async_results_contain_the_same_message(async_client,
         ("application/xml", '<result value="1">native</result>\n'),
         ("text/xml", "<result>native</result>"),
         ("image/svg+xml", '<svg xmlns="http://www.w3.org/2000/svg"/>'),
-        ("application/json", 'A JSON string with "quotes"'),
+        ("application/json", 'Café </script><script>"quoted"</script> &lt;river&gt; \\u003c'),
     ],
 )
 def test_native_string_results_match_synchronous_execution(async_client, durable, media_type, value):
@@ -123,6 +153,7 @@ def test_native_string_results_match_synchronous_execution(async_client, durable
     assert asynchronous.headers["Content-Type"] == synchronous.headers["Content-Type"] == media_type
     if media_type == "application/json":
         assert asynchronous.json == synchronous.json == value
+        assert all(b"<" not in response.data and b">" not in response.data for response in (synchronous, asynchronous))
     else:
         assert asynchronous.data == synchronous.data == value.encode("utf-8")
 
@@ -302,3 +333,57 @@ def test_result_capacity_failure_fits_reserved_headroom(durable):
             manager._sql("SELECT sum(octet_length(request) + octet_length(response)) FROM {jobs}")
         ).scalar_one()
     assert size <= maximum
+
+
+@pytest.mark.parametrize(
+    "response_mode,transmission",
+    [("raw", "value"), ("document", "value"), ("raw", "reference"), ("document", "reference")],
+)
+def test_sampling_properties_survive_sync_and_async_result_delivery(async_client, durable, response_mode, transmission):
+    from urllib.parse import urlsplit
+
+    from test_raster_operations import points, raster_source
+
+    features = points([[4.5, 53.5]])
+    properties = {
+        "label": "</script><script>alert('Café')</script>",
+        "entity": "&lt;river&gt; &amp; &#60;",
+        "nested": {"key<tag>": ["a < b > c", r"\u003c", 7, None]},
+    }
+    features["features"][0]["properties"] = properties
+    document = {
+        "inputs": {"source": raster_source(), "points": {"value": features, "mediaType": "application/geo+json"}},
+        "response": response_mode,
+        "outputs": {"result": {"transmissionMode": transmission}},
+    }
+    path = "/processes/raster-sample-points/execution"
+    synchronous = async_client.post(path, json=document)
+    submitted = async_client.post(path, json=document, headers={"Prefer": "respond-async"})
+    assert submitted.status_code == 201
+    identifier = submitted.json["jobID"]
+    assert durable[0].claim() == identifier
+    durable[0].perform(identifier)
+    asynchronous = async_client.get(f"/jobs/{identifier}/results")
+    for response in (synchronous, asynchronous):
+        if response_mode == "raw" and transmission == "reference":
+            assert response.status_code == 204 and response.data == b"" and "Content-Type" not in response.headers
+            href = response.headers["Link"].split(">", 1)[0][1:]
+            result = async_client.get(urlsplit(href).path)
+            assert result.status_code == 200 and result.mimetype == "application/geo+json"
+            result = result.json
+        else:
+            assert response.status_code == 200
+            if response_mode == "document":
+                assert response.mimetype == "application/json"
+                assert b"<" not in response.data and b">" not in response.data
+                value = response.json["result"]
+                if transmission == "reference":
+                    download = async_client.get(urlsplit(value["href"]).path)
+                    assert download.status_code == 200 and download.mimetype == "application/geo+json"
+                    result = download.json
+                else:
+                    result = value["value"]
+            else:
+                assert response.mimetype == "application/geo+json"
+                result = response.json
+        assert result["features"][0]["properties"] == {**properties, "value": 1}

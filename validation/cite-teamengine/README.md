@@ -44,10 +44,29 @@ The echo fixture has matching input/output identifiers required by the suite,
 uses the ordinary processor/formatter interfaces, and the durable manager
 advertises both execution modes. Async requests run through the actual worker.
 The echo returns Python values so the HTTP boundary serializes JSON once.
-HTTP regressions check raw/document output in both execution modes and preserve
-quoted, Unicode and escaped string content.
-All five raster process descriptions are also selected. Execution tests primarily
-exercise the echo; the raster smoke tests are separate integration evidence.
+It accepts a required string plus optional integer array (up to 16 items),
+4/6-coordinate bounding box, mixed string/integer/qualified-object value and
+`pause` (0–5 seconds). Omitted values have defaults; pause is not an output.
+Strings are limited to 4,096 characters and integers to ±1,000,000. Bounding boxes
+are echoed structurally, without interpreting their coordinates.
+
+Matching outputs support value transmission: a single raw JSON value, a result
+document, or `multipart/related` for multiple raw outputs. This MIME formatter is
+validation-only. HTTP/PostgreSQL regressions check values, schemas, output selection,
+invalid inputs and sync/async parity; CITE exercises the real worker and pending
+result retrieval. Public raster contracts and production processes are unchanged.
+
+The pinned suite flattens array item types into input types and can consequently
+send a scalar for a string-array input. The fixture uses integer arrays with strict
+validation instead. Its mixed application-object choice precedes bbox because the
+suite's generic object generator otherwise supplies a qualified string to bbox.
+Neither accommodation accepts values outside the advertised schemas.
+The runner requests all-process testing, but the pinned suite's process-description
+class inherits `testAllProcesses=false` without assigning the supplied setting.
+Those methods therefore inspect the echo, not every raster description. Our
+HTTP/schema tests cover the raster descriptions; separate raster smoke tests
+exercise actual operations. Method names alone do not establish that every
+transport or transmission mode was tested.
 
 ## Reports and exit behavior
 
@@ -78,10 +97,48 @@ Missing reports (including official HTML/ZIP) or malformed/inconsistent totals
 never count as a pass.
 
 The [combined-deployment observation](combined/README.md) records **45 passed,
-4 failed, 5 skipped**, with explicit classifications. These failures still make
-`make validate-cite` fail; CITE is not a mandatory PR gate. The earlier
+4 failed, 5 skipped**, with explicit classifications. The expanded echo result
+below is a subsequent observation; historical snapshots are unchanged.
+Reported failures still make `make validate-cite` fail; CITE is not a mandatory
+PR gate. The earlier
 [synchronous observation](current/README.md) (**36/5/13**) and
 [predecessor snapshot](baseline/README.md) remain historical, unchanged records.
+
+## Expanded echo coverage (2026-10-31)
+
+Run `raster-cite-968ddd0eac91`: **49 passed / 5 failed / 0 skipped**, compared with
+the historical combined **45 / 4 / 5**. All 54 official verdicts remain unmodified;
+the command still exits nonzero. All five former skips now pass: array input,
+bounding-box input, mixed input/output descriptions, and not-ready results.
+The same fixture passes HTTP/PostgreSQL regression tests for sync/async results.
+
+| Remaining method(s) | Assessment and follow-up |
+| --- | --- |
+| `testJobCreationInputRef`, `testJobCreationInputValidation` | The suite now takes its multipart branch and cannot find `teststring`, although independently decoded JSON parts contain it. Its `validateMultipartResponse` calls Java MIME `getContent().toString()` rather than decoding JSON bytes. Assessed checker limitation; retain correct JSON part types and failed verdicts. The initial-valid-response check still prevents the intended invalid-input check. |
+| `testJobResultsAsyncRawValueOne` | Newly fails as a suite polling limitation. The retained report contains a successful job completed about 10 seconds after submission, but says “20 seconds.” `loopOverStatus` uses an instance-wide `attempts` counter without resetting it between tests and checks the counter before examining the successful status. The pause test adds real queue pressure. Keep actual async parity/pending-result regressions; do not shorten the requested pause or manufacture immediate completion. |
+| `testJobList`, `testJobListSuccess` | Unchanged optional Job List expectations; unsupported/unadvertised, returning 405. |
+
+These classifications follow the pinned [Jobs implementation][echo-jobs-source].
+The mixed-schema checks examine only the echo because of the unassigned
+`testAllProcesses` field in [CommonFixture][echo-common-source] and its use in
+[OGCProcessDescription][echo-description-source]. An exploratory run with
+`testallprocesses=off` produced the same verdicts; no new scope option is retained.
+
+Coverage limits remain explicit: the echo has no binary input or reference
+outputs. Several passing method names therefore do not prove binary, referenced-input
+or reference-transmission coverage; inspect their requests. Raster smoke tests
+and our HTTP/security tests supply separate evidence. The earlier string/binary
+`oneOf` schema overlap is unchanged: the two affected methods now follow the
+legitimate multipart path because the fixture has multiple outputs, rather than
+reaching that bundled response-schema check.
+
+The complete official report is retained under
+`runtime-data/cite/raster-cite-968ddd0eac91/`; no reviewed baseline was replaced.
+Geonovum independently still matches the **one-diagnostic** combined baseline.
+
+[echo-jobs-source]: https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/jobs/Jobs.java
+[echo-common-source]: https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/CommonFixture.java
+[echo-description-source]: https://github.com/opengeospatial/ets-ogcapi-processes10/blob/7ec421d9fc23718953c7ab973d3f6cc23b33e76e/src/main/java/org/opengis/cite/ogcapiprocesses10/ogcprocessdescription/OGCProcessDescription.java
 
 ## Supported CLI, REST and browser fallback
 
