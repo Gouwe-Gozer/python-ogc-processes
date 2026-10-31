@@ -2,7 +2,10 @@
 
 This example exposes an ordinary text-statistics function through the existing
 API and durable worker. It uses only the service's existing dependencies. It is
-**not enabled in the default deployment**.
+**not enabled in the default deployment**. It demonstrates the external-source
+integration path; an in-repository process or locked registry package does not
+need this example's derived-image build. See [both paths](../../docs/adding-a-process.md#choose-an-integration-path)
+and [resource limits](../../docs/release-image.md#resource-configuration).
 
 | File | Purpose |
 | --- | --- |

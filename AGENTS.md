@@ -1,8 +1,9 @@
 # Development instructions
 
-This repository implements Raster Processes API, a Rasterio/GDAL-backed OGC API –
-Processes service built on pygeoapi. Code, configuration and tests define current
-behavior. Use [development](docs/development.md), [architecture](docs/architecture.md)
+This repository implements Raster Processes API, an extensible OGC API – Processes
+application built on pygeoapi for custom Python workflows. Bundled Rasterio/GDAL
+operations demonstrate the integration. Code, configuration and tests define
+current behavior. Use [development](docs/development.md), [architecture](docs/architecture.md)
 and [validation](docs/validation.md) for maintained guidance.
 The Python package remains `geo_processes` (distribution `geo-processes`);
 the public project/repository name is `raster-processes`.
@@ -22,7 +23,8 @@ the public project/repository name is `raster-processes`.
 ## Implementation
 
 - Keep additions operation-specific: independent OGC processors/contracts and
-  small Python/Rasterio adapters. See [adding a process](docs/adding-a-process.md).
+  small Python processing functions; use Rasterio/GDAL where relevant. See
+  [adding a process](docs/adding-a-process.md).
 - Reuse input validation, staging, result storage and shared sync/async execution.
   Shared infrastructure must preserve per-operation output IDs, formats and
   transmission modes; do not assume one JSON output or value-only delivery.
@@ -33,6 +35,23 @@ the public project/repository name is `raster-processes`.
   Check request/response semantics against the [OGC review guide](docs/validation.md#ogc-review-guide).
 - Keep current guidance in `docs/` and the README. Do not maintain current status,
   copied instructions or future assignments in historical handover/milestone records.
+  Preserve unique technical knowledge when simplifying docs; see [contribution guidance](CONTRIBUTING.md).
+
+## Integrating a Python process
+
+1. Read [adding a process](docs/adding-a-process.md) and its working example; choose
+   an in-repository module or an external package before changing installation.
+2. Identify input/output contracts, validation, dependencies and runtime/storage
+   needs. Check [resource settings and hard limits](docs/release-image.md#resource-configuration).
+3. Keep the processing function independent; use a direct `BaseProcessor` wrapper
+   and explicit `resources` registration. Reuse relevant helpers, not raster assumptions.
+4. Install identical code/dependencies/configuration in API and worker; keep
+   metadata/constructors cheap and preserve security and per-execution isolation.
+5. Use existing formatting/OpenAPI hooks and tests. Do not add API routes, manager
+   dispatch, registries or generic adapters for a requirement the existing interfaces cover.
+   Explain a demonstrated infrastructure limitation before proposing changes.
+6. Verify discovery, OpenAPI, sync/async results, advertised output modes and errors
+   through the existing tests and deployment. Report skipped checks and remaining limits.
 
 ## Checks
 

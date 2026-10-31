@@ -1,18 +1,26 @@
 # Raster Processes API
 
-An OGC API – Processes service for raster operations, powered by pygeoapi and Rasterio/GDAL.
+An extensible, standards-oriented OGC API – Processes application built on
+pygeoapi for integrating custom Python workflows.
 
-Designed around OGC API – Processes Part 1: Core, it exposes operations through
-standardized, discoverable endpoints, enabling clients to submit spatial data
-and retrieve processing results. The default deployment runs one API with
-PostgreSQL and a separate worker. Ordinary requests remain synchronous;
+Wrap an importable Python function with pygeoapi's `BaseProcessor`, describe its
+inputs/outputs and register it explicitly. The existing API and durable worker
+handle discovery and execution. Start with [adding a Python process](docs/adding-a-process.md)
+or run the [independent working example](examples/custom-process/README.md).
+Integration requires a wrapper, runtime validation and deployment configuration;
+Python functions are not exposed automatically.
+
+The application is designed around OGC API – Processes Part 1: Core. The default
+deployment runs one API with PostgreSQL and a separate worker. Ordinary requests
+remain synchronous;
 `Prefer: respond-async` submits a durable job with status and result endpoints.
 List retained asynchronous jobs at `/jobs?f=json`; filter or page the list using
 [Job List parameters](docs/asynchronous-execution.md#list-retained-jobs).
 See [asynchronous execution](docs/asynchronous-execution.md).
 
-The five Rasterio/GDAL operations below process **users' own GeoTIFFs**, supplied
-as controlled HTTPS references or inline base64.
+The bundled Rasterio/GDAL operations demonstrate the processing interfaces with
+**users' own GeoTIFFs**, supplied as controlled HTTPS references or inline base64.
+Custom processes need not use Rasterio or accept raster data.
 
 | Process | Purpose | Output |
 | --- | --- | --- |
@@ -98,6 +106,13 @@ generated references need public HTTPS deployment to meet the input policy.
 
 ## Supported scope
 
+Python processes share one installed dependency environment. The async worker
+executes one job at a time, with a configurable timeout capped at **300 seconds**.
+CPU/RAM can be changed in Compose; input helpers and file delivery have additional
+application limits. Review [resource configuration](docs/release-image.md#resource-configuration)
+before integrating a workload. Large ML workflows, isolated dependencies and
+distributed execution are not demonstrated by the bundled examples.
+
 Read-only [sample datasets](docs/sample-data.md) are available through
 `/collections/sample-points/items?f=json`, `/collections/sample-polygons/items?f=json`
 and `/sample-data/AHN4_R5_117000_517000.TIF`. The points and polygon are inside
@@ -135,6 +150,7 @@ remaining implementation gaps are documented in [validation](docs/validation.md)
 - [Repeatable validation commands](docs/validation.md#repeatable-commands):
   `make test`, `make validate-geonovum`, `make validate` and `make validate-cite`.
 - [Raster operation contracts](docs/raster-operations.md) and [JSON exceptions](docs/errors.md).
+- [Resource configuration](docs/release-image.md#resource-configuration): deployment settings and hardcoded limits.
 - [Development and checks](docs/development.md), [architecture](docs/architecture.md)
   and [adding a process](docs/adding-a-process.md), including the
   [independent Python example](examples/custom-process/README.md).

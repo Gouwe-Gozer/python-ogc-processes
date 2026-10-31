@@ -132,12 +132,18 @@ A second worker is rejected rather than creating unbounded concurrency.
 
 ## Bounds and lifetime
 
-| Setting | Default | Meaning |
+| Setting | Default | Allowed range and meaning |
 | --- | ---: | --- |
-| `GEO_JOB_MAX_COUNT` | 16 | All retained async jobs, including completed/failed jobs |
-| `GEO_JOB_MAX_BYTES` | 64 MiB | Total retained request/response payload budget; failure headroom is reserved |
-| `GEO_JOB_TIMEOUT` | 30 seconds | Maximum child lifetime, including startup and processing |
-| `GEO_RESULT_RETENTION_SECONDS` | 86400 | Also bounds job lifetime from acceptance |
+| `GEO_JOB_MAX_COUNT` | 16 | 1–1,000 retained async jobs, including completed/failed jobs |
+| `GEO_JOB_MAX_BYTES` | 64 MiB | 1 byte–1 GiB total retained request/response budget; failure headroom is reserved |
+| `GEO_JOB_TIMEOUT` | 30 seconds | **1–300 seconds**, including child initialization and processing |
+| `GEO_RESULT_RETENTION_SECONDS` | 86400 | 1 second–7 days; also bounds job lifetime from acceptance |
+
+These settings apply to the whole deployment, not individual processors. The
+300-second ceiling remains enforced in `async_manager.job_limits()`. One worker
+executes one job at a time; every job starts a fresh child, so process-local model
+caches are not retained between jobs. CPU/RAM, scratch storage and dependency
+constraints are mapped in [resource configuration](release-image.md#resource-configuration).
 
 Expired job rows are removed during admission and worker queue polling. They are never exposed
 after expiry. Jobs are not retained longer than their referenced raster files;

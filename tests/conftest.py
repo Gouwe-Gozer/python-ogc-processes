@@ -49,6 +49,19 @@ def http_client(app):
     return app.test_client()
 
 
+@pytest.fixture(params=[False, True], ids=["configured", "with-custom-process"])
+def process_catalogue(request, http_client, monkeypatch):
+    from pygeoapi.flask_app import api_
+
+    registrations = dict(api_.manager.processes)
+    if request.param:
+        example = Path(__file__).resolve().parents[1] / "examples/custom-process"
+        monkeypatch.syspath_prepend(str(example))
+        registrations.update(yaml.safe_load((example / "process.yml").read_text()))
+    monkeypatch.setattr(api_.manager, "processes", registrations)
+    return tuple(registrations)
+
+
 @pytest.fixture(scope="session")
 def http_server(app):
     from werkzeug.serving import make_server
