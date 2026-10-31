@@ -28,6 +28,64 @@ Run the [container smoke checks](development.md#container-and-integration-checks
 to verify discovery, actual processing, all result modes and restart persistence.
 A health check alone only fetches `/conformance`.
 
+## Resource configuration
+
+Settings are shared by the deployment, not selected by each process request.
+Use the existing Compose files plus an explicit override; no new configuration
+layer is required. This map separates deployment settings from application limits.
+
+| Setting | Current default and scope | Where to change it |
+| --- | --- | --- |
+| CPU/RAM/processes | API and worker each: 1 CPU, 512 MiB RAM, 128 processes; PostgreSQL: 256 MiB RAM | Override `cpus`, `mem_limit`, `pids_limit` on the relevant services; defaults are in `compose.base.yml`. |
+| Sync concurrency/timeout | API: two Gunicorn workers, 30 seconds per worker | Container environment `WSGI_WORKERS` / `WSGI_WORKER_TIMEOUT`; see [startup settings](#startup-and-public-url). These do not increase async concurrency. |
+| Async concurrency/timeout | One executing job per dedicated database; 30-second child deadline | `GEO_JOB_TIMEOUT` accepts **1–300 seconds**. The single-worker policy is coded; adding worker replicas is rejected. See [job bounds](asynchronous-execution.md#bounds-and-lifetime). |
+| Request body | 24 MiB for the application | Hardcoded `inputs.MAX_EXECUTION_BYTES`, applied by Flask; not a Compose setting. |
+| Raster helper inputs | 16 MiB, 1,048,576 samples including bands; 16 MiB decoded blocks/cache | Hardcoded in `engine.py`; applies to the bundled raster resolver/operations, not every Python function. |
+| JSON/scalar helper inputs | JSON parameters: 256 KiB; scalar references: 4 KiB | Hardcoded in `inputs.py`; changing metadata alone does not change validation. |
+| HTTPS acquisition | Public HTTPS/443, ten-second fetch deadline, three-second socket operations, three redirects, two input slots per directory | Security/transport limits are coded in `inputs.py`; `GEO_INPUT_ALLOWED_HOSTS` can narrow destinations. See [input policy](inputs.md). |
+| Temporary storage | Separate 64 MiB `/tmp` tmpfs for API and worker; staging `/tmp/geo-inputs` | Override each service's `tmpfs` or add deliberate data/cache mounts. `GEO_INPUT_TMPDIR` changes the staging path; mounts must agree. |
+| Persistent file results | Shared `results` volume at `/var/lib/geo/results`; locally `runtime-data/results` | `GEO_OUTPUT_DIR` and matching API/worker mounts. Capacity/expiry use `GEO_RESULT_*`; [result settings](results.md#bounds-and-configuration) own defaults and ranges. |
+| Individual file delivery | Existing store: TIFF/GeoJSON, at most **16 MiB per file** | Hardcoded `storage.MAX_RESULT_BYTES` / `RESULT_TYPES`. Raising total store capacity does not raise this limit. |
+| Retained async payloads | Requests/results in PostgreSQL's `jobs-db` volume, with a shared admission budget | `GEO_JOB_MAX_COUNT` / `GEO_JOB_MAX_BYTES`; see [job bounds](asynchronous-execution.md#bounds-and-lifetime). Binary results are base64 in stored responses, not streamed from the worker. |
+| Dependencies | One locked Python environment and shared image for API/worker | `pyproject.toml` / `uv.lock`; [installation paths](adding-a-process.md#3-install-and-register-explicitly). Registry wheels are supported; local/source builds need deliberate build inputs. |
+| Process formats/options | Declared and validated by each processor | Metadata, wrapper validation and explicit `processor` configuration fields; no automatic per-process resource policy. Native by-value output can use other media types; the file-store allowlist is separate. |
+
+Compose forwards `GEO_JOB_TIMEOUT`, `GEO_JOB_MAX_COUNT`, `GEO_JOB_MAX_BYTES`,
+`GEO_JOB_PASSWORD`, `GEO_RESULT_*` and `GEO_INPUT_ALLOWED_HOSTS` from the environment
+or `.env`. It constructs `GEO_JOB_DSN` from the database credentials; changing that
+connection string needs an explicit override.
+
+CPU/RAM, Gunicorn settings, directory mounts and tmpfs changes need an explicit
+Compose override. For example, save this as your own `compose.workload.yml`:
+
+```yaml
+services:
+  api:
+    environment:
+      WSGI_WORKER_TIMEOUT: "60"
+  worker:
+    mem_limit: 2g
+    cpus: 2.0
+```
+
+```bash
+GEO_JOB_TIMEOUT=120 docker compose -f compose.release.yml -f compose.workload.yml up --build --detach
+```
+
+Keep the same project name and override arguments for subsequent commands.
+Recreate containers after environment/deployment changes; plain `restart` does
+not apply a changed environment. File/job quotas are application publication
+budgets, not filesystem/database-size quotas. Process models and caches need
+explicit paths/mounts because the root filesystem is read-only.
+
+For workloads that fit the existing input/output interfaces, more CPU/RAM and
+an async timeout up to five minutes need deployment changes only. Longer jobs,
+additional downloadable file types, larger files through the existing raster
+resolver/store, per-process dependency isolation or parallel
+async workers need application work. Each async job gets a fresh child, including
+initialization overhead; persistent model reuse and GPU execution are not
+demonstrated. Keep the existing security controls when assessing a new workload.
+
 ## Startup and public URL
 
 The owned entrypoint validates runtime settings and prints the effective public
@@ -78,7 +136,7 @@ Both development and release Compose give each API/worker container:
 - UID/GID `10001:10001`, read-only root, dropped capabilities and `no-new-privileges`;
 - a 64 MiB `/tmp` tmpfs with `noexec,nosuid`, including private input workspaces;
 - one writable named volume, `results`, mounted at `/var/lib/geo/results`;
-- 512 MiB memory, one CPU and 128 processes.
+- resource budgets from the [configuration map](#resource-configuration).
 
 The image initializes result-directory ownership before dropping privileges.
 No source/configuration bind mounts or runtime root initialization are required.

@@ -105,6 +105,9 @@ check, rather than a storage capacity reservation or a memory/workload guarantee
 
 ## Extending the service
 
+Choose an [integration path](adding-a-process.md#choose-an-integration-path) and
+check [deployment settings versus hard limits](release-image.md#resource-configuration).
+
 Use the [Python process contribution recipe](adding-a-process.md) and its
 [working independent example](../examples/custom-process/README.md) for registration,
 shared API/worker installation and meaningful HTTP tests. Keep processors/contracts

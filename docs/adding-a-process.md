@@ -5,7 +5,24 @@ subclass and explicit configuration. No API routes, worker dispatch code,
 registry or automatic discovery need to change. The
 [working custom-process example](../examples/custom-process/README.md) walks
 through building and running independent code, including durable async execution.
-The default deployment continues to expose only the five raster operations.
+The bundled raster operations are examples of this integration, not a requirement
+for contributed functions. Check [resource configuration](release-image.md#resource-configuration)
+before choosing workload size and duration.
+
+## Choose an integration path
+
+| Path | Files and installation |
+| --- | --- |
+| In this repository | Put the function (or a call to an existing library) in `src/geo_processes/operations/<name>.py`, a direct wrapper in `processes/<name>.py`, and metadata/schemas in `contracts/<name>.py`. Paths after the first are relative to `src/geo_processes/`. Register it in `config/pygeoapi.yml` and add focused tests. Existing source mounts/image copies include these modules. |
+| External Python package | Keep the function in its existing package. Put its wrapper here or in that package, install the package for both services and register the wrapper's dotted name. A locked registry wheel uses the existing Docker build; unpackaged source can use the example's derived image. |
+
+Keep existing processing code unchanged where practical. A wrapper adapts JSON
+inputs and serializable results; live datasets, CLI interaction and API-process
+global state are not execution inputs. Add dependencies to `pyproject.toml` and
+`uv.lock` when needed. Do not change API routes, the manager or worker dispatch
+for an ordinary integration. The three-file layout is a convention; OGC specifies
+wire contracts, while `BaseProcessor` and dotted registration are pygeoapi interfaces.
+The result/OpenAPI hooks below are repository-specific, not OGC Python interfaces.
 
 ## 1. Write your function
 
@@ -17,7 +34,11 @@ it need not be a Rasterio operation. Do not import the API or a job manager.
 Choose explicit inputs, output identifiers, units/CRSs where relevant, defaults,
 formats and resource bounds. Open datasets and temporary files inside each
 execution, close them with context managers, and avoid mutable global state.
-Do not rely on API-process memory: async runs in a separate worker child process.
+Do not rely on API-process memory: async runs in a fresh worker child per job.
+Keep imports and processor constructors cheap: discovery, OpenAPI generation
+and async submission instantiate processors too. Load large models/data during
+execution rather than fetching or allocating them for metadata discovery.
+There is no persistent in-memory model cache across async jobs.
 
 ## 2. Define the contract and wrapper
 
@@ -34,9 +55,11 @@ Follow the example's
   your function and return `(media_type, value)`. Metadata schemas do not
   automatically validate runtime inputs. Set `supports_outputs = True` when
   accepting output selection/options; otherwise pygeoapi ignores those options.
-- Reuse `validate_inputs`, `resolve_json`/`resolve_source`, `processing_errors`
-  and `output_transmission` where applicable. These retain bounded HTTPS
-  transport and existing typed errors; never fetch arbitrary input URLs yourself.
+- Reuse `validate_inputs`, `resolve_json` and `output_transmission` where applicable.
+  `resolve_source` is specifically a bounded GeoTIFF resolver; `processing_errors`
+  includes Rasterio error handling. Non-raster functions need not use them.
+  Reuse bounded HTTPS transport and typed errors for supported references;
+  do not implement unchecked URL fetching to accept a new input format.
   The example accepts bare/qualified JSON strings or HTTPS JSON references and
   bounds text to 4096 characters. It rejects reference outputs.
 - Use `InvalidExecutionRequestError` for invalid parameters. Unexpected exceptions
@@ -70,14 +93,20 @@ performed after acceptance; invalid async jobs expose their errors at `/jobs/{jo
 
 ## 3. Install and register explicitly
 
-Add your importable package to both runtimes. The example copies `custom_processes`
-into `/pygeoapi`, which the base image already puts on `PYTHONPATH`. A separately
-packaged library can instead be installed into `/venv` during image construction.
+Add your importable package to both runtimes. The unpackaged-source example
+copies `custom_processes` into `/pygeoapi`, which the base image already puts on `PYTHONPATH`. In-repository
+modules and locked registry packages do not require that extra copy or a derived
+image: the existing build copies `geo_processes` and installs production packages
+into `/venv`. Both services use that same image.
 For host-only development with the example, use
 `PYTHONPATH=examples/custom-process uv run ...`; that does **not** install code
 inside Docker or make it available to a separate worker automatically.
 
-The example needs no new dependencies. For a real dependency:
+The example needs no new dependencies. Processes share the [same Python environment](development.md):
+there are no per-process virtual environments or independent version constraints.
+An external dependency must be compatible with the existing lock and supported
+Python version. GPU/model-runtime compatibility has not been established by the
+text example. For a real dependency:
 
 1. Add a pinned dependency with `uv add 'PACKAGE==VERSION'`; retain intentional
    `pyproject.toml` and `uv.lock` changes together.
@@ -97,6 +126,12 @@ text-statistics:
   processor:
     name: custom_processes.processor.TextStatisticsProcessor
 ```
+
+For process-specific options such as a model path, add fields under `processor`
+and read them explicitly from `processor_def` in your wrapper. These are options
+your code implements, not automatic CPU/memory/timeout policies. Supply model/data
+mounts to both services when both execution modes need them; never store secrets
+in metadata or execution examples.
 
 This is pygeoapi's existing explicit registration, not a new plugin registry.
 Keep the resource ID and metadata ID consistent. A Python import alone does not
@@ -134,6 +169,11 @@ processor, error and contract test template. The `custom_process` HTTP tests in
 image/configuration through the real worker. Adapt these focused tests; do not
 copy worker internals or add a parallel test framework.
 
+Generic discovery/pagination tests exercise the configured registry and an added
+custom process. Explicit bundled-process checks remain separate; retain them when
+adding operations. For code outside the checked `src/`, `tests/`, `scripts/` and
+custom-example paths, include it in your own package's quality checks.
+
 Run `make test` plus the example's focused/container commands. The example's Python
 code is included in normal Ruff/Bandit checks; container tests are explicitly
 opt-in and reuse the existing lifecycle fixture. For your own operation, add small
@@ -151,10 +191,8 @@ Adding a process does not establish OGC certification or change conformance base
 
 ## Raster and file processes
 
-For operations maintained inside this project, keep the existing layout:
-`contracts/<operation>.py` for metadata/schemas, a plain function in an operation
-module, and `processes/<operation>.py` for the direct processor wrapper.
-Use `raster-info` for JSON results and `raster-warp` for file delivery.
+Use the bundled `raster-info` wrapper for a JSON result example and `raster-warp`
+for file delivery; the module layout follows the integration paths above.
 
 Reuse `contracts/sources.py` for GeoTIFF value/wire conventions and
 `inputs.resolve_source()` for acquisition/validation/cleanup. Set `require_crs=True`

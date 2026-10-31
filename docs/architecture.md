@@ -1,9 +1,9 @@
 # Architecture
 
 pygeoapi supplies discovery, Flask routes, configuration and process registration.
-Each public processor validates its operation's inputs/output choices, calls a
-small Rasterio/GDAL adapter and owns its result representations. NumPy supplies
-masked statistics; [raster metadata](raster-operations.md#raster-information--raster-info) is an application-owned contract.
+Each processor validates its inputs/output choices, calls ordinary Python code
+and owns its result representations. The bundled raster examples use small
+Rasterio/GDAL adapters and NumPy masked statistics; [raster metadata](raster-operations.md#raster-information--raster-info) is an application-owned contract.
 
 ## Module boundaries
 
@@ -121,6 +121,13 @@ an upstream upgrade; no upstream source or entrypoint is patched. Remaining
 conformance gaps are tracked in [validation](validation.md).
 
 ## Extension boundaries
+
+Independent Python functions can use direct `BaseProcessor` wrappers without
+changing routing, job storage or worker dispatch. Metadata schemas describe
+values; wrappers enforce runtime validation. The contribution guide distinguishes
+[in-repository and external-package integration](adding-a-process.md#choose-an-integration-path).
+Shared serialization/native response handling does not imply unrestricted file
+delivery or workload size; see [resource limits](release-image.md#resource-configuration).
 
 Public samples use native GeoJSON feature providers and Flask's static-file
 blueprint. Feature discovery, paging, IDs and bbox queries remain upstream;

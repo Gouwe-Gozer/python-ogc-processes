@@ -127,33 +127,41 @@ def test_preferences_remain_synchronous(http_client, preference):
     assert response.headers.get("Preference-Applied") == ("wait" if preference == "wait" else None)
 
 
-def test_discovery_links_descriptions_and_capabilities_agree(http_client):
+def test_discovery_links_descriptions_and_capabilities_agree(http_client, process_catalogue, service_config):
     landing = http_client.get("/?f=json")
     assert landing.status_code == 200
     assert landing.get_json()["title"] == "Raster Processes API"
     listing = http_client.get("/processes?f=json").get_json()
-    assert {process["id"] for process in listing["processes"]} == {
+    default_limit = service_config["server"]["limits"]["default_items"]
+    assert [process["id"] for process in listing["processes"]] == list(process_catalogue[:default_limit])
+    for process in listing["processes"]:
+        description_link = next(link for link in process["links"] if link["type"] == "application/json")
+        parsed = urlsplit(description_link["href"])
+        response = http_client.get(f"{parsed.path}?{parsed.query}")
+        assert response.status_code == 200
+        description = response.get_json()
+        assert description["id"] == process["id"]
+        assert description["jobControlOptions"] == ["sync-execute"]
+        execution = next(link for link in description["links"] if link["rel"].endswith("/execute"))
+        assert urlsplit(execution["href"]).path == f"/processes/{process['id']}/execution"
+    for link in landing.get_json()["links"]:
+        assert not link["rel"].endswith("/job-list")
+
+
+def test_bundled_raster_catalogue_and_information_contract(http_client, service_config):
+    registered = {key for key, resource in service_config["resources"].items() if resource["type"] == "process"}
+    assert {
         "raster-info",
         "raster-warp",
         "raster-sample-points",
         "raster-reclassify",
         "raster-polygonize",
-    }
-    process = next(process for process in listing["processes"] if process["id"] == "raster-info")
-    description_link = next(link for link in process["links"] if link["type"] == "application/json")
-    parsed = urlsplit(description_link["href"])
-    response = http_client.get(f"{parsed.path}?{parsed.query}")
-    assert response.status_code == 200
-    description = response.get_json()
-    assert description["id"] == process["id"]
-    assert description["jobControlOptions"] == ["sync-execute"]
+    } <= registered
+    assert not {"async-echo", "cite-echo", "text-statistics"} & registered
+    description = http_client.get("/processes/raster-info?f=json").get_json()
     assert description["outputTransmission"] == ["value"]
     assert description["inputs"]["source"]["schema"]["contentEncoding"] == "binary"
     assert description["outputs"]["info"]["schema"]["contentMediaType"] == "application/json"
-    execution = next(link for link in description["links"] if link["rel"].endswith("/execute"))
-    assert urlsplit(execution["href"]).path == EXECUTION_PATH
-    for link in landing.get_json()["links"]:
-        assert not link["rel"].endswith("/job-list")
 
 
 def test_conformance_excludes_unimplemented_optional_classes(http_client):

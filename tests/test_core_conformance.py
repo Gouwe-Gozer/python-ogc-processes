@@ -107,7 +107,7 @@ def test_landing_link_hook_preserves_other_json_shapes(app, document):
         assert response.data == original_body
 
 
-def test_limited_process_list_can_be_traversed_without_losing_filters(http_client):
+def test_limited_process_list_can_be_traversed_without_losing_filters(http_client, process_catalogue):
     response = http_client.get("/processes?limit=1&f=json")
     assert response.status_code == 200
     first = response.get_json()
@@ -124,10 +124,11 @@ def test_limited_process_list_can_be_traversed_without_losing_filters(http_clien
     while next_link := next((link for link in page["links"] if link["rel"] == "next"), None):
         page = http_client.get(local_path(next_link["href"])).get_json()
         validate_official(page, "processList.yaml")
+        assert len(page["processes"]) == 1
         identifier = page["processes"][0]["id"]
         assert identifier not in seen
         seen.add(identifier)
-    assert seen == {"raster-info", "raster-warp", "raster-sample-points", "raster-reclassify", "raster-polygonize"}
+    assert seen == set(process_catalogue)
     for link in first["links"]:
         alternate = http_client.get(local_path(link["href"]))
         assert alternate.status_code == 200
