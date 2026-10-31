@@ -1,11 +1,14 @@
 """Flask boundary guard for registered synchronous process endpoints."""
 
 from collections.abc import Mapping
+from copy import copy
 from email.utils import formatdate
 from itertools import chain
 
 from flask import Blueprint, jsonify, make_response, request
+from pygeoapi.api.processes import execute_process as upstream_execute_process
 from pygeoapi.flask_app import API_RULES, APP, CONFIG, api_, execute_from_flask
+from pygeoapi.util import JobStatus
 from werkzeug.datastructures import Headers
 
 from geo_processes.datasets import SAMPLE_DATA_DIR
@@ -21,7 +24,7 @@ from geo_processes.documentation import configure_documentation_templates
 from geo_processes.errors import exception_document, install_exception_renderer
 from geo_processes.inputs import MAX_EXECUTION_BYTES
 from geo_processes.logging_filters import install_metadata_locale_filter
-from geo_processes.responses import STATUS_HEADER
+from geo_processes.responses import STATUS_HEADER, htmlsafe_json
 from geo_processes.startup import validate_runtime
 from geo_processes.storage import RESULT_TYPES, ResultNotFoundError, ResultStore, ResultStoreError
 
@@ -106,6 +109,38 @@ def get_landing_page():
 
 
 APP.view_functions["pygeoapi.landing_page"] = get_landing_page
+
+
+def execute_process_jobs(process_id):
+    """Keep upstream dispatch; correct only its lossy JSON result serialization."""
+    scoped = copy(api_)
+    scoped.manager = copy(api_.manager)
+    execute = api_.manager.execute_process
+    json_result = []
+
+    def capture_result(*args, **kwargs):
+        result = execute(*args, **kwargs)
+        _, media_type, value, status, _ = result
+        if status == JobStatus.successful and (media_type == "application/json" or isinstance(value, (dict, list))):
+            pretty = api_.pretty_print if kwargs.get("requested_response") == "document" else False
+            json_result.append((value, pretty))
+        return result
+
+    # Request-local copies preserve the real manager, other API instances and concurrent calls.
+    scoped.manager.execute_process = capture_result
+
+    def serialize_result(api, api_request, identifier):
+        headers, status, body = upstream_execute_process(api, api_request, identifier)
+        if status == 200 and json_result:
+            value, pretty = json_result[0]
+            body = htmlsafe_json(value, pretty=pretty)
+        return headers, status, body
+
+    # Re-encode before upstream's Flask adapter applies compression and builds the response.
+    return execute_from_flask(serialize_result, request, process_id, alternative_api=scoped)
+
+
+APP.view_functions["pygeoapi.execute_process_jobs"] = execute_process_jobs
 
 
 def _invalid_request(description):

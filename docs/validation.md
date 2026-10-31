@@ -46,8 +46,11 @@ multiple outputs or additional execution capabilities.
 
 The audit and regressions establish the recorded behavior, not a certificate.
 The [combined CITE observation](../validation/cite-teamengine/combined/README.md)
-records **45 passed / 4 failed / 5 skipped**; the earlier synchronous snapshot
-remains unchanged. The published binary-schema overlap below remains explicit.
+records the earlier **45 passed / 4 failed / 5 skipped**. The subsequent
+[expanded echo observation](../validation/cite-teamengine/README.md#expanded-echo-coverage-2026-10-31)
+records **49 passed / 5 failed / 0 skipped**, including a newly exposed suite
+polling-counter limitation. All five former skips pass; historical snapshots and
+the published binary-schema overlap below remain unchanged.
 Geonovum now retains only the optional Job List finding; seven previously
 unreachable job/async-response findings are resolved by implemented behavior.
 Neither result establishes full conformance or certification.
@@ -168,10 +171,13 @@ modified to hide the overlap; these checks do not establish complete conformance
   deployment and matches one reviewed optional Job List finding. The eight-finding
   synchronous baseline remains available explicitly.
 - [CITE/TEAM Engine](../validation/cite-teamengine/README.md) runs the default
-  durable manager and worker, selecting all five real process descriptions and
-  exercising its echo through both execution modes. Actual raster smokes run
-  separately. The [combined observation](../validation/cite-teamengine/combined/README.md)
-  records 45 passes, 4 failures and 5 skips, with coverage limits and classifications.
+  durable manager and worker, exercising its echo through both execution modes.
+  The runner requests all-process testing, but the pinned suite's description
+  class does not apply that setting and checks only the echo. Our HTTP/schema
+  tests cover raster descriptions; actual raster smokes run separately. See the
+  [expanded echo observation](../validation/cite-teamengine/README.md#expanded-echo-coverage-2026-10-31)
+  for 49 passes, 5 failures, no skips and explicit checker limitations. The earlier
+  [combined observation](../validation/cite-teamengine/combined/README.md) is historical.
 
 ## Recorded checks
 

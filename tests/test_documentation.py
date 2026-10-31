@@ -67,3 +67,17 @@ def test_template_configuration_keeps_operator_overrides(path):
         assert (Path(actual["path"]) / "openapi" / "redoc.html").is_file()
     else:
         assert actual["path"] == path
+
+
+def test_process_html_remains_escaped_and_upstream_json_is_unchanged(http_client, monkeypatch):
+    from pygeoapi.util import to_json
+
+    from geo_processes.contracts.info import PROCESS_METADATA
+
+    title = "<img src=x onerror=alert(1)>"
+    monkeypatch.setitem(PROCESS_METADATA, "title", title)
+    response = http_client.get("/processes/raster-info?f=html")
+    assert response.status_code == 200 and response.mimetype == "text/html"
+    assert title not in response.text
+    assert "&lt;img src=x onerror=alert(1)&gt;" in response.text
+    assert to_json("<tag>") == '"&lt;tag&gt;"'

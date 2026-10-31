@@ -8,6 +8,7 @@ from pygeoapi.process.base import JobNotFoundError
 from sqlalchemy.exc import SQLAlchemyError
 
 from geo_processes.errors import exception_document
+from geo_processes.responses import htmlsafe_json
 
 
 def job_response(api, identifier, *, results=False):
@@ -23,7 +24,7 @@ def job_response(api, identifier, *, results=False):
             body = base64.b64decode(stored["body"]) if stored["binary"] else stored["body"]
             # Match synchronous rendering: native strings pass through; JSON values are encoded.
             if not stored["binary"] and (stored["media_type"] == "application/json" or not isinstance(body, str)):
-                body = jsonify(body)
+                body = htmlsafe_json(body)
             response = make_response(body, stored["status"])
             response.headers.update(stored["headers"])
             if stored["status"] == 204:

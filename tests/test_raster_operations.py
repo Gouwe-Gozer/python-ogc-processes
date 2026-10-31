@@ -483,3 +483,27 @@ def test_download_routes_are_described_without_warp(service_config, process, ext
     route = paths[f"/results/{{result_id}}/output.{extension}"]["get"]
     assert route["tags"] == [process] and "200" in route["responses"]
     assert "/processes/raster-warp" not in paths
+
+
+@pytest.mark.parametrize("response_mode", ["raw", "document"])
+def test_sampling_preserves_html_like_properties_in_native_and_document_results(http_client, response_mode):
+    features = points([[4.5, 53.5]])
+    properties = {
+        "label": "</script><script>alert('Café')</script>",
+        "entity": "&lt;river&gt; &amp; &#60;",
+        "nested": {"key<tag>": ["a < b > c", r"\u003c", 7, None]},
+    }
+    features["features"][0]["properties"] = properties
+    response = http_client.post(
+        "/processes/raster-sample-points/execution",
+        json={
+            "inputs": {"source": raster_source(), "points": {"value": features, "mediaType": GEOJSON_TYPE}},
+            "response": response_mode,
+        },
+    )
+    assert response.status_code == 200
+    assert response.mimetype == ("application/json" if response_mode == "document" else GEOJSON_TYPE)
+    result = response.json["result"]["value"] if response_mode == "document" else response.json
+    assert result["features"][0]["properties"] == {**properties, "value": 1}
+    if response_mode == "document":
+        assert b"<" not in response.data and b">" not in response.data
