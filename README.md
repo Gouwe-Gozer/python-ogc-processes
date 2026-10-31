@@ -10,6 +10,8 @@ or run the [independent working example](examples/custom-process/README.md).
 Integration requires a wrapper, runtime validation and deployment configuration;
 Python functions are not exposed automatically.
 
+For agent-assisted integration, point your coding agent to [AGENTS.md](https://github.com/Gouwe-Gozer/python-ogc-processes/blob/v0.1.0/AGENTS.md) and provide your existing Python function. It contains a process-integration checklist and links to the authoritative development, deployment and testing guidance.
+
 The application is designed around OGC API – Processes Part 1: Core. The default
 deployment runs one API with PostgreSQL and a separate worker. Ordinary requests
 remain synchronous;
