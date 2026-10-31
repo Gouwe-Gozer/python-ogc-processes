@@ -1,0 +1,5 @@
+{
+  "inputs": {"text": "Bring your own Python!"},
+  "response": "document",
+  "outputs": {"statistics": {"transmissionMode": "value"}}
+}

@@ -227,7 +227,7 @@ def generate_openapi(config):
         execution["responses"]["400"] = exception_response("Invalid execution request", "InvalidParameterValue", 400)
         execution["responses"]["404"] = exception_response("Unknown process", "NoSuchProcess", 404)
         execution["responses"]["413"] = exception_response(
-            "Request body exceeds 24 MiB or raster exceeds 16 MiB", "RequestTooLarge", 413
+            "Request body or process input exceeds its supported size limit", "RequestTooLarge", 413
         )
         execution["responses"]["500"] = exception_response("Process execution failed", "NoApplicableCode", 500)
         execution["responses"]["503"] = exception_response("Processing capacity unavailable", "ServerBusy", 503)

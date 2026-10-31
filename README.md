@@ -135,7 +135,8 @@ remaining implementation gaps are documented in [validation](docs/validation.md)
 - [Raster metadata](docs/raster-info.md) and [JSON exceptions](docs/errors.md).
 - [Sampling, reclassification and polygonization](docs/raster-operations.md).
 - [Development and checks](docs/development.md), [architecture](docs/architecture.md)
-  and [adding a process](docs/adding-a-process.md).
+  and [adding a process](docs/adding-a-process.md), including the
+  [independent Python example](examples/custom-process/README.md).
 - [Release deployment](docs/release-image.md), [client interoperability](docs/client-interoperability.md)
   and [future work](docs/roadmap.md).
 

@@ -34,7 +34,7 @@ uv. Reports are in `runtime-data/validation/`.
 
 Tests include loopback HTTP and HTTPS servers and need permission to bind local
 sockets. TLS uses public test-only fixtures, with no production bypass flag.
-They never download public raster data. `uv run ruff format src tests scripts`
+They never download public raster data. `uv run ruff format src tests scripts examples/custom-process`
 applies formatting. Dependency changes must include `pyproject.toml` and
 `uv.lock` together. `.venv/`, project-local uv caches and generated API documents
 are ignored. Pre-commit is configured to run the same Ruff and Bandit checks:
@@ -94,8 +94,9 @@ check, rather than a storage capacity reservation or a memory/workload guarantee
 
 ## Extending the service
 
-Use the [operation contribution recipe](adding-a-process.md) for the file map,
-contract checklist and meaningful raster/HTTP tests. Keep processors/contracts
+Use the [Python process contribution recipe](adding-a-process.md) and its
+[working independent example](../examples/custom-process/README.md) for registration,
+shared API/worker installation and meaningful HTTP tests. Keep processors/contracts
 independent and reuse the [input](inputs.md), [result](results.md) and
 [exception](errors.md) lifecycles. Architectural boundaries are in
 [architecture](architecture.md); proposed capabilities belong in the [roadmap](roadmap.md).
@@ -111,7 +112,8 @@ An exported `COMPOSE_PROJECT_NAME`, `COMPOSE_FILE` or local `.env` setting can
 override defaults; remove stale values rather than launching another copy.
 
 For bind-mounted development, use `docker compose up --build --detach`.
-Restart the API after source/configuration changes with `docker compose restart api`.
+Restart both services after processor source/configuration changes with
+`docker compose restart api worker`; the worker also reads configuration at startup.
 Use `docker compose --file compose.release.yml ...` consistently for release
 commands. Switching files updates the same `api` service, rather than creating
 independent development and release projects.

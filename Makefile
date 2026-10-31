@@ -12,9 +12,9 @@ help:
 	@echo 'make validate            Routine checks plus Geonovum; excludes CITE'
 
 quality:
-	$(UV) run ruff format --check src tests scripts
-	$(UV) run ruff check src tests scripts
-	$(UV) run bandit -r src scripts -c pyproject.toml
+	$(UV) run ruff format --check src tests scripts examples/custom-process
+	$(UV) run ruff check src tests scripts examples/custom-process
+	$(UV) run bandit -r src scripts examples/custom-process -c pyproject.toml
 
 validate-openapi:
 	mkdir -p runtime-data/validation
