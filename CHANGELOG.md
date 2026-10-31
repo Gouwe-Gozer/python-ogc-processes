@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — Unreleased
+## 0.1.0 — 2026-11-01
 
 - Adopt Python OGC Processes / `python-ogc-processes` branding, retaining existing
   Python imports, process IDs and execution contracts. Make the default service
