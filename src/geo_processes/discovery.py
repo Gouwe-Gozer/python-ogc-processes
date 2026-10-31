@@ -8,7 +8,6 @@ from urllib.parse import urlencode
 from flask import render_template_string
 from pygeoapi.api import conformance as upstream_conformance
 from pygeoapi.api import evaluate_limit
-from pygeoapi.api import landing_page as upstream_landing_page
 from pygeoapi.api.processes import describe_processes
 from pygeoapi.util import render_j2_template
 
@@ -33,18 +32,6 @@ def readonly_geojson_collections(config):
         and providers[0].get("name") == "GeoJSON"
         and not providers[0].get("editable", False)
     }
-
-
-def landing_page(api, request):
-    """Upstream infers optional job-list links from async execution support."""
-    if not getattr(api.manager, "durable_async", False) or getattr(api.manager, "supports_job_list", False):
-        return upstream_landing_page(api, request)
-    # Scope the correction to native landing-page rendering in every encoding;
-    # do not change the actual manager or its execution/discovery capabilities.
-    scoped = copy(api)
-    scoped.manager = copy(api.manager)
-    scoped.manager.is_async = False
-    return upstream_landing_page(scoped, request)
 
 
 def conformance(api, request):
@@ -96,27 +83,6 @@ def _navigation(links):
     )
 
 
-def describe_process(api, request, identifier):
-    """Retain native metadata; suppress job-list links for unsupported managers."""
-    if not getattr(api.manager, "durable_async", False) or getattr(api.manager, "supports_job_list", False):
-        return describe_processes(api, request, identifier)
-    value_request = copy(request)
-    value_request._format = "json"
-    headers, status, body = describe_processes(api, value_request, identifier)
-    if status != 200:
-        return describe_processes(api, request, identifier)
-    document = json.loads(body)
-    document["links"] = [link for link in document["links"] if not link["rel"].endswith("/job-list")]
-    if request.format == "html":
-        body = render_j2_template(
-            api.tpl_config, api.get_dataset_templates(identifier), "processes/process.html", document, request.locale
-        )
-        headers["Content-Type"] = "text/html"
-    else:
-        body = json.dumps(document)
-    return headers, status, body
-
-
 def list_processes(api, request):
     """Preserve filters in self/alternate links and make limited lists traversable."""
     headers = request.get_response_headers(**api.api_headers)
@@ -138,7 +104,7 @@ def list_processes(api, request):
     value_request._format = "json"
     summaries = []
     for identifier in identifiers[offset : offset + limit]:
-        _, status, body = describe_process(api, value_request, identifier)
+        _, status, body = describe_processes(api, value_request, identifier)
         if status != 200:
             return api.get_exception(500, headers, request.format, "NoApplicableCode", "process discovery failed")
         summary = json.loads(body)

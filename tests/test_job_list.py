@@ -261,3 +261,21 @@ def test_job_list_database_failure_is_sanitized_and_not_cached(async_client, dur
     assert response.json["code"] == "ServerBusy"
     assert "private database" not in response.text
     assert response.headers["Cache-Control"] == "no-store"
+
+
+@pytest.mark.parametrize("format_", ["json", "html", "jsonld"])
+@pytest.mark.parametrize("path", ["/", "/processes/raster-info"])
+def test_durable_discovery_preserves_native_pygeoapi_responses(async_client, durable, monkeypatch, path, format_):
+    from pygeoapi.flask_app import get_processes, landing_page
+
+    response = async_client.get(f"{path}?f={format_}")
+    # Native rendering remains authoritative; retain application after-request corrections.
+    with monkeypatch.context() as context:
+        context.setitem(async_client.application.view_functions, "pygeoapi.landing_page", landing_page)
+        context.setitem(async_client.application.view_functions, "pygeoapi.get_processes", get_processes)
+        native = async_client.get(f"{path}?f={format_}")
+    assert response.status_code == native.status_code == 200
+    assert response.headers["Content-Type"] == native.headers["Content-Type"]
+    assert response.data == native.data
+    assert response.headers.getlist("Link") == native.headers.getlist("Link")
+    assert durable[0].is_async is True and durable[0].supports_job_list is True
