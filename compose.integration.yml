@@ -1,6 +1,0 @@
-services:
-  api:
-    volumes:
-      - ./config/pygeoapi.integration.yml:/pygeoapi/local.config.yml:ro
-      - ./src/geo_processes:/pygeoapi/geo_processes:ro
-      - ./tests/fixtures/test_processes:/pygeoapi/test_processes:ro
