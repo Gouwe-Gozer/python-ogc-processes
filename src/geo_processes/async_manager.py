@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from pygeoapi.process.base import JobNotFoundError, JobResultNotFoundError, ProcessorExecuteError
 from pygeoapi.process.manager.postgresql import PostgreSQLManager
-from pygeoapi.util import JobStatus, RequestedProcessExecutionMode
+from pygeoapi.util import JobStatus, RequestedProcessExecutionMode, json_serial
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -257,7 +257,8 @@ class DurableProcessManager(PostgreSQLManager):
         return identifier
 
     def finish(self, job_id, response, *, failed=False):
-        encoded = json.dumps(response, allow_nan=False)
+        # Match HTTP type conversion while retaining strict persisted JSON.
+        encoded = json.dumps(response, default=json_serial, allow_nan=False)
         with self._transaction() as connection:
             size = connection.execute(
                 self._sql(
