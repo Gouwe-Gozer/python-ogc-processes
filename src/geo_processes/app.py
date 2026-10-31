@@ -15,9 +15,7 @@ from werkzeug.datastructures import Headers
 from geo_processes.datasets import SAMPLE_DATA_DIR
 from geo_processes.discovery import (
     conformance,
-    describe_process,
     landing_links,
-    landing_page,
     list_processes,
     readonly_geojson_collections,
 )
@@ -91,8 +89,6 @@ _upstream_get_processes = APP.view_functions["pygeoapi.get_processes"]
 
 def get_processes(process_id=None):
     if process_id is not None:
-        if getattr(api_.manager, "durable_async", False):
-            return execute_from_flask(describe_process, request, process_id)
         return _upstream_get_processes(process_id)
     return execute_from_flask(list_processes, request)
 
@@ -105,13 +101,6 @@ def get_conformance():
 
 
 APP.view_functions["pygeoapi.conformance"] = get_conformance
-
-
-def get_landing_page():
-    return execute_from_flask(landing_page, request)
-
-
-APP.view_functions["pygeoapi.landing_page"] = get_landing_page
 
 
 def execute_process_jobs(process_id):
