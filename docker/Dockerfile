@@ -1,3 +1,5 @@
+FROM ghcr.io/astral-sh/uv:0.13.5@sha256:32a7bb39b496babbd997b0a39a4d66c126bdaf5661b302bf6f06abda8deca6ff AS uv
+
 FROM geopython/pygeoapi:0.24.0@sha256:a62895f2585ef1fcd1fc97ec35bf13177becc1334a622172a2c5c4d2145b8f0a
 
 LABEL org.opencontainers.image.title="Raster Processes API" \
@@ -22,11 +24,20 @@ COPY LICENSE THIRD_PARTY_NOTICES.md /licenses/raster-processes/
 
 COPY docker/entrypoint.sh /geo-entrypoint.sh
 
-# Install into the interpreter actually used by Gunicorn. Fail if no wheel exists.
-RUN /venv/bin/python3 -m pip install --no-cache-dir --only-binary=:all: "numpy==1.26.4" "rasterio==1.4.3" "psycopg2-binary==2.9.11" "geoalchemy2==0.20.0"
+# Install locked production dependencies into Gunicorn's existing interpreter.
+# Retain base-image tools (e.g. Gunicorn) that are outside the application lock.
+# The build tool and manifests are temporary; no second dependency list is kept.
+RUN --mount=from=uv,source=/uv,target=/bin/uv \
+    --mount=type=bind,source=pyproject.toml,target=/tmp/dependencies/pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=/tmp/dependencies/uv.lock \
+    UV_PROJECT_ENVIRONMENT=/venv /bin/uv sync --project /tmp/dependencies \
+    --python /venv/bin/python3 --locked --no-dev --no-install-project --inexact \
+    --no-build --no-python-downloads --no-cache
 
 RUN /venv/bin/python3 -c \
-    'import rasterio, pygeoapi; from geo_processes.processes.info import RasterInfoProcessor'
+    'from importlib.metadata import version; import rasterio, pygeoapi; \
+    assert pygeoapi.__version__ == version("pygeoapi"), "base pygeoapi source must match uv.lock"; \
+    from geo_processes.processes.info import RasterInfoProcessor'
 
 # Docker initializes a new named volume with this non-root ownership.
 RUN mkdir -p /var/lib/geo/results \
