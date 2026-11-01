@@ -44,7 +44,7 @@ inspect a raster without a CRS; warp rejects that raster. All five accept
 and staged privately; metadata and all statistics refer to the supplied file.
 
 Raw execution returns this object directly. Document execution returns
-`{"info":{"value":{...metadata...}}}`. See the [README](../README.md) and
+`{"info":{"value":{...metadata...}}}`. See the [HTTP contract](results.md#http-contract) and
 [OGC review guide](validation.md#ogc-review-guide) for HTTP and standards context.
 
 ## Raster reprojection — `raster-warp`

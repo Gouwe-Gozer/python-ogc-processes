@@ -90,6 +90,27 @@ to successful feature item responses; discovery and errors remain ordinary JSON.
 
 ## Use the samples for processing
 
+Start the service using the [quick start](../README.md#quick-start). Run commands
+from the repository root after [installing the local client dependencies](inputs.md#process-a-local-file).
+
+### Inspect and reproject the GeoTIFF
+
+```bash
+mkdir -p runtime-data
+uv run python scripts/process_raster.py \
+  src/geo_processes/data/samples/AHN4_R5_117000_517000.TIF \
+  --output runtime-data/ahn4-wgs84.tif \
+  --target-crs EPSG:4326 --base-url http://localhost:5001
+```
+
+The client prints source dimensions and band count, submits the file inline,
+and downloads the reprojected GeoTIFF. Replace the input path to use your own
+raster. The destination's parent directory must exist; choose another output
+filename when rerunning, since existing files are preserved. Failed downloads
+are discarded. See [the local-file client](inputs.md#process-a-local-file) for options.
+
+### Sample the point collection
+
 Clients can download the TIFF and submit its bytes as qualified base64. The
 point Features response can be passed directly as `inputs.points.value`;
 collection-level metadata is accepted and ignored during sampling.
@@ -126,7 +147,6 @@ The sampled values are approximately **1.9285**, **3.2804** and **-2.1011** in
 point order. External client rendering remains a separate
 [interoperability check](validation.md#client-interoperability).
 
-For local commands, data paths default relative to the repository root. The
-image sets `GEO_SAMPLE_DATA_DIR` to its packaged sample directory. An operator
+The image sets `GEO_SAMPLE_DATA_DIR` to its packaged sample directory. An operator
 override must point both the feature providers and static file serving at a
 directory containing only data intended for public access.

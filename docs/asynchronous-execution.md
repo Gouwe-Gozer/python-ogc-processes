@@ -8,8 +8,17 @@ result-store limits are unchanged. No PostGIS extension is required.
 
 Use [release deployment](release-image.md#run-and-inspect) for a self-contained
 image or [development](development.md#container-and-integration-checks) for source
-mounts. Both start API, PostgreSQL and worker. Apply `compose.sync.yml` after the
-chosen Compose file for the explicit database-free opt-out; see [README](../README.md#run-the-service).
+mounts. Both start API, PostgreSQL and worker.
+
+For a database-free, synchronous-only API, apply `compose.sync.yml` after the
+release file:
+
+```bash
+docker compose -f compose.release.yml -f compose.sync.yml up --build --detach
+```
+
+For bind-mounted development, use `-f compose.yml -f compose.sync.yml` instead.
+This opt-out retains no jobs; see [capabilities and gaps](validation.md#conformance-claims-and-gaps).
 
 Both result and database volumes survive normal `down`; `down --volumes` removes
 both. Use one image/configuration for API and worker and a persistent, URL-safe

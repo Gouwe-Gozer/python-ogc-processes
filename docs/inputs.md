@@ -9,9 +9,12 @@ independent [24-hour lifecycle](results.md).
 
 ## Process a local file
 
-With the service running, inspect and reproject your own file in one command:
+Start the service with the [quick start](../README.md#quick-start). Run commands
+from the repository root with Python 3.12 and user-installed `uv`. Install the
+local client dependencies, then inspect and reproject your own file:
 
 ```bash
+uv sync --locked --all-groups
 uv run python scripts/process_raster.py my-dem.tif --output my-dem-wgs84.tif \
   --base-url http://localhost:5001 --target-crs EPSG:4326
 ```
@@ -36,6 +39,7 @@ mkdir -p runtime-data
 uv run python scripts/process_raster.py src/geo_processes/data/demo-dem.tif --output runtime-data/demo-wgs84.tif
 ```
 
+For the packaged AHN4 tile, see the [sample walkthrough](sample-data.md#inspect-and-reproject-the-geotiff).
 Use `uv run python scripts/process_raster.py --help` for options. The lower-level
 request examples below expose the same wire contract. `smoke_inputs.py` remains
 the developer check for all response/transmission modes.

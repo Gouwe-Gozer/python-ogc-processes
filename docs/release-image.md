@@ -122,7 +122,12 @@ on internal port 8080. Directory probes do not delete stored results.
 See [startup validation](development.md#startup-validation) for exact checks.
 
 Compose publishes port 5001 by default. Set `API_PORT` and `PYGEOAPI_SERVER_URL`
-together when changing the external address, as shown in the [README](../README.md).
+together when changing the external address:
+
+```bash
+API_PORT=5002 PYGEOAPI_SERVER_URL=http://localhost:5002 docker compose --file compose.release.yml up --build --detach
+```
+
 Generated links use that canonical URL, including any proxy prefix, rather than
 the requesting Host header. URL validation does not test client reachability.
 
